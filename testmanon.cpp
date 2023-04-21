@@ -7,6 +7,7 @@
 #include <sys/uio.h>
 #include <unistd.h>
 #include <netdb.h>
+#include <fcntl.h>
 
 #define PORT 8081
 #define FAMILY AF_INET
@@ -84,6 +85,8 @@ int main(void) {
 			std::cerr << "accept: " << strerror(errno) << std::endl;
 			exit(EXIT_FAILURE);
 		}
+		/* ???? Setting fd to non blocking ???? */
+		fcntl(request_fd, F_SETFL, O_NONBLOCK);
 		char buffer[30000] = {0};
 		bytes_read = read( request_fd , buffer, 30000);
 		std::cout << "The message was: " << buffer;
