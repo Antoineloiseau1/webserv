@@ -94,7 +94,7 @@ int main(void) {
 		write(request_fd , hello.c_str() , hello.length());
 		std::string response = "Good talking to you\n";
 		send(request_fd, response.c_str(), response.size(), 0);
-		printf("------------------Hello message sent-------------------\n");
+		std::cout << ("------------------Hello message sent-------------------") << std::endl;
 		close(request_fd);
 	}
 	close(server_fd);
