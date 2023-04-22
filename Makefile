@@ -1,7 +1,7 @@
 
 NAME		= webserv
 
-SRCS		= testmanon.cpp
+SRCS		= test.cpp
 
 OBJS		= ${SRCS:.cpp=.o}
 

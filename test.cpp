@@ -8,35 +8,23 @@
 #include <unistd.h>
 #include <netdb.h>
 #include <fcntl.h>
+#include <cerrno> //linux
+#include <string.h> //linux
+#include <stdlib.h> // linux
+ #include <sys/types.h>
+#include <event2/event.h>
+#include <sys/time.h>
+#include <vector>
 
 #define PORT 8081
 #define FAMILY AF_INET
 #define	SOCKTYPE SOCK_STREAM
+const int MAX_EVENTS = 100;
+const int TIMEOUT = -1;
 
-
-// void connect_UsingGetAddrInfo(std::string host, unsigned short int port, int& socketfd)
-// {
-//     //simplified loops & error handling for concision
-//     int x;
-
-//     struct addrinfo hints, *addr;
-//     //fine-tune hints according to which socket you want to open
-//     hints.ai_family = FAMILY; 
-//     hints.ai_socktype = SOCKTYPE; 
-//     hints.ai_protocol = 0; //any protocol can be returned
-//     hints.ai_flags = AI_CANONNAME | AI_ALL | AI_ADDRCONFIG;
-
-//     //Precise here the port !
-//     const char* service = std::to_string(port).c_str();
-// 	const char* hostname = &host[0];
-//     x =  getaddrinfo(hostname, service, &hints, &addr);
-//     socketfd = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
-//     x = connect(socketfd, addr->ai_addr, addr->ai_addrlen);
-// }
-
-// void	connect_to_server_from_client() {
-// }
-
+void	manage_events() {
+//use poll or kqueue
+}
 
 int main(void) {
 
@@ -52,7 +40,7 @@ int main(void) {
 	struct linger sl;
 	setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &sl, sizeof(server_fd));
 
-	/* Naming the socket (bind) */
+	/* Naming the socket (bind): linking it to a port */
 	struct sockaddr_in	address;
 	socklen_t	addrlen = sizeof(address);
 	address.sin_family = FAMILY;
@@ -76,6 +64,8 @@ int main(void) {
 
 	long	bytes_read;
 	int		request_fd;
+
+	manage_events();
 	while(1)
 	{
 		std::cout << "+++++++ Waiting for new connection ++++++++" << std::endl;
@@ -89,7 +79,7 @@ int main(void) {
 		fcntl(request_fd, F_SETFL, O_NONBLOCK);
 		char buffer[30000] = {0};
 		bytes_read = read( request_fd , buffer, 30000);
-		std::cout << "The message was: " << buffer;
+		std::cout << "The message was: " << buffer << " with length " << bytes_read;
 		std::string hello = "HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 13\n\nHello, World!";
 		write(request_fd , hello.c_str() , hello.length());
 		std::string response = "Good talking to you\n";
