@@ -3,6 +3,7 @@
 #include <netdb.h>
 #include <fcntl.h>
 #include "./Networking/ServerSocket.hpp"
+#include <fstream>
 
 #define PORT 8080
 #define FAMILY AF_INET
@@ -45,10 +46,21 @@ int main(void) {
 
 	long	bytes_read;
 	int		request_fd;
-	manage_events();
+
+    // open the HTML file
+    std::ifstream file("./data/www/index.html");
+    if (!file.is_open())
+    {
+        std::cerr << "Error opening file" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+    // read the contents of the file into a string variable
+    std::string content((std::istreambuf_iterator<char>(file)), (std::istreambuf_iterator<char>()));
+
 	while(1)
 	{
-		std::cout << "+++++++ Waiting for new connection ++++++++" << std::endl;
+		std::cout << "+++++++ Waiting for new connection ++++++++" << std::endl << std::endl;
 		request_fd = server.acceptConnection(); 
 		if (request_fd < 0)
 		{
@@ -57,16 +69,13 @@ int main(void) {
 		}
 
 		/*  Setting fd to non blocking  */
-		fcntl(request_fd, F_SETFL, O_NONBLOCK);
-
+		//fcntl(request_fd, F_SETFL, O_NONBLOCK);
 		char buffer[30000] = {0};
 		bytes_read = read( request_fd , buffer, 30000);
-		std::cout << "The message was: " << buffer << " with length " << bytes_read << std::endl;
-		std::string hello = "HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 13\n\nHello, World!\n";
+		std::cout <<  "(--------------- Received Request -----------------)\n" << buffer << std::endl;
+		std::string hello = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: 354321354\n\n";
 		write(request_fd , hello.c_str() , hello.length());
-		std::string response = "Good talking to you\n";
-		send(request_fd, response.c_str(), response.size(), 0);
-		std::cout << ("------------------Hello message sent-------------------") << std::endl;
+		write(request_fd, content.c_str(), content.length());
 		close(request_fd);
 	}
 	return 0;

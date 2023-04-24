@@ -1,5 +1,7 @@
 #include "ServerSocket.hpp"
 
+#define BACKLOG 1
+
 ServerSocket::ServerSocket(int domain, int service, int protocole, int port) : Socket(domain, service, protocole, port) {
 	/* Setting Socket Options */
 	struct linger sl;
@@ -9,12 +11,12 @@ ServerSocket::ServerSocket(int domain, int service, int protocole, int port) : S
 	this->establishConnection();
 
 	/* Getting Ready For Requests */
-	if (listen(this->_fd, 10) == -1) 
+	if (listen(this->_fd, BACKLOG) == -1) 
 	{ 
 		std::cerr << "listen: " << strerror(errno) << std::endl; 
 		exit(EXIT_FAILURE); 
 	}
-	std::cout << "+++++++ webserv has been opened +++++++" << std::endl;
+	std::cout << "+++++++ webserv has been opened +++++++" << std::endl << std::endl;
 }
 
 ServerSocket::~ServerSocket(void) { close(this->_fd); }
