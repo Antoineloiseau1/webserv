@@ -19,6 +19,7 @@ class Socket{
 	public:
 
 		Socket(int domain, int service, int protocole, int port);
+		virtual	~Socket(void);
 
 		virtual	void				establishConnection(void) = 0;
 		virtual int					getFd(void) const = 0;

@@ -2,12 +2,13 @@
 #include <sys/uio.h>
 #include <netdb.h>
 #include <fcntl.h>
-#include "./Networking/ServerSocket.hpp"
 #include <fstream>
+#include "Networking/Server.hpp"
 
 #define PORT 8080
 #define FAMILY AF_INET
 #define	SOCKTYPE SOCK_STREAM
+#define BACKLOG	3
 // const int MAX_EVENTS = 100;
 // const int TIMEOUT = -1;
 
@@ -40,43 +41,16 @@ void	manage_events() {
 // }
 
 
-int main(void) {
-
-	ServerSocket	server(FAMILY, SOCKTYPE, 0, PORT);
-
-	long	bytes_read;
-	int		request_fd;
-
-    // open the HTML file
-    std::ifstream file("./data/www/manon.html");
-    if (!file.is_open())
-    {
-        std::cerr << "Error opening file" << std::endl;
-        exit(EXIT_FAILURE);
-    }
-
-    // read the contents of the file into a string variable
-    std::string content((std::istreambuf_iterator<char>(file)), (std::istreambuf_iterator<char>()));
-
-	while(1)
-	{
-		std::cout << "+++++++ Waiting for new connection ++++++++" << std::endl << std::endl;
-		request_fd = server.acceptConnection(); 
-		if (request_fd < 0)
-		{
-			std::cerr << "accept: " << strerror(errno) << std::endl;
-			exit(EXIT_FAILURE);
-		}
-
-		/*  Setting fd to non blocking  */
-		//fcntl(request_fd, F_SETFL, O_NONBLOCK);
-		char buffer[30000] = {0};
-		bytes_read = read( request_fd , buffer, 30000);
-		std::cout <<  "(--------------- Received Request -----------------)\n" << buffer << std::endl;
-		std::string hello = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: 354321354\n\n";
-		write(request_fd , hello.c_str() , hello.length());
-		write(request_fd, content.c_str(), content.length());
-		close(request_fd);
+int main(int argc, char *argv[], char *envp[]) {
+	if(argc != 2) {
+		std::cerr << "usage: ./webserv <config_file>" << std::endl;
+		exit(EXIT_FAILURE);
 	}
+	(void)argv;
+	(void)envp;
+
+	Server	server(FAMILY, SOCKTYPE, 0, PORT, BACKLOG);
+	server.start();
+
 	return 0;
 }

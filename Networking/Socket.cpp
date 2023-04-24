@@ -13,3 +13,5 @@ Socket::Socket(int domain, int service, int protocole, int port) {
 		exit(EXIT_FAILURE);
 	}
 }
+
+Socket::~Socket(void) {}
