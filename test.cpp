@@ -1,21 +1,28 @@
-#include <arpa/inet.h>
-#include <sys/uio.h>
-#include <netdb.h>
-#include <fcntl.h>
-#include <fstream>
 #include "Networking/Server.hpp"
 
-#define PORT 8080
+#define PORT 80
 #define FAMILY AF_INET
 #define	SOCKTYPE SOCK_STREAM
+#define PROTOCOLE 0
 #define BACKLOG	3
-// const int MAX_EVENTS = 100;
-// const int TIMEOUT = -1;
 
 void	manage_events() {
 //use poll or kqueue
 }
 
+int main(int argc, char *argv[], char *envp[]) {
+	if(argc != 2) {
+		std::cerr << "usage: ./webserv <config_file>" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+	(void)argv;
+	(void)envp;
+
+	Server	server(FAMILY, SOCKTYPE, PROTOCOLE, PORT, BACKLOG);
+	server.start();
+
+	return 0;
+}
 
 // void connect_UsingGetAddrInfo(std::string host, unsigned short int port, int& socketfd)
 // {
@@ -39,18 +46,3 @@ void	manage_events() {
 
 // void	connect_to_server_from_client() {
 // }
-
-
-int main(int argc, char *argv[], char *envp[]) {
-	if(argc != 2) {
-		std::cerr << "usage: ./webserv <config_file>" << std::endl;
-		exit(EXIT_FAILURE);
-	}
-	(void)argv;
-	(void)envp;
-
-	Server	server(FAMILY, SOCKTYPE, 0, PORT, BACKLOG);
-	server.start();
-
-	return 0;
-}
