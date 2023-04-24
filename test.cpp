@@ -7,8 +7,8 @@
 #define PORT 8080
 #define FAMILY AF_INET
 #define	SOCKTYPE SOCK_STREAM
-const int MAX_EVENTS = 100;
-const int TIMEOUT = -1;
+// const int MAX_EVENTS = 100;
+// const int TIMEOUT = -1;
 
 void	manage_events() {
 //use poll or kqueue
