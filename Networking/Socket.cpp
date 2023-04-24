@@ -1,12 +1,16 @@
 #include "Socket.hpp"
 
+
+/* Socket Default Constructor */
 Socket::Socket(int domain, int service, int protocole, int port) {
+	/* Initializing struct sockaddr_in */
 	this->_address.sin_family = domain;
 	this->_address.sin_port = htons(port);
 	this->_address.sin_addr.s_addr = htonl(INADDR_ANY);
 	this->_addrlen = sizeof(this->_address);
 	memset(this->_address.sin_zero, '\0', sizeof(this->_address.sin_zero));
 
+	/* Opening a socket */
 	this->_fd = socket(domain, service, protocole);
 	if (this->_fd == -1) {
 		std::cerr << "socket: " << strerror(errno) << std::endl;
@@ -14,4 +18,5 @@ Socket::Socket(int domain, int service, int protocole, int port) {
 	}
 }
 
+/* Socket virtual destructor */
 Socket::~Socket(void) {}

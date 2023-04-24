@@ -10,8 +10,7 @@ class ServerSocket: public Socket {
 		ServerSocket(int domain, int service, int protocole, int port, int backlog);
 		~ServerSocket(void);
 
-		void				establishConnection(void);
-		int					acceptConnection();
+		void				establishConnection(int backlog);
 		int					getFd(void) const;
 		socklen_t			getSockLen(void) const;
 		struct sockaddr_in	getAddress(void) const;

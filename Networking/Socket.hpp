@@ -21,7 +21,6 @@ class Socket{
 		Socket(int domain, int service, int protocole, int port);
 		virtual	~Socket(void);
 
-		virtual	void				establishConnection(void) = 0;
 		virtual int					getFd(void) const = 0;
 		virtual struct sockaddr_in	getAddress(void) const = 0;	
 
