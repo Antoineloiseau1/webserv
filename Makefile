@@ -1,7 +1,7 @@
 
-NAME		= webserv
+NAME		= webserv 
 
-SRCS		= test.cpp
+SRCS		= test.cpp ./Networking/Socket.cpp ./Networking/ServerSocket.cpp
 
 OBJS		= ${SRCS:.cpp=.o}
 
