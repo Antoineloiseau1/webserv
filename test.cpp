@@ -48,7 +48,7 @@ int main(void) {
 	int		request_fd;
 
     // open the HTML file
-    std::ifstream file("./data/www/index.html");
+    std::ifstream file("./data/www/manon.html");
     if (!file.is_open())
     {
         std::cerr << "Error opening file" << std::endl;
