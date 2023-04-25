@@ -1,13 +1,15 @@
 
 NAME		= webserv 
 
-SRCS		= test.cpp ./Networking/Socket.cpp ./Networking/ServerSocket.cpp Networking/Server.cpp
+SRCS		= main.cpp ./Networking/Socket.cpp ./Networking/ServerSocket.cpp Networking/Server.cpp
 
 OBJS		= ${SRCS:.cpp=.o}
 
 HEADER		= ./includes/
 
 CFLAGS		= -Wall -Wextra -Werror -std=c++98
+
+DEBUG		=	-g -fsanitize=address
 
 RM  		= rm -f
 
@@ -20,10 +22,10 @@ CYAN		:=  "\033[0;36m"
 RESET		:=  "\033[0m"
 
 %.o:		%.cpp
-				@${CC} ${CFLAGS} -g -o $@ -c $< -I ${HEADER}
+				@${CC} ${DEBUG} ${CFLAGS} -o $@ -c $< -I ${HEADER}
 
 ${NAME}:	${OBJS}
-				@${CC} ${CFLAGS} -o ${NAME} ${OBJS}
+				@${CC} ${CFLAGS} ${DEBUG}  -o ${NAME} ${OBJS}
 				@echo ${GREEN}"Compiled '${NAME}' with success" ${RESET}
 
 all:		${NAME}

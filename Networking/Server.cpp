@@ -1,5 +1,6 @@
 #include "Server.hpp"
 #include <fstream>
+#include <fcntl.h>
 
 Server::Server(int domain, int service, int protocole, int port, int backlog) {
 	this->_socket = new ServerSocket(domain, service, protocole, port, backlog);
@@ -20,15 +21,17 @@ void	Server::start(void) {
 	while(true) {
 		std::cout << "+++++++ Waiting for new connection ++++++++" << std::endl << std::endl;
 		_accepter();
-		std::cout <<  "(--------------- Received Request -----------------)\n" << std::endl;
 		_handler();
 		_responder(content);
+		close(this->_requestFd);
 	}
 }
 
 void	Server::_accepter(void) {
-	struct sockaddr_in	address = this->_socket->getAddress();
-	socklen_t			addrlen = sizeof(address);
+	struct sockaddr_in	address;
+	socklen_t			addrlen;
+	int					r;
+
 	this->_requestFd = accept(this->_socket->getFd(), reinterpret_cast<struct sockaddr *>(&address), &addrlen);
 	if (this->_requestFd == -1) {
 		delete this->_socket;
@@ -36,19 +39,28 @@ void	Server::_accepter(void) {
 		exit(EXIT_FAILURE);
 	}
 
-	//fcntl(request_fd, F_SETFL, O_NONBLOCK);
-	read(this->_requestFd, _requestBuffer, 30000);
+	fcntl(this->_requestFd, F_SETFL, O_NONBLOCK);
+	memset(this->_requestBuffer, 0, sizeof(this->_requestBuffer));
+	r = read(this->_requestFd, this->_requestBuffer, 30000);
+	std::cout << "Server::Accepter: ";
+	if (r > 0) {
+		this->_requestBuffer[r] = 0;
+		std::cout << " ########### Received " << r << " bytes ###########\n" << this->_requestBuffer << std::endl;
+	}
+	else
+		std::cout << " bytes = " << r << " nothing to read" << std::endl;
 }
 
 void	Server::_handler(void) {
-	std::cout << _requestBuffer << std::endl;
+	std::cout << this->_requestBuffer << std::endl;
 }
 
 void	Server::_responder(std::string content) {
-		std::string hello = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: 354321354\n\n";
-		write(this->_requestFd , hello.c_str() , hello.length());
-		write(this->_requestFd, content.c_str(), content.length());
-		close(this->_requestFd);
+		// std::string hello = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: 354321354\n\n";
+		// write(this->_requestFd , hello.c_str() , hello.length());
+		// write(this->_requestFd, content.c_str(), content.length());
+		// close(this->_requestFd);
+		(void)content;
 }
 
 ServerSocket	*Server::getSocket(void) const { return this->_socket; }
