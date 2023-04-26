@@ -2,9 +2,9 @@
 #include <fstream>
 #include <fcntl.h>
 
-Server::Server(int domain, int service, int protocole, int port, int nbSocket) {
+Server::Server(int domain, int service, int protocole, int *ports, int nbSocket) {
 	for (int i = 0; i < nbSocket; i++)
-		this->_socket.push_back(new ListeningSocket(domain, service, protocole, port));
+		this->_socket.push_back(new ListeningSocket(domain, service, protocole, ports[i]));
 }
 
 void	Server::start(void) {
@@ -46,7 +46,7 @@ void	Server::_accepter(void) {
 	std::cout << "Server::Accepter: ";
 	if (r > 0) {
 		this->_requestBuffer[r] = 0;
-		std::cout << " ########### Received " << r << " bytes ###########\n" << this->_requestBuffer << std::endl;
+		std::cout << " ########### Received " << r << " bytes ###########\n" << std::endl;
 	}
 	else
 		std::cout << " bytes = " << r << " nothing to read" << std::endl;
