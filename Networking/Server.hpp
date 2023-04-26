@@ -11,7 +11,8 @@ class Server {
 		int								_requestFd;
 		void							_accepter(void);
 		void							_handler(void);
-		void							_responder(std::string content);
+		void							_responder(int fd);
+		void 							_watchLoop(int kq);
 		
 	public:
 		Server(int domain, int service, int protocole, int *ports, int nbSocket);
