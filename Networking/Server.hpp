@@ -1,21 +1,22 @@
 #ifndef SERVER_HPP
 # define SERVER_HPP
 
-#include "ServerSocket.hpp"
+#include <vector>
+#include "ListeningSocket.hpp"
 
 class Server {
 	private:
-		char			_requestBuffer[30000];
-		ServerSocket	*_socket;
-		int				_requestFd;
-		void			_accepter(void);
-		void			_handler(void);
-		void			_responder(std::string content);
+		char						_requestBuffer[30000];
+		std::vector<ListeningSocket*>	_socket;
+		int							_requestFd;
+		void						_accepter(void);
+		void						_handler(void);
+		void						_responder(std::string content);
 		
 	public:
-		Server(int domain, int service, int protocole, int port, int backlog);
+		Server(int domain, int service, int protocole, int port, int nbSocket);
 		~Server(void);
-		ServerSocket	*getSocket(void) const;
+		ListeningSocket	*getSocket(void) const;
 		void			start(void);
 };
 

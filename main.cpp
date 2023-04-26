@@ -4,7 +4,7 @@
 #define FAMILY AF_INET
 #define	SOCKTYPE SOCK_STREAM
 #define PROTOCOLE 0
-#define BACKLOG	3
+#define NBSOCKET 1
 
 void	manage_events() {
 //use poll or kqueue
@@ -18,7 +18,7 @@ int main(int argc, char *argv[], char *envp[]) {
 	(void)argv;
 	(void)envp;
 
-	Server	server(FAMILY, SOCKTYPE, PROTOCOLE, PORT, BACKLOG);
+	Server	server(FAMILY, SOCKTYPE, PROTOCOLE, PORT, NBSOCKET);
 	server.start();
 
 	return 0;

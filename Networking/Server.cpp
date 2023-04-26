@@ -2,8 +2,9 @@
 #include <fstream>
 #include <fcntl.h>
 
-Server::Server(int domain, int service, int protocole, int port, int backlog) {
-	this->_socket = new ServerSocket(domain, service, protocole, port, backlog);
+Server::Server(int domain, int service, int protocole, int port, int nbSocket) {
+	for (int i = 0; i < nbSocket; i++)
+		this->_socket.push_back(new ListeningSocket(domain, service, protocole, port));
 }
 
 void	Server::start(void) {
@@ -32,14 +33,14 @@ void	Server::_accepter(void) {
 	socklen_t			addrlen;
 	int					r;
 
-	this->_requestFd = accept(this->_socket->getFd(), reinterpret_cast<struct sockaddr *>(&address), &addrlen);
+	this->_requestFd = accept(this->_socket[0]->getFd(), reinterpret_cast<struct sockaddr *>(&address), &addrlen);
 	if (this->_requestFd == -1) {
-		delete this->_socket;
+		delete this->_socket[0];
 		std::cerr << "accept: " << strerror(errno) << std::endl;
 		exit(EXIT_FAILURE);
 	}
 
-	fcntl(this->_requestFd, F_SETFL, O_NONBLOCK);
+	//fcntl(this->_requestFd, F_SETFL, O_NONBLOCK);
 	memset(this->_requestBuffer, 0, sizeof(this->_requestBuffer));
 	r = read(this->_requestFd, this->_requestBuffer, 30000);
 	std::cout << "Server::Accepter: ";
@@ -63,6 +64,6 @@ void	Server::_responder(std::string content) {
 		(void)content;
 }
 
-ServerSocket	*Server::getSocket(void) const { return this->_socket; }
+ListeningSocket	*Server::getSocket(void) const { return this->_socket[0]; }
 
-Server::~Server(void) { delete this->_socket; }
+Server::~Server(void) { delete this->_socket[0]; }
