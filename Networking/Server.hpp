@@ -11,11 +11,11 @@
 
 class Server {
 	private:
-		// char							_requestBuffer[30000];
+		char							_requestBuffer[30000];
 		std::vector<ListeningSocket*>	_socket;
 		int								_requestFd;
 		void							_accepter(int server_fd);
-		void							_handler(int server_fd);
+		void							_handler(int client_fd);
 		// void							_responder(int fd);
 		void 							_watchLoop();
 		struct kevent					_evSet;
