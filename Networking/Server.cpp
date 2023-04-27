@@ -6,68 +6,68 @@
 #include <sys/time.h>
 #define NUSERS 10
 
-struct uc {
-    int uc_fd;
-    char *uc_addr;
-} users[NUSERS];
+// struct uc {
+//     int uc_fd;
+//     char *uc_addr;
+// } users[NUSERS];
 
-void
-send_msg(int s, std::string message) {
-    char buf[256];
-    int len;
+// void
+// send_msg(int s, std::string message) {
+//     char buf[256];
+//     int len;
 
-    len = message.length();
-    send(s, buf, len, 0);
-}
+//     len = message.length();
+//     send(s, buf, len, 0);
+// }
 
-void recv_msg(int s) {
-    char buf[30000];
-    size_t bytes_read;
+// void recv_msg(int s) {
+//     char buf[30000];
+//     size_t bytes_read;
 
-    bytes_read = recv(s, buf, sizeof(buf), 0);
-    if ((int)bytes_read)
-	{	
-		buf[bytes_read] = 0;
-        std::cout << buf << std::endl;
-	}
-}
+//     bytes_read = recv(s, buf, sizeof(buf), 0);
+//     if ((int)bytes_read)
+// 	{	
+// 		buf[bytes_read] = 0;
+//         std::cout << buf << std::endl;
+// 	}
+// }
 
-int conn_index(int fd) {
-    int index;
-    for (index = 0; index < NUSERS; index++)
-        if (users[index].uc_fd == fd)
-            return index;
-    return -1;
-}
+// int conn_index(int fd) {
+//     int index;
+//     for (index = 0; index < NUSERS; index++)
+//         if (users[index].uc_fd == fd)
+//             return index;
+//     return -1;
+// }
 
-int conn_delete(int fd) {
-    int index;
-    if (fd < 1) 
-		return -1;
-    if ((index = conn_index(fd)) == -1)
-        return -1;
+// int conn_delete(int fd) {
+//     int index;
+//     if (fd < 1) 
+// 		return -1;
+//     if ((index = conn_index(fd)) == -1)
+//         return -1;
 
-    users[index].uc_fd = 0;
-    users[index].uc_addr = NULL;
+//     users[index].uc_fd = 0;
+//     users[index].uc_addr = NULL;
 
-    /* free(users[index].uc_addr); */
-    return close(fd);
-}
+//     /* free(users[index].uc_addr); */
+//     return close(fd);
+// }
 
-int conn_add(int fd) {
-    int index;
-    if (fd < 1) 
-		return -1;
-    if ((index = conn_index(0)) == -1)
-        return -1;
-    if (index == NUSERS) {
-        close(fd);
-        return -1;
-    }
-    users[index].uc_fd = fd; /* users file descriptor */
-    users[index].uc_addr = 0; /* user IP address */
-    return 0;
-}
+// int conn_add(int fd) {
+//     int index;
+//     if (fd < 1) 
+// 		return -1;
+//     if ((index = conn_index(0)) == -1)
+//         return -1;
+//     if (index == NUSERS) {
+//         close(fd);
+//         return -1;
+//     }
+//     users[index].uc_fd = fd; /* users file descriptor */
+//     users[index].uc_addr = 0; /* user IP address */
+//     return 0;
+// }
 
 void Server::_watchLoop(int kq) {
     struct kevent evSet;
@@ -78,46 +78,52 @@ void Server::_watchLoop(int kq) {
     int fd;
 
     while(1) {
-        nev = kevent(kq, NULL, 0, evList, 32, NULL);
-		std::cout << "nev: " << nev << std::endl;
-        if (nev < 1)
-            std::cerr << "kevent: " << strerror(errno) << std::endl;
-        for (i=0; i<nev; i++) {
-            if (evList[i].flags & EV_EOF) {
-            	std::cout << "disconnect\n";
-            	fd = evList[i].ident;
-                EV_SET(&evSet, fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-                if (kevent(kq, &evSet, 1, NULL, 0, NULL) == -1)
-                    std::cerr << "kevent: " << strerror(errno) << std::endl;
-                conn_delete(fd);
-            }
-            else if ((int)evList[i].ident == _socket[0]->getFd()) {
-                fd = accept(evList[i].ident, (struct sockaddr *)&addr,
-                    &socklen);
-                if (fd == -1)
-                    std::cerr << "accept: " << strerror(errno) << std::endl;
-				std::cout << "Accepted connexion: \n" << std::endl;
-                if (conn_add(fd) == 0) {
-                    EV_SET(&evSet, fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
-                    if (kevent(kq, &evSet, 1, NULL, 0, NULL) == -1)
-                        std::cerr << "kevent: " << strerror(errno) << std::endl;
-                    send_msg(fd, "welcome!\n");
-                } else {
-                    printf("connection refused\n");
-                    close(fd);
+      nev = kevent(kq, NULL, 0, evList, MAX_EVENTS, NULL);
+        if (nev == -1) {
+            perror("kevent() failed");
+            exit(EXIT_FAILURE);
+        }
+
+        for (int i = 0; i < nev; ++i) {
+            if (evList[i].ident == listen_fd) {
+                // Handle incoming connection
+                clilen = sizeof(cliaddr);
+                conn_fd = accept(listen_fd, (struct sockaddr*)&cliaddr, &clilen);
+                if (conn_fd == -1) {
+                    perror("accept() failed");
+                    exit(EXIT_FAILURE);
+                }
+
+                // Add the connection socket to the kqueue
+                EV_SET(&evSet, conn_fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
+                if (kevent(kq, &evSet, 1, NULL, 0, NULL) == -1) {
+                    perror("kevent() failed");
+                    exit(EXIT_FAILURE);
                 }
             }
-            else if (evList[i].filter == EVFILT_READ) {
-                recv_msg(evList[i].ident);
-				_responder(fd);
-           		fd = evList[i].ident;
-                EV_SET(&evSet, fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-                if (kevent(kq, &evSet, 1, NULL, 0, NULL) == -1)
-                    std::cerr << "kevent: " << strerror(errno) << std::endl;
-                conn_delete(fd);
-            }
-        }
-    }
+            else {
+                // Handle incoming data
+                char buf[1024];
+                ssize_t n = recv(evList[i].ident, buf, sizeof(buf), 0);
+                if (n == -1) {
+                    perror("read() failed");
+                    exit(EXIT_FAILURE);
+                }
+                else if (n == 0) {
+                    // Connection closed by client
+                    close(evList[i].ident);
+                    EV_SET(&evSet, evList[i].ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+                    if (kevent(kq, &evSet, 1, NULL, 0, NULL)
+        		}
+				 else {
+					// Handle received data
+					buf[nbytes] = '\0';
+					printf("Received data from %d: %s", evList[i].ident, buf);
+					// Add code to process the received data here
+				}
+    		}
+		}
+	}	
 }
 
 
