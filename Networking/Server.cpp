@@ -20,29 +20,21 @@ void Server::_watchLoop() {
 				EV_SET(&_evSet, fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
 				// if (kevent(_kq, &_evSet, 1, NULL, 0, NULL) == -1)
 				// 	std::cerr << "kevent: " << strerror(errno) << std::endl;
+				std::cout << "Closing fd 2: " << fd << std::endl;
 				close(fd);
 			}
 			else if ((int)_evList[i].ident == _socket[0]->getFd()) {
-				struct sockaddr_in	address;
-				socklen_t			addrlen;
-
-				this->_requestFd = accept(_evList[i].ident, reinterpret_cast<struct sockaddr *>(&address), &addrlen);
-				if (this->_requestFd == -1) {
-					std::cerr << "accept: " << strerror(errno) << std::endl;
-					exit(EXIT_FAILURE);
-				}
-				fcntl(this->_requestFd, F_SETFL, O_NONBLOCK);
-
-				EV_SET(&_evSet, this->_requestFd, EVFILT_READ, EV_ADD, 0, 0, NULL);
-				std::cout << "ACCEEPT : " << _requestFd << std::endl;
-				// if (kevent(_kq, &_evSet, 1, NULL, 0, NULL) == -1) {
-				// 	perror("kevent() failed");
-				// 	exit(EXIT_FAILURE);
-				// }
+				_accepter(_evList[i].ident);
 			}
 			else {
-				_handler(_evList[i].ident);
+				/* TENTATIVE DE FIX QUI FAIT UNE BOUCLE INFINIE SUR LE COUCOU*/
+				// int fd = _evList[i].ident;
+				// int fd_flags = fcntl(fd, F_GETFD);
+				// if (!(fd_flags == -1 && (fd_flags & FD_CLOEXEC)))
+				/* FIN DU FIX*/
+					_handler(_evList[i].ident);
 			}
+			// std::cout << "COUCOU\n";
 		}
 	}
 }
@@ -100,6 +92,7 @@ void	Server::_handler(int client_fd) {
 		// 	exit(EXIT_FAILURE);
 		// }
 		close(client_fd);
+		std::cout << "Closing fd : " << client_fd << std::endl;
 	}
 	else {
 		// main case: handle received data (print for now)
@@ -107,6 +100,7 @@ void	Server::_handler(int client_fd) {
 		/* PARSE AND CREATE A REQUEST*/
 		printf("Received data from %d: %s", client_fd, _requestBuffer);
 		close(client_fd);
+		std::cout << "Closing 1 fd : " << client_fd << std::endl;
 	}
 }
 
