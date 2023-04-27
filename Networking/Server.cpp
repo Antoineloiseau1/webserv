@@ -72,23 +72,21 @@
 void Server::_watchLoop(int kq) {
     struct kevent evSet;
     struct kevent evList[32];
-    int nev, i;
+    int nev;
     struct sockaddr_storage addr;
     socklen_t socklen = sizeof(addr);
-    int fd;
 
     while(1) {
-      nev = kevent(kq, NULL, 0, evList, MAX_EVENTS, NULL);
+      nev = kevent(kq, NULL, 0, evList, 32, NULL);
         if (nev == -1) {
             perror("kevent() failed");
             exit(EXIT_FAILURE);
         }
 
         for (int i = 0; i < nev; ++i) {
-            if (evList[i].ident == listen_fd) {
+            if ((int)evList[i].ident == _socket[0]->getFd()) {
                 // Handle incoming connection
-                clilen = sizeof(cliaddr);
-                conn_fd = accept(listen_fd, (struct sockaddr*)&cliaddr, &clilen);
+                int conn_fd = accept(evList[i].ident, (struct sockaddr *)&addr, &socklen);
                 if (conn_fd == -1) {
                     perror("accept() failed");
                     exit(EXIT_FAILURE);
@@ -113,12 +111,15 @@ void Server::_watchLoop(int kq) {
                     // Connection closed by client
                     close(evList[i].ident);
                     EV_SET(&evSet, evList[i].ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-                    if (kevent(kq, &evSet, 1, NULL, 0, NULL)
+                    if (kevent(kq, &evSet, 1, NULL, 0, NULL) == -1) {
+                    perror("kevent() failed");
+                    exit(EXIT_FAILURE);
+                    }
         		}
 				 else {
 					// Handle received data
-					buf[nbytes] = '\0';
-					printf("Received data from %d: %s", evList[i].ident, buf);
+					buf[n] = '\0';
+					printf("Received data from %d: %s", (int)evList[i].ident, buf);
 					// Add code to process the received data here
 				}
     		}
