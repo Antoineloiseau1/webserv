@@ -7,7 +7,7 @@ void Server::_watchLoop() {
 	_socklen = sizeof(_addr);
 
 	while(1) {
-		nev = kevent(_kq, NULL, 0, _evList, 32, NULL);
+		nev = kevent(_kq, &_evSet, 1, _evList, 32, NULL);
 		if (nev == -1) {
 			perror("kevent() failed");
 			exit(EXIT_FAILURE);
@@ -18,12 +18,28 @@ void Server::_watchLoop() {
 				std::cout << "disconnect\n";
 				int fd = _evList[i].ident;
 				EV_SET(&_evSet, fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-				if (kevent(_kq, &_evSet, 1, NULL, 0, NULL) == -1)
-					std::cerr << "kevent: " << strerror(errno) << std::endl;
+				// if (kevent(_kq, &_evSet, 1, NULL, 0, NULL) == -1)
+				// 	std::cerr << "kevent: " << strerror(errno) << std::endl;
 				close(fd);
 			}
-			else if ((int)_evList[i].ident == _socket[0]->getFd())
-				_accepter(_evList[i].ident);
+			else if ((int)_evList[i].ident == _socket[0]->getFd()) {
+				struct sockaddr_in	address;
+				socklen_t			addrlen;
+
+				this->_requestFd = accept(_evList[i].ident, reinterpret_cast<struct sockaddr *>(&address), &addrlen);
+				if (this->_requestFd == -1) {
+					std::cerr << "accept: " << strerror(errno) << std::endl;
+					exit(EXIT_FAILURE);
+				}
+				fcntl(this->_requestFd, F_SETFL, O_NONBLOCK);
+
+				EV_SET(&_evSet, this->_requestFd, EVFILT_READ, EV_ADD, 0, 0, NULL);
+				std::cout << "ACCEEPT : " << _requestFd << std::endl;
+				// if (kevent(_kq, &_evSet, 1, NULL, 0, NULL) == -1) {
+				// 	perror("kevent() failed");
+				// 	exit(EXIT_FAILURE);
+				// }
+			}
 			else {
 				_handler(_evList[i].ident);
 			}
@@ -50,9 +66,6 @@ void	Server::start(void) {
 	
 	_kq = kqueue();
 	EV_SET(&_evSet, _socket[0]->getFd(), EVFILT_READ, EV_ADD, 0, 0, NULL);
-	if (kevent(_kq, &_evSet, 1, NULL, 0, NULL) == -1)
-		std::cerr << "kevent: " << strerror(errno) << std::endl;
-
 	_watchLoop();
 }
 
@@ -67,16 +80,12 @@ void	Server::_accepter(int server_fd) {
 		exit(EXIT_FAILURE);
 	}
 	fcntl(this->_requestFd, F_SETFL, O_NONBLOCK);
-
 	EV_SET(&_evSet, this->_requestFd, EVFILT_READ, EV_ADD, 0, 0, NULL);
-	if (kevent(_kq, &_evSet, 1, NULL, 0, NULL) == -1) {
-		perror("kevent() failed");
-		exit(EXIT_FAILURE);
-	}
 }
 
 // Handle incoming data on accepted connections
 void	Server::_handler(int client_fd) {
+	std::cout << "HANDLER : " << client_fd << std::endl;
 	memset(this->_requestBuffer, 0, sizeof(this->_requestBuffer));
 	ssize_t n = recv(client_fd, _requestBuffer, sizeof(_requestBuffer), 0);
 	if (n == -1) {
@@ -86,16 +95,16 @@ void	Server::_handler(int client_fd) {
 	else if (n == 0) {
 		// Connection closed by client
 		EV_SET(&_evSet, client_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-		if (kevent(_kq, &_evSet, 1, NULL, 0, NULL) == -1) {
-			perror("kevent() failed");
-			exit(EXIT_FAILURE);
-		}
+		// if (kevent(_kq, &_evSet, 1, NULL, 0, NULL) == -1) {
+		// 	perror("kevent() failed");
+		// 	exit(EXIT_FAILURE);
+		// }
 		close(client_fd);
 	}
 	else {
 		// main case: handle received data (print for now)
 		_requestBuffer[n] = '\0';
-		/* PARSE AND CREATE A REQUEST OBJECT*/
+		/* PARSE AND CREATE A REQUEST*/
 		printf("Received data from %d: %s", client_fd, _requestBuffer);
 		close(client_fd);
 	}
