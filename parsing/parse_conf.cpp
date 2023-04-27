@@ -6,7 +6,7 @@
 /*   By: mmidon <marvin@42.fr>                      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/25 10:15:25 by mmidon            #+#    #+#             */
-/*   Updated: 2023/04/27 11:45:16 by mmidon           ###   ########.fr       */
+/*   Updated: 2023/04/27 16:41:20 by mmidon           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,21 +28,51 @@ std::string trim(const std::string& str, const std::string& whitespace = " \t")
 	return str.substr(strBegin, strRange);
 }
 
+void data::setSettings()
+{
+	_possibleSettings.push_back("listen");
+	_possibleSettings.push_back("");
+
+	//a lot of things to push_back
+}
+
+
+std::string data::whichSetting(std::string content)
+{
+	for (int i = 0; !_possibleSettings[i].size(); i++)
+	{
+		if (!std::strncmp(content.c_str(), _possibleSettings[i].c_str(), std::strlen(_possibleSettings[i].c_str())))
+			return _possibleSettings[i];
+	}
+	return "";
+}
+
+
 data::data(std::string conf)
 {
-	std::size_t	i = 0;
+	std::size_t	 pos = 0;
+	std::string content;
+	std::string setting;
 
 	std::fstream file(conf); //can't fine which of ofstream and ifstream we need so fstream
 	if (!file.is_open())
 		throw CantOpenFileException();
 
-	std::string content((std::istreambuf_iterator<char>(file)), (std::istreambuf_iterator<char>()));
+	setSettings();
+	getline(file, content);
 
-	i = content.find("listen") + std::strlen("listen");   //"listen" is tmp, it should be a loop on a list of "authorized" parameters
-	std::string line = content.substr(i, content.find(";", i) - i);
-	line = trim(line);
-	_config.insert(std::make_pair("listen", line));
-	std::cout << "line:" << _config["listen"]  << "$" << std::endl;
+	while (!content.empty())
+	{
+		getline(file, content);
+		setting = whichSetting(content);
+		if (setting.empty())
+			throw (WrongDataException());
+		pos = content.find(setting) + std::strlen(setting.c_str());
+		std::string line = content.substr(pos, content.find(";", pos) - pos);
+		line = trim(line);
+		_config.insert(std::make_pair(setting, line));
+		std::cout << "line:" << _config[setting]  << "$" << std::endl;
+	}
 
 
 
