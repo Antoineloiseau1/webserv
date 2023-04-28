@@ -16,7 +16,7 @@ class Server {
 		int								_requestFd;
 		void							_accepter(int server_fd);
 		void							_handler(int client_fd);
-		// void							_responder(int fd);
+		void							_responder(int client_fd);
 		void 							_watchLoop();
 		struct kevent					_evSet;
 		struct kevent					_evList[32];
