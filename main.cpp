@@ -1,4 +1,5 @@
 #include "Networking/Server.hpp"
+#include "parsing/parsing.hpp"
 
 #define PORT 80
 #define FAMILY AF_INET
@@ -15,7 +16,11 @@ int main(int argc, char *argv[], char *envp[]) {
 		std::cerr << "usage: ./webserv <config_file>" << std::endl;
 		exit(EXIT_FAILURE);
 	}
-	(void)argv;
+
+	data data(static_cast<std::string>(argv[1]));
+	if (data.getData().empty())
+		return 1;
+
 	(void)envp;
 	int ports[2] = {PORT, 4242};
 	Server	server(FAMILY, SOCKTYPE, PROTOCOLE, ports, NBSOCKET);
