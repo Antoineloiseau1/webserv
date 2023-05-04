@@ -23,7 +23,7 @@ void	ListeningSocket::establishConnection(void) {
 
 	/* Getting Ready For Requests */
 	if (listen(this->_fd, SOMAXCONN) == -1) 
-	{ 
+	{
 		std::cerr << "listen: " << strerror(errno) << std::endl; 
 		exit(EXIT_FAILURE); 
 	}

@@ -1,7 +1,7 @@
 #include "Networking/Server.hpp"
 #include "parsing/parsing.hpp"
 
-#define PORT 80
+#define PORT 8080
 #define FAMILY AF_INET
 #define	SOCKTYPE SOCK_STREAM
 #define PROTOCOLE 0

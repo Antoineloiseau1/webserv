@@ -6,7 +6,7 @@
 /*   By: mmidon <marvin@42.fr>                      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/27 10:31:47 by mmidon            #+#    #+#             */
-/*   Updated: 2023/05/02 14:54:17 by mmidon           ###   ########.fr       */
+/*   Updated: 2023/05/04 11:02:32 by mmidon           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,3 +42,5 @@ class data
 			const char	*what() const throw(){ return "wrong data";};
 		};
 };
+
+std::map<std::string, std::string>	requestParse(std::string request);

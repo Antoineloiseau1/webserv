@@ -1,125 +1,51 @@
 #include "Server.hpp"
-#include <fstream>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/event.h>
-#include <sys/time.h>
+#include "../parsing/parsing.hpp"
+
 #define NUSERS 10
+/* A ce stade, pas de monitoring des connections acceptees. pas de pb apparent.*/
+void Server::_watchLoop() {
+	int nev;
+	_socklen = sizeof(_addr);
 
-struct uc {
-    int uc_fd;
-    char *uc_addr;
-} users[NUSERS];
-
-void
-send_msg(int s, std::string message) {
-    char buf[256];
-    int len;
-
-    len = message.length();
-    send(s, buf, len, 0);
-}
-
-void recv_msg(int s) {
-    char buf[30000];
-    size_t bytes_read;
-
-    bytes_read = recv(s, buf, sizeof(buf), 0);
-    if ((int)bytes_read)
-	{	
-		buf[bytes_read] = 0;
-        std::cout << buf << std::endl;
+	while(1) {
+		std::cout << "Waiting for connexion" << std::endl;
+		nev = kevent(_kq, &_evSet, 1, _evList, 32,  NULL);
+		if (nev == -1) {
+			perror("kevent() failed");
+			exit(EXIT_FAILURE);
+		}
+		for (int i = 0; i < nev; ++i) {
+			if (_evList[i].flags & EV_EOF) //si CTRL+C 
+			{
+				std::cout << "EOF: removing client connection from monitoring : " << _evList[i].ident << std::endl;
+				EV_SET(&_evSet, _evList[i].ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+				close(_evList[i].ident);
+			}
+			else if ((int)_evList[i].ident == _socket[0]->getFd()) {
+				_accepter(_evList[i].ident);
+			}
+			else {
+				fd_set read_fds;
+				FD_ZERO(&read_fds);
+				FD_SET(_evList[i].ident, &read_fds);
+				int num_ready = select(_evList[i].ident + 1, &read_fds, NULL, NULL, NULL);
+				if (num_ready == -1) {
+					std::cout << "ERROR : fd "<< _evList[i].ident << " not valid\n";
+					exit(1);
+				}
+				else if (num_ready == 0) {
+					continue ;
+				}
+				else {
+					// At least one socket is ready for reading
+					if (FD_ISSET(_evList[i].ident, &read_fds)) {
+						_handler(_evList[i].ident);
+					}
+				}
+			}
+		}
 	}
 }
-
-int conn_index(int fd) {
-    int index;
-    for (index = 0; index < NUSERS; index++)
-        if (users[index].uc_fd == fd)
-            return index;
-    return -1;
-}
-
-int conn_delete(int fd) {
-    int index;
-    if (fd < 1) 
-		return -1;
-    if ((index = conn_index(fd)) == -1)
-        return -1;
-
-    users[index].uc_fd = 0;
-    users[index].uc_addr = NULL;
-
-    /* free(users[index].uc_addr); */
-    return close(fd);
-}
-
-int conn_add(int fd) {
-    int index;
-    if (fd < 1) 
-		return -1;
-    if ((index = conn_index(0)) == -1)
-        return -1;
-    if (index == NUSERS) {
-        close(fd);
-        return -1;
-    }
-    users[index].uc_fd = fd; /* users file descriptor */
-    users[index].uc_addr = 0; /* user IP address */
-    return 0;
-}
-
-void Server::_watchLoop(int kq) {
-    struct kevent evSet;
-    struct kevent evList[32];
-    int nev, i;
-    struct sockaddr_storage addr;
-    socklen_t socklen = sizeof(addr);
-    int fd;
-
-    while(1) {
-        nev = kevent(kq, NULL, 0, evList, 32, NULL);
-		std::cout << "nev: " << nev << std::endl;
-        if (nev < 1)
-            std::cerr << "kevent: " << strerror(errno) << std::endl;
-        for (i=0; i<nev; i++) {
-            if (evList[i].flags & EV_EOF) {
-            	std::cout << "disconnect\n";
-            	fd = evList[i].ident;
-                EV_SET(&evSet, fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-                if (kevent(kq, &evSet, 1, NULL, 0, NULL) == -1)
-                    std::cerr << "kevent: " << strerror(errno) << std::endl;
-                conn_delete(fd);
-            }
-            else if ((int)evList[i].ident == _socket[0]->getFd()) {
-                fd = accept(evList[i].ident, (struct sockaddr *)&addr,
-                    &socklen);
-                if (fd == -1)
-                    std::cerr << "accept: " << strerror(errno) << std::endl;
-				std::cout << "Accepted connexion: \n" << std::endl;
-                if (conn_add(fd) == 0) {
-                    EV_SET(&evSet, fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
-                    if (kevent(kq, &evSet, 1, NULL, 0, NULL) == -1)
-                        std::cerr << "kevent: " << strerror(errno) << std::endl;
-                    send_msg(fd, "welcome!\n");
-                } else {
-                    printf("connection refused\n");
-                    close(fd);
-                }
-            }
-            else if (evList[i].filter == EVFILT_READ) {
-                recv_msg(evList[i].ident);
-				_responder(fd);
-           		fd = evList[i].ident;
-                EV_SET(&evSet, fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-                if (kevent(kq, &evSet, 1, NULL, 0, NULL) == -1)
-                    std::cerr << "kevent: " << strerror(errno) << std::endl;
-                conn_delete(fd);
-            }
-        }
-    }
-}
-
 
 Server::Server(int domain, int service, int protocole, int *ports, int nbSocket) {
 	for (int i = 0; i < nbSocket; i++)
@@ -127,66 +53,70 @@ Server::Server(int domain, int service, int protocole, int *ports, int nbSocket)
 }
 
 void	Server::start(void) {
-    // open the HTML file
-    // std::ifstream file("./data/www/manon.html");
-    // if (!file.is_open())
-    // {
-    //     std::cerr << "Error opening file" << std::endl;
-    //     exit(EXIT_FAILURE);
-    // }
-
-    // // read the contents of the file into a string variable
-    // std::string content((std::istreambuf_iterator<char>(file)), (std::istreambuf_iterator<char>()));
-	int kq;
-	struct kevent evSet;
-
-	kq = kqueue();
-
-	EV_SET(&evSet, _socket[0]->getFd(), EVFILT_READ, EV_ADD, 0, 0, NULL);
-	if (kevent(kq, &evSet, 1, NULL, 0, NULL) == -1)
-		std::cerr << "kevent: " << strerror(errno) << std::endl;
-
-	_watchLoop(kq);
-	// while(true) {
-	// 	std::cout << "+++++++ Waiting for new connection ++++++++" << std::endl << std::endl;
-	// 	_accepter();
-	// 	_handler();
-	// 	_responder(content);
-	// 	close(this->_requestFd);
+	// open the HTML file
+	// std::ifstream file("./data/www/manon.html");
+	// if (!file.is_open())
+	// {
+	//     std::cerr << "Error opening file" << std::endl;
+	//     exit(EXIT_FAILURE);
 	// }
+
+	// // read the contents of the file into a string variable
+	// std::string content((std::istreambuf_iterator<char>(file)), (std::istreambuf_iterator<char>()));
+	
+	_kq = kqueue();
+	EV_SET(&_evSet, _socket[0]->getFd(), EVFILT_READ, EV_ADD, 0, 0, NULL);
+	_watchLoop();
 }
 
-void	Server::_accepter(void) {
+// Handle incoming CONNECTION and add the connection socket to the kqueue
+void	Server::_accepter(int server_fd) {
 	struct sockaddr_in	address;
 	socklen_t			addrlen;
-	int					r;
 
-	this->_requestFd = accept(this->_socket[0]->getFd(), reinterpret_cast<struct sockaddr *>(&address), &addrlen);
+	this->_requestFd = accept(server_fd, reinterpret_cast<struct sockaddr *>(&address), &addrlen);
 	if (this->_requestFd == -1) {
-		delete this->_socket[0];
 		std::cerr << "accept: " << strerror(errno) << std::endl;
 		exit(EXIT_FAILURE);
 	}
+	fcntl(this->_requestFd, F_SETFL, O_NONBLOCK);
+	EV_SET(&_evSet, this->_requestFd, EVFILT_READ, EV_ADD, 0, 0, NULL);
+}
 
-	//fcntl(this->_requestFd, F_SETFL, O_NONBLOCK);
+// Handle incoming data on accepted connections
+void	Server::_handler(int client_fd) {
 	memset(this->_requestBuffer, 0, sizeof(this->_requestBuffer));
-	r = read(this->_requestFd, this->_requestBuffer, 30000);
-	std::cout << "Server::Accepter: ";
-	if (r > 0) {
-		this->_requestBuffer[r] = 0;
-		std::cout << " ########### Received " << r << " bytes ###########\n" << std::endl;
+	ssize_t n = recv(client_fd, _requestBuffer, sizeof(_requestBuffer), 0);
+	if (n == -1) {
+		perror("read() failed");
+		exit(EXIT_FAILURE);
 	}
-	else
-		std::cout << " bytes = " << r << " nothing to read" << std::endl;
+	else if (n == 0) {
+		// Connection closed by client
+		EV_SET(&_evSet, client_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+		// std::cout << "-----Connection closed by client" << std::endl;
+		// close(client_fd);
+	}
+	else {
+		// main case: handle received data (print for now)
+		_requestBuffer[n] = '\0';
+
+		/* PARSE AND CREATE A REQUEST (work in progress)*/
+
+		printf("Received data from %d \n", client_fd);
+		EV_SET(&_evSet, client_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+		_responder(client_fd, requestParse(_requestBuffer));
+	}
 }
 
-void	Server::_handler(void) {
-	std::cout << this->_requestBuffer << std::endl;
-}
+void	Server::_responder(int client_fd, std::map<std::string, std::string> responder) {
 
-void	Server::_responder(int fd) {
-		std::string hello = "HTTP/1.1 200 OK\n";
-		write(fd , hello.c_str() , hello.length());
+	/////////responder data is parts of response
+	std::string response = responder["status"] + responder["type"] + responder["length"] + responder["connexion"] + responder["body"];//"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 13\r\nConnection: keep-alive\r\n\r\nHello, World!";
+	send(client_fd, response.c_str(), response.length(), 0);
+	// close(client_fd);
+	std::cout << "Response sent" << std::endl;
+	std::cout << response << std::endl;
 }
 
 ListeningSocket	*Server::getSocket(void) const { return this->_socket[0]; }
