@@ -6,7 +6,7 @@
 /*   By: mmidon <marvin@42.fr>                      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/04 10:37:45 by mmidon            #+#    #+#             */
-/*   Updated: 2023/05/04 16:36:36 by mmidon           ###   ########.fr       */
+/*   Updated: 2023/05/05 10:58:46 by mmidon           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,10 +49,8 @@ std::map<std::string, std::string>	requestParse(std::string request)
 
 	response["status"] = "HTTP/1.1 200 OK\r\n";
 	response["type"] = "Content-Type: text/plain\r\n";
-	response["connexion"] = "Connexion: keep-alive\r\n\r\n";
+	response["connexion"] = "Connexion: close\r\n\r\n";
 
-	std::cout << request << std::endl;
-	std::cout << "file :" << file << "$" << std::endl;
 	if (file != "favicon.ico" && file != " " && !file.empty() && file != "" && file != "data/www/style.css") ///terrible conditions bit i'll change it later
 	{
 		response["body"] = cgiHandling(file);

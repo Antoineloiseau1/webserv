@@ -22,6 +22,7 @@ void Server::_watchLoop() {
 				close(_evList[i].ident);
 			}
 			else if ((int)_evList[i].ident == _socket[0]->getFd()) {
+				close(_requestFd);
 				_accepter(_evList[i].ident);
 			}
 			else {
@@ -92,10 +93,7 @@ void	Server::_handler(int client_fd) {
 		exit(EXIT_FAILURE);
 	}
 	else if (n == 0) {
-		// Connection closed by client
 		EV_SET(&_evSet, client_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-		// std::cout << "-----Connection closed by client" << std::endl;
-		// close(client_fd);
 	}
 	else {
 		// main case: handle received data (print for now)
@@ -103,7 +101,6 @@ void	Server::_handler(int client_fd) {
 
 		/* PARSE AND CREATE A REQUEST (work in progress)*/
 
-		printf("Received data from %d \n", client_fd);
 		EV_SET(&_evSet, client_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
 		_responder(client_fd, requestParse(_requestBuffer));
 	}
@@ -114,9 +111,6 @@ void	Server::_responder(int client_fd, std::map<std::string, std::string> respon
 	/////////responder data is parts of response
 	std::string response = responder["status"] + responder["type"] + responder["length"] + responder["connexion"] + responder["body"];//"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 13\r\nConnection: keep-alive\r\n\r\nHello, World!";
 	send(client_fd, response.c_str(), response.length(), 0);
-	// close(client_fd);
-	std::cout << "Response sent" << std::endl;
-	std::cout << response << std::endl;
 }
 
 ListeningSocket	*Server::getSocket(void) const { return this->_socket[0]; }
