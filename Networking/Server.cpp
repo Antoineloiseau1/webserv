@@ -8,7 +8,6 @@ void Server::_watchLoop() {
 	_socklen = sizeof(_addr);
 
 	while(1) {
-		std::cout << "Waiting for connexion" << std::endl;
 		nev = kevent(_kq, &_evSet, 1, _evList, 32,  NULL);
 		if (nev == -1) {
 			perror("kevent() failed");
