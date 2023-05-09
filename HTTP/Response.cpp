@@ -1,7 +1,43 @@
 #include "Response.hpp"
+#include <unistd.h>
+#include <stdlib.h>
 
-Response::Response(Request &request) : _request(request)
+void	Response::handleCgi() {
+	int pipefd[2];
+
+	std::string arg1 = "form_handler.cgi";
+	const char* cmd1_cstr = arg1.c_str();
+	std::string arg2 = _request.getBody();
+	const char* cmd2_cstr = arg2.c_str();
+	char* const args[] = { const_cast<char*>(cmd1_cstr), const_cast<char*>(cmd2_cstr), NULL };
+
+	if (pipe(pipefd) == -1) {
+		std::cerr << "Erreur lors de la création de la pipe\n";
+		close(_server.getSocket()->getFd());
+		return ;
+	}
+
+	pid_t pid = fork();
+	if (pid == -1) {
+		std::cerr << "Erreur lors du fork\n";
+		close(_server.getSocket()->getFd());
+		close(pipefd[0]);
+		close(pipefd[1]);
+		return ;	
+	}
+
+	if (pid == 0) { // Processus enfant (script CGI)
+		pipefd[1] = _server.getRequestFd();
+		dup2(pipefd[1], STDOUT_FILENO);
+		execve("form_handler.cgi", args, _server.getEnvp());
+	}
+	close(pipefd[1]);
+	close(pipefd[0]);
+}
+
+Response::Response(Request &request, Server &server) : _server(server), _request(request)
 {
+	try {
 	std::string	file = request.getPath();
 	_response["status"] = "200 OK\r\n";
 	if (file != "favicon.ico" && file != " " && !file.empty() && file != "" && file != "data/www/style.css")
@@ -14,6 +50,10 @@ Response::Response(Request &request) : _request(request)
 	_response["type"] = "Content-Type: text/html\r\n"; //NEED TO PARSE
 	_response["version"] = request.getVersion();
 	_response["connexion"] = "Connexion: close\r\n\r\n";
+	}
+	catch( std::out_of_range &e) {
+		std::cout << "ERROR: " << e.what() << std::endl;
+	}
 }
 
 Response::~Response() {}
@@ -21,10 +61,10 @@ Response::~Response() {}
 std::string	Response::openHtmlFile(std::string f)
 {
 	std::ifstream file(f);
-	std::cout << "-- TEST 1 = " << f << "\n";
+	std::cout << "-Opening HTML file : " << f << "\n";
     if (!file.is_open())
     {
-		std::cout << "-- TEST 1\n";
+		std::cout << "Trying to open error page\n";
 		return (openHtmlFile("data/www/error.html"));
     }
 
@@ -32,7 +72,7 @@ std::string	Response::openHtmlFile(std::string f)
     std::string content((std::istreambuf_iterator<char>(file)), (std::istreambuf_iterator<char>()));
 	if (content.empty())
 	{
-		std::cout << "-- TEST 22\n";
+		std::cout << "Trying to open error page\n";
 		return (openHtmlFile("data/www/error.html"));
     }
 	return content;
@@ -40,24 +80,25 @@ std::string	Response::openHtmlFile(std::string f)
 
 std::map<std::string, std::string>	Response::getMap() { return _response; }
 
-GetResponse::GetResponse(Request request) : Response(request) {}
+GetResponse::GetResponse(Request request, Server& server) : Response(request, server) {}
 
 GetResponse::~GetResponse() {}
 
-void	GetResponse::executor() {
+void	GetResponse::executor() {}
 
-	std::cout << "EXECUTE GET REQUEST\n";
+PostResponse::PostResponse(Request request, Server& server) : Response(request, server) {
+	executor();
 }
-
-PostResponse::PostResponse(Request request) : Response(request) {}
 
 PostResponse::~PostResponse() {}
 
 void	PostResponse::executor() {
+    //   nom=a&prenom=a&email=a%40q&ville=a
 	std::cout << "EXECUTE POST REQUEST\n";
+	handleCgi();
 }
 
-DeleteResponse::DeleteResponse(Request request) : Response(request) {}
+DeleteResponse::DeleteResponse(Request request, Server& server) : Response(request, server) {}
 
 DeleteResponse::~DeleteResponse() {}
 

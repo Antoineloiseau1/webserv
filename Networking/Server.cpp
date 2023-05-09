@@ -1,8 +1,14 @@
 #include "Server.hpp"
 #include "../parsing/parsing.hpp"
 #include "../HTTP/Response.hpp"
+#include <exception>
 
 #define NUSERS 10
+
+int	Server::getRequestFd() const { return _requestFd; }
+
+char	**Server::getEnvp() const { return _envp; }
+
 /* A ce stade, pas de monitoring des connections acceptees. pas de pb apparent.*/
 void Server::_watchLoop() {
 	int nev;
@@ -48,7 +54,7 @@ void Server::_watchLoop() {
 	}
 }
 
-Server::Server(int domain, int service, int protocole, int *ports, int nbSocket) {
+Server::Server(int domain, int service, int protocole, int *ports, int nbSocket, char **envp) : _envp(envp) {
 	for (int i = 0; i < nbSocket; i++)
 		this->_socket.push_back(new ListeningSocket(domain, service, protocole, ports[i]));
 }
@@ -93,7 +99,7 @@ void	Server::_handler(int client_fd) {
 
 		EV_SET(&_evSet, client_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
 		printf("request : %s\n", _requestBuffer);
-		_responder(client_fd, requestParse(_requestBuffer));
+		_responder(client_fd, requestParse(_requestBuffer, *this));
 	}
 }
 

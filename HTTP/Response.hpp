@@ -7,20 +7,25 @@
 #include <sstream>
 #include <fstream>
 #include "Request.hpp"
+#include "../Networking/Server.hpp"
+
+class	Server;
 
 class Response
 {
 	protected:
+		Server&								_server;
 		Request&							_request;
 		std::map<std::string, std::string>	_response;
 	public:
-		Response(Request &request);
+		Response(Request &request, Server &server);
 		virtual ~Response();
 
 		virtual void	executor() = 0;
 
 		std::string	openHtmlFile(std::string f);
 		std::map<std::string, std::string>	getMap();
+		void								handleCgi();
 };
 
 class GetResponse : public Response
@@ -28,7 +33,7 @@ class GetResponse : public Response
 	private:
 		
 	public:
-		GetResponse(Request request);
+		GetResponse(Request request, Server &server);
 		~GetResponse();
 
 		void	executor();		
@@ -40,7 +45,7 @@ class PostResponse : public Response
 	private:
 		
 	public:
-		PostResponse(Request request);
+		PostResponse(Request request, Server &server);
 		~PostResponse();
 
 		void	executor();		
@@ -52,7 +57,7 @@ class DeleteResponse : public Response
 	private:
 		
 	public:
-		DeleteResponse(Request request);
+		DeleteResponse(Request request, Server &server);
 		~DeleteResponse();
 
 		void	executor();		

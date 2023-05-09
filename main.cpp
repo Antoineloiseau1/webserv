@@ -20,10 +20,9 @@ int main(int argc, char *argv[], char *envp[]) {
 	data data(static_cast<std::string>(argv[1]));
 	if (data.getData().empty())
 		return 1;
-
-	(void)envp;
 	int ports[2] = {PORT, 4242};
-	Server	server(FAMILY, SOCKTYPE, PROTOCOLE, ports, NBSOCKET);
+	Server	server(FAMILY, SOCKTYPE, PROTOCOLE, ports, NBSOCKET, envp);
+	
 	server.start();
 
 	return 0;

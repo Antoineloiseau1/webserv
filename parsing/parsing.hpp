@@ -44,4 +44,4 @@ class data
 		};
 };
 
-Response	*requestParse(std::string request);
+Response	*requestParse(std::string request, Server &server);

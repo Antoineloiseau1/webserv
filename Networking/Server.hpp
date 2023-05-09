@@ -23,6 +23,8 @@
 #include <sys/time.h>
 #include "../HTTP/Response.hpp"
 
+class Response;
+
 class Server {
 	private:
 		char							_requestBuffer[30000];
@@ -37,14 +39,17 @@ class Server {
 		struct sockaddr_storage			_addr;
 		socklen_t						_socklen;
 		int								_kq;
+		char							**_envp;
 
 
 
 	public:
-		Server(int domain, int service, int protocole, int *ports, int nbSocket);
+		Server(int domain, int service, int protocole, int *ports, int nbSocket, char **envp);
 		~Server(void);
 		ListeningSocket	*getSocket(void) const;
 		void			start(void);
+		int				getRequestFd() const;
+		char			**getEnvp() const;
 };
 
 #endif
