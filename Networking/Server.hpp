@@ -21,6 +21,7 @@
 #include <sys/types.h>
 #include <sys/event.h>
 #include <sys/time.h>
+#include "../HTTP/Response.hpp"
 
 class Server {
 	private:
@@ -29,7 +30,7 @@ class Server {
 		int								_requestFd;
 		void							_accepter(int server_fd);
 		void							_handler(int client_fd);
-		void							_responder(int client_fd, std::map<std::string, std::string> responder);
+		void							_responder(int client_fd, Response *responder);
 		void 							_watchLoop();
 		struct kevent					_evSet;
 		struct kevent					_evList[32];

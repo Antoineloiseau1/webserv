@@ -15,19 +15,9 @@
 #include <string>
 #include <sstream>
 #include <fstream>
+#include "../HTTP/Request.hpp"
+#include "../HTTP/Response.hpp"
 
-std::string	cgiHandling(std::string f)
-{
-	std::ifstream file(f);
-    if (!file.is_open())
-    {
-		return (cgiHandling("data/www/error.html"));
-    }
-
-    // read the contents of the file into a string variable
-    std::string content((std::istreambuf_iterator<char>(file)), (std::istreambuf_iterator<char>()));
-	return content;
-}
 
 std::string	cutRequest(std::istringstream &iss, std::string limiter) //cut it in little parts easy to understand and to interpret
 {
@@ -40,26 +30,34 @@ std::string	cutRequest(std::istringstream &iss, std::string limiter) //cut it in
 	return result;
 }
 
-std::map<std::string, std::string>	requestParse(std::string request)
+Response	*requestParse(std::string request)
 {
-	std::map<std::string, std::string> response;
-	std::istringstream iss(request);
-	std::string file = cutRequest(iss, "HTTP");
+	//request == par ex, GET /data/www/about.html HTTP/1.1
+	Response	*ret = 0;
+	Request	clientRequest(request);
+	std::string	type[] = { "GET", "POST", "DELETE" };
+	int a = 0;
 
-	response["status"] = "HTTP/1.1 200 OK\r\n";
-	response["type"] = "Content-Type: text/plain\r\n";
-	response["connexion"] = "Connexion: close\r\n\r\n";
-
-	if (file != "favicon.ico" && file != " " && !file.empty() && file != "" && file != "data/www/style.css") ///terrible conditions bit i'll change it later
-	{
-		response["body"] = cgiHandling(file);
-		response["type"] = "Content-Type: text/html\r\n";
+	for (int i = 0; i < 3 ; i++) {
+		if (clientRequest.getType() == type[i])
+			a = i + 1;
 	}
-	else
-		response["body"] = "Hello, World!";
-	response["length"] = "Content-Length: ";
-	response["length"] += std::to_string(std::strlen(response["body"].c_str()));
-	response["length"] += "\r";
+	switch (a)
+	{
+		case 1:
+			ret = new GetResponse( request );
+			break;
 
-	return response;
+		case 2:
+			ret = new PostResponse( request );
+			break;
+
+		case 3:
+			ret = new DeleteResponse( request );
+			break;
+		
+		default:
+			std::cout << "Bad Request" << std::endl;
+	}
+	return ret;	
 }

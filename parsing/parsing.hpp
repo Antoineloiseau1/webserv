@@ -16,6 +16,7 @@
 #include <vector>
 #include <iostream>
 #include <exception>
+#include "../HTTP/Response.hpp"
 
 class data
 {
@@ -43,4 +44,4 @@ class data
 		};
 };
 
-std::map<std::string, std::string>	requestParse(std::string request);
+Response	*requestParse(std::string request);

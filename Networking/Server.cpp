@@ -1,5 +1,6 @@
 #include "Server.hpp"
 #include "../parsing/parsing.hpp"
+#include "../HTTP/Response.hpp"
 
 #define NUSERS 10
 /* A ce stade, pas de monitoring des connections acceptees. pas de pb apparent.*/
@@ -96,11 +97,12 @@ void	Server::_handler(int client_fd) {
 	}
 }
 
-void	Server::_responder(int client_fd, std::map<std::string, std::string> responder) {
+void	Server::_responder(int client_fd, Response *response) {
 
 	/////////responder data is parts of response
-	std::string response = responder["status"] + responder["type"] + responder["length"] + responder["connexion"] + responder["body"];//"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 13\r\nConnection: keep-alive\r\n\r\nHello, World!";
-	send(client_fd, response.c_str(), response.length(), 0);
+	std::map<std::string, std::string> responder = response->getMap();
+	std::string res = responder["version"] + ' ' + responder["status"] + responder["type"] + responder["length"] + responder["connexion"] + responder["body"];//"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 13\r\nConnection: keep-alive\r\n\r\nHello, World!";
+	send(client_fd, res.c_str(), res.length(), 0);
 }
 
 ListeningSocket	*Server::getSocket(void) const { return this->_socket[0]; }
