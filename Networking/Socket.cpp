@@ -18,7 +18,7 @@ Socket::Socket(int domain, int service, int protocole, int port) {
 	}
 	int opt = 1;
 	if (setsockopt(_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
-		perror("setsockopt");
+		perror("setsockopt : ");
 		exit(EXIT_FAILURE);
 	}
 }

@@ -53,17 +53,7 @@ Server::Server(int domain, int service, int protocole, int *ports, int nbSocket)
 }
 
 void	Server::start(void) {
-	// open the HTML file
-	// std::ifstream file("./data/www/manon.html");
-	// if (!file.is_open())
-	// {
-	//     std::cerr << "Error opening file" << std::endl;
-	//     exit(EXIT_FAILURE);
-	// }
 
-	// // read the contents of the file into a string variable
-	// std::string content((std::istreambuf_iterator<char>(file)), (std::istreambuf_iterator<char>()));
-	
 	_kq = kqueue();
 	EV_SET(&_evSet, _socket[0]->getFd(), EVFILT_READ, EV_ADD, 0, 0, NULL);
 	_watchLoop();
@@ -101,6 +91,7 @@ void	Server::_handler(int client_fd) {
 		/* PARSE AND CREATE A REQUEST (work in progress)*/
 
 		EV_SET(&_evSet, client_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+		printf("request : %s\n", _requestBuffer);
 		_responder(client_fd, requestParse(_requestBuffer));
 	}
 }

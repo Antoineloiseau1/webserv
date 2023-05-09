@@ -6,7 +6,7 @@
 /*   By: mmidon <marvin@42.fr>                      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/04 10:37:45 by mmidon            #+#    #+#             */
-/*   Updated: 2023/05/05 10:58:46 by mmidon           ###   ########.fr       */
+/*   Updated: 2023/05/09 10:26:49 by mmidon           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,8 +21,7 @@ std::string	cgiHandling(std::string f)
 	std::ifstream file(f);
     if (!file.is_open())
     {
-        std::cerr << "Error opening file" << std::endl;
-        exit(EXIT_FAILURE);
+		return (cgiHandling("data/www/error.html"));
     }
 
     // read the contents of the file into a string variable
