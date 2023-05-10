@@ -15,40 +15,32 @@ void Server::_watchLoop() {
 	_socklen = sizeof(_addr);
 
 	while(1) {
-		nev = kevent(_kq, &_evSet, 1, _evList, 32,  NULL);
-		if (nev == -1) {
+
+		nev = kevent(_kq, NULL, 0, _evList, 64,  NULL);
+		if (nev < 1) {
 			perror("kevent() failed");
 			exit(EXIT_FAILURE);
 		}
-		for (int i = 0; i < nev; ++i) {
+		for (int i = 0; i < nev; i++) {
 			if (_evList[i].flags & EV_EOF) //si CTRL+C 
 			{
 				std::cout << "EOF: removing client connection from monitoring : " << _evList[i].ident << std::endl;
 				EV_SET(&_evSet, _evList[i].ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+				if (kevent(_kq, &_evSet, 1, NULL, 0, NULL) < 0) {
+          			fprintf(stderr, "Problem adding kevent listener for client: %s\n",
+					strerror(errno));
+				}
+				std::cout << "------- Closing fd popo: "<< _evList[i].ident << '\n';
 				close(_evList[i].ident);
+				
 			}
 			else if ((int)_evList[i].ident == _socket[0]->getFd()) {
-				close(_requestFd);
+				// std::cout << "----*--- Closing fd bibou: "<< _requestFd << '\n';
+				// close(_requestFd);
 				_accepter(_evList[i].ident);
 			}
 			else {
-				fd_set read_fds;
-				FD_ZERO(&read_fds);
-				FD_SET(_evList[i].ident, &read_fds);
-				int num_ready = select(_evList[i].ident + 1, &read_fds, NULL, NULL, NULL);
-				if (num_ready == -1) {
-					std::cout << "ERROR : fd "<< _evList[i].ident << " not valid\n";
-					exit(1);
-				}
-				else if (num_ready == 0) {
-					continue ;
-				}
-				else {
-					// At least one socket is ready for reading
-					if (FD_ISSET(_evList[i].ident, &read_fds)) {
-						_handler(_evList[i].ident);
-					}
-				}
+				_handler(_evList[i].ident);
 			}
 		}
 	}
@@ -63,33 +55,54 @@ void	Server::start(void) {
 
 	_kq = kqueue();
 	EV_SET(&_evSet, _socket[0]->getFd(), EVFILT_READ, EV_ADD, 0, 0, NULL);
+	if (kevent(_kq, &_evSet, 1, NULL, 0, NULL) < 0) {
+		exit(1);
+		std::cout << "EROR\n";
+  	}
 	_watchLoop();
 }
 
 // Handle incoming CONNECTION and add the connection socket to the kqueue
 void	Server::_accepter(int server_fd) {
 	struct sockaddr_in	address;
-	socklen_t			addrlen;
+	socklen_t			addrlen = sizeof(address);
 
-	this->_requestFd = accept(server_fd, reinterpret_cast<struct sockaddr *>(&address), &addrlen);
+	_requestFd = accept(server_fd, reinterpret_cast<struct sockaddr *>(&address), &addrlen);
+	std::cout << ">>>>>>>>>> . TEST request fd : "<< _requestFd << "\n"; 
 	if (this->_requestFd == -1) {
 		std::cerr << "accept: " << strerror(errno) << std::endl;
 		exit(EXIT_FAILURE);
 	}
-	fcntl(this->_requestFd, F_SETFL, O_NONBLOCK);
-	EV_SET(&_evSet, this->_requestFd, EVFILT_READ, EV_ADD, 0, 0, NULL);
+	fcntl(_requestFd, F_SETFL, O_NONBLOCK);
+	int opt = 1;
+	if (setsockopt(_requestFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
+		perror("setsockopt : ");
+		exit(EXIT_FAILURE);
+	}
+	EV_SET(&_evSet, _requestFd, EVFILT_READ, EV_ADD, 0, 0, NULL);
+	if (kevent(_kq, &_evSet, 1, NULL, 0, NULL) < 0) {
+        fprintf(stderr, "Problem adding kevent for client: %s\n",
+        strerror(errno));
+    }
 }
 
 // Handle incoming data on accepted connections
 void	Server::_handler(int client_fd) {
 	memset(this->_requestBuffer, 0, sizeof(this->_requestBuffer));
 	ssize_t n = recv(client_fd, _requestBuffer, sizeof(_requestBuffer), 0);
-	if (n == -1) {
+	if (n < 0) {
 		perror("read() failed");
-		exit(EXIT_FAILURE);
+		std::cout << "pour client_fd : "<< client_fd << '\n';
+		std::cout << "Closing fd lala: "<< client_fd << '\n';
+		close(client_fd);
+		// exit(EXIT_FAILURE);
 	}
 	else if (n == 0) {
 		EV_SET(&_evSet, client_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+		if (kevent(_kq, &_evSet, 1, NULL, 0, NULL) < 0) {
+			fprintf(stderr, "Problem adding kevent listener for client: %s\n",
+			strerror(errno));
+		}
 	}
 	else {
 		// main case: handle received data (print for now)

@@ -35,7 +35,7 @@ class Server {
 		void							_responder(int client_fd, Response *responder);
 		void 							_watchLoop();
 		struct kevent					_evSet;
-		struct kevent					_evList[32];
+		struct kevent					_evList[64];
 		struct sockaddr_storage			_addr;
 		socklen_t						_socklen;
 		int								_kq;
