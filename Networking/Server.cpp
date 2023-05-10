@@ -16,18 +16,18 @@ void Server::_watchLoop() {
 
 	while(1) {
 
-		nev = kevent(_kq, NULL, 0, _evList, 64,  NULL);
+		nev = kevent(_kq, NULL, 0, _evList, 32,  NULL);
 		if (nev < 1) {
 			perror("kevent() failed");
 			exit(EXIT_FAILURE);
 		}
 		for (int i = 0; i < nev; i++) {
-			if (_evList[i].flags & EV_EOF) //si CTRL+C 
+			if (_evList[i].flags & EV_EOF)
 			{
 				std::cout << "EOF: removing client connection from monitoring : " << _evList[i].ident << std::endl;
 				EV_SET(&_evSet, _evList[i].ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
 				if (kevent(_kq, &_evSet, 1, NULL, 0, NULL) < 0) {
-          			fprintf(stderr, "Problem adding kevent listener for client: %s\n",
+					fprintf(stderr, "Problem adding kevent listener for client: %s\n",
 					strerror(errno));
 				}
 				std::cout << "------- Closing fd popo: "<< _evList[i].ident << '\n';
@@ -35,12 +35,15 @@ void Server::_watchLoop() {
 				
 			}
 			else if ((int)_evList[i].ident == _socket[0]->getFd()) {
-				// std::cout << "----*--- Closing fd bibou: "<< _requestFd << '\n';
+				std::cout << "----*--- in accepter if: "<< _requestFd << '\n';
 				// close(_requestFd);
 				_accepter(_evList[i].ident);
 			}
 			else {
-				_handler(_evList[i].ident);
+				if (_evList[i].flags & EVFILT_READ) {
+					_handler(_evList[i].ident);
+				}
+				
 			}
 		}
 	}
@@ -88,6 +91,7 @@ void	Server::_accepter(int server_fd) {
 
 // Handle incoming data on accepted connections
 void	Server::_handler(int client_fd) {
+	std::cout << "IN HANDLER, FD= "<< client_fd<< std::endl;
 	memset(this->_requestBuffer, 0, sizeof(this->_requestBuffer));
 	ssize_t n = recv(client_fd, _requestBuffer, sizeof(_requestBuffer), 0);
 	if (n < 0) {
@@ -110,7 +114,13 @@ void	Server::_handler(int client_fd) {
 
 		/* PARSE AND CREATE A REQUEST (work in progress)*/
 
-		EV_SET(&_evSet, client_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+		// EV_SET(&_evSet, client_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+		// if (kevent(_kq, &_evSet, 1, NULL, 0, NULL) < 0) {
+		// 	fprintf(stderr, "Problem adding kevent listener for client: %s\n",
+		// 	strerror(errno));
+		// }
+		// std::cout << "------- Closing fd handler: "<< client_fd << '\n';
+		// close(client_fd);
 		printf("request : %s\n", _requestBuffer);
 		_responder(client_fd, requestParse(_requestBuffer, *this));
 	}
