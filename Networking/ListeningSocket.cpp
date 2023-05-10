@@ -5,8 +5,8 @@
 ListeningSocket::ListeningSocket(int domain, int service, int protocole, int port) : Socket(domain, service, protocole, port) {
 
 	/* Setting Socket Options */
-	struct linger sl;
-	setsockopt(this->_fd, SOL_SOCKET, SO_REUSEPORT, &sl, sizeof(this->_fd));
+	// struct linger sl;
+	// setsockopt(this->_fd, SOL_SOCKET, SO_REUSEPORT, &sl, sizeof(this->_fd));
 
 	/* Binding address and starting to listen*/
 	establishConnection();

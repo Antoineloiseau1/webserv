@@ -5,6 +5,7 @@
 
 #define NUSERS 10
 
+static int test;
 int	Server::getRequestFd() const { return _requestFd; }
 
 char	**Server::getEnvp() const { return _envp; }
@@ -21,22 +22,21 @@ void Server::_watchLoop() {
 			perror("kevent() failed");
 			exit(EXIT_FAILURE);
 		}
+		std::cout << "++++ Number of events = "<< nev << std::endl;
 		for (int i = 0; i < nev; i++) {
 			if (_evList[i].flags & EV_EOF)
-			{
-				std::cout << "EOF: removing client connection from monitoring : " << _evList[i].ident << std::endl;
-				EV_SET(&_evSet, _evList[i].ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-				if (kevent(_kq, &_evSet, 1, NULL, 0, NULL) < 0) {
-					fprintf(stderr, "Problem adding kevent listener for client: %s\n",
-					strerror(errno));
+				{
+					std::cout << "EOF: removing client connection from monitoring : " << _evList[i].ident << std::endl;
+					EV_SET(&_evSet, _evList[i].ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+					if (kevent(_kq, &_evSet, 1, NULL, 0, NULL) < 0) {
+						fprintf(stderr, "Problem adding kevent listener for client: %s\n",
+						strerror(errno));
+					}
+					std::cout << "------- Closing fd pop: "<< _evList[i].ident << '\n';
+					close(_evList[i].ident);
 				}
-				std::cout << "------- Closing fd popo: "<< _evList[i].ident << '\n';
-				close(_evList[i].ident);
-				
-			}
 			else if ((int)_evList[i].ident == _socket[0]->getFd()) {
-				std::cout << "----*--- in accepter if: "<< _requestFd << '\n';
-				// close(_requestFd);
+				std::cout << "----*--- in accepter if: "<< _evList[i].ident << '\n';
 				_accepter(_evList[i].ident);
 			}
 			else {
@@ -96,8 +96,12 @@ void	Server::_handler(int client_fd) {
 	ssize_t n = recv(client_fd, _requestBuffer, sizeof(_requestBuffer), 0);
 	if (n < 0) {
 		perror("read() failed");
-		std::cout << "pour client_fd : "<< client_fd << '\n';
 		std::cout << "Closing fd lala: "<< client_fd << '\n';
+		EV_SET(&_evSet, client_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+		if (kevent(_kq, &_evSet, 1, NULL, 0, NULL) < 0) {
+			fprintf(stderr, "Problem adding kevent listener for client: %s\n",
+			strerror(errno));
+		}
 		close(client_fd);
 		// exit(EXIT_FAILURE);
 	}
@@ -111,16 +115,7 @@ void	Server::_handler(int client_fd) {
 	else {
 		// main case: handle received data (print for now)
 		_requestBuffer[n] = '\0';
-
-		/* PARSE AND CREATE A REQUEST (work in progress)*/
-
-		// EV_SET(&_evSet, client_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-		// if (kevent(_kq, &_evSet, 1, NULL, 0, NULL) < 0) {
-		// 	fprintf(stderr, "Problem adding kevent listener for client: %s\n",
-		// 	strerror(errno));
-		// }
-		// std::cout << "------- Closing fd handler: "<< client_fd << '\n';
-		// close(client_fd);
+		std::cout << "========= "<< test++ << std::endl;
 		printf("request : %s\n", _requestBuffer);
 		_responder(client_fd, requestParse(_requestBuffer, *this));
 	}
@@ -132,6 +127,12 @@ void	Server::_responder(int client_fd, Response *response) {
 	std::map<std::string, std::string> responder = response->getMap();
 	std::string res = responder["version"] + ' ' + responder["status"] + responder["type"] + responder["length"] + responder["connexion"] + responder["body"];//"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 13\r\nConnection: keep-alive\r\n\r\nHello, World!";
 	send(client_fd, res.c_str(), res.length(), 0);
+	EV_SET(&_evSet, client_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+	if (kevent(_kq, &_evSet, 1, NULL, 0, NULL) < 0) {
+		fprintf(stderr, "Problem adding kevent listener for client: %s\n",
+		strerror(errno));
+	}
+	close(client_fd);
 }
 
 ListeningSocket	*Server::getSocket(void) const { return this->_socket[0]; }
