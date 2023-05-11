@@ -1,6 +1,7 @@
 #include "Response.hpp"
 #include <unistd.h>
 #include <stdlib.h>
+#include <errno.h>
 
 void	Response::handleCgi() {
 	int pipefd[2];
@@ -16,6 +17,8 @@ void	Response::handleCgi() {
 		close(_server.getSocket()->getFd());
 		return ;
 	}
+	std::cout << "PIPE a fermer = " <<  pipefd[1] << std::endl;
+	close(pipefd[0]);
 
 	pid_t pid = fork();
 	if (pid == -1) {
@@ -29,10 +32,14 @@ void	Response::handleCgi() {
 	if (pid == 0) { // Processus enfant (script CGI)
 		pipefd[1] = _server.getRequestFd();
 		dup2(pipefd[1], STDOUT_FILENO);
-		execve("form_handler.cgi", args, _server.getEnvp());
+		if (execve("data/CGI/form_handler.cgi", args, _server.getEnvp()) == -1)
+		{
+			std::cerr << "error: " << strerror(errno) << std::endl;
+		}
 	}
 	close(pipefd[1]);
 	close(pipefd[0]);
+	
 }
 
 Response::Response(Request &request, Server &server) : _server(server), _request(request)
@@ -45,7 +52,7 @@ Response::Response(Request &request, Server &server) : _server(server), _request
 	else
 		_response["body"] = "Hello World";
 	_response["length"] = "Content-Length: ";
-	_response["length"] += std::to_string(std::strlen(_response["body"].c_str()));
+	_response["length"] += std::to_string(std::strlen(_response[	"body"].c_str()));
 	_response["length"] += "\r";
 	_response["type"] = "Content-Type: text/html\r\n"; //NEED TO PARSE
 	_response["version"] = request.getVersion();
