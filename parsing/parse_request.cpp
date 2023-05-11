@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parse_request.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mmidon <marvin@42.fr>                      +#+  +:+       +#+        */
+/*   By: anloisea <anloisea@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/04 10:37:45 by mmidon            #+#    #+#             */
-/*   Updated: 2023/05/09 10:26:49 by mmidon           ###   ########.fr       */
+/*   Updated: 2023/05/11 16:22:30 by anloisea         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,7 +59,8 @@ Response	*requestParse(std::string request, Server &server)
 			break;
 		
 		default:
-			std::cout << "Bad Request" << std::endl;
+			std::cout << "############# Bad Request Received #############\n";
+			ret = new BadRequestError( request, server);
 	}
 	
 	return ret;

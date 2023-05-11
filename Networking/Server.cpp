@@ -113,13 +113,9 @@ void	Server::_handler(int client_fd) {
 }
 
 void	Server::_responder(int client_fd, Response *response) {
-
-	/////////responder data is parts of response
-	if (dynamic_cast<GetResponse*>(response)) {
-		std::map<std::string, std::string> responder = response->getMap();
-		std::string res = responder["version"] + ' ' + responder["status"] + responder["type"] + responder["length"] + responder["connexion"] + responder["body"];//"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 13\r\nConnection: keep-alive\r\n\r\nHello, World!";
-		send(client_fd, res.c_str(), res.length(), 0);
-	}
+	std::string res = response->buildResponse();
+	std::cout << "Response from the server:\n" << res << std::endl;
+	send(client_fd, res.c_str(), res.length(), 0);
 	EV_SET(&_evSet, client_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
 	if (kevent(_kq, &_evSet, 1, NULL, 0, NULL) < 0) {
 		fprintf(stderr, "Problem adding kevent listener for client RESPON: %s\n",

@@ -3,6 +3,79 @@
 #include <stdlib.h>
 #include <errno.h>
 
+Response::Response(Request &request, Server &server) : _server(server), _request(request) {
+	_response["version"] = _request.getVersion();
+	_response["connexion"] = "Connexion: close\r\n\r\n";
+}
+Response::~Response() {}
+
+GetResponse::GetResponse(Request request, Server& server) : Response(request, server) {
+
+
+		std::string	file = request.getPath();
+		if (file != "favicon.ico" && file != " " && !file.empty() && file != "" && file != "data/www/style.css")
+			_response["body"] = openHtmlFile(file);
+		else
+			_response["body"] = "GetResponse: Not handled yet\r\n";
+		_response["length"] = "Content-Length: ";
+		_response["length"] += std::to_string(std::strlen(_response["body"].c_str()));
+		_response["length"] += "\r\n";
+		_response["type"] = "Content-Type: text/html\r\n"; //NEED TO PARSE
+}
+
+GetResponse::~GetResponse() {}
+
+void	GetResponse::executor() {}
+
+PostResponse::PostResponse(Request request, Server& server) : Response(request, server) {
+
+		std::string	file = request.getPath();
+		if (file != "favicon.ico" && file != " " && !file.empty() && file != "" && file != "data/www/style.css")
+			_response["body"] = openHtmlFile(file);
+		else
+			_response["body"] = "GetResponse: Not handled yet\r\n";
+		_response["length"] = "Content-Length: ";
+		_response["length"] += std::to_string(std::strlen(_response["body"].c_str()));
+		_response["length"] += "\r\n";
+		_response["type"] = "Content-Type: text/html\r\n"; //NEED TO PARSE
+	executor();
+}
+
+PostResponse::~PostResponse() {}
+
+void	PostResponse::executor() {
+    //   nom=a&prenom=a&email=a%40q&ville=a
+	std::cout << "EXECUTE POST REQUEST\n";
+	handleCgi();
+}
+
+DeleteResponse::DeleteResponse(Request request, Server& server) : Response(request, server) {}
+
+DeleteResponse::~DeleteResponse() {}
+
+void	DeleteResponse::executor() {
+	std::cout << "EXECUTE Delete REQUEST\n";
+}
+
+std::string	Response::openHtmlFile(std::string f)
+{
+	std::ifstream file(f);
+    if (!file.is_open())
+	{
+		_response["status"] = " 404 Not Found";
+		return (openHtmlFile("data/www/error/404.html"));
+	}
+	else
+	{
+		_response["status"] = " 200 OK";
+    	// read the contents of the file into a string variable
+    	std::string content((std::istreambuf_iterator<char>(file)), (std::istreambuf_iterator<char>()));
+		return content;
+	}
+}
+
+std::map<std::string, std::string>	Response::getMap() { return _response; }
+
 void	Response::handleCgi() {
 	int pipefd[2];
 
@@ -39,76 +112,29 @@ void	Response::handleCgi() {
 	}
 	close(pipefd[1]);
 	close(pipefd[0]);
-	
 }
 
-Response::Response(Request &request, Server &server) : _server(server), _request(request)
-{
-	try {
-	std::string	file = request.getPath();
-	_response["status"] = "200 OK\r\n";
-	if (file != "favicon.ico" && file != " " && !file.empty() && file != "" && file != "data/www/style.css")
-		_response["body"] = openHtmlFile(request.getPath());
-	else
-		_response["body"] = "Hello World";
+std::string	Response::buildResponse(void) {
+	return (_response["version"] + _response["status"] + _response["type"] + _response["length"] + _response["connexion"] + _response["body"]);
+}
+
+/********************************* BadRequestError Class ***************************************/
+BadRequestError::BadRequestError(Request request, Server& server) : Response(request, server) {
+
+	std::ifstream error("data/www/error/400.html");
+    std::string content((std::istreambuf_iterator<char>(error)), (std::istreambuf_iterator<char>()));
+
+	_response["version"] = _request.getVersion();
+	_response["status"] = " 400 Bad Request\r\n";
+	_response["body"] = content;
+	_response["type"] = "Content-Type: text/html\r\n";
 	_response["length"] = "Content-Length: ";
-	_response["length"] += std::to_string(std::strlen(_response[	"body"].c_str()));
-	_response["length"] += "\r";
-	_response["type"] = "Content-Type: text/html\r\n"; //NEED TO PARSE
-	_response["version"] = request.getVersion();
+	_response["length"] += std::to_string(std::strlen(_response["body"].c_str()));
+	_response["length"] += "\r\n";
 	_response["connexion"] = "Connexion: close\r\n\r\n";
-	}
-	catch( std::out_of_range &e) {
-		std::cout << "ERROR: " << e.what() << std::endl;
-	}
 }
 
-Response::~Response() {}
+void	BadRequestError::executor(void) {}
+BadRequestError::~BadRequestError(void) {}
 
-std::string	Response::openHtmlFile(std::string f)
-{
-	std::ifstream file(f);
-	std::cout << "-Opening HTML file : " << f << "\n";
-    if (!file.is_open())
-    {
-		std::cout << "Trying to open error page\n";
-		return (openHtmlFile("data/www/error.html"));
-    }
-
-    // read the contents of the file into a string variable
-    std::string content((std::istreambuf_iterator<char>(file)), (std::istreambuf_iterator<char>()));
-	if (content.empty())
-	{
-		std::cout << "Trying to open error page\n";
-		return (openHtmlFile("data/www/error.html"));
-    }
-	return content;
-}
-
-std::map<std::string, std::string>	Response::getMap() { return _response; }
-
-GetResponse::GetResponse(Request request, Server& server) : Response(request, server) {}
-
-GetResponse::~GetResponse() {}
-
-void	GetResponse::executor() {}
-
-PostResponse::PostResponse(Request request, Server& server) : Response(request, server) {
-	executor();
-}
-
-PostResponse::~PostResponse() {}
-
-void	PostResponse::executor() {
-    //   nom=a&prenom=a&email=a%40q&ville=a
-	std::cout << "EXECUTE POST REQUEST\n";
-	handleCgi();
-}
-
-DeleteResponse::DeleteResponse(Request request, Server& server) : Response(request, server) {}
-
-DeleteResponse::~DeleteResponse() {}
-
-void	DeleteResponse::executor() {
-	std::cout << "EXECUTE Delete REQUEST\n";
-}
+/************************************************************************************************/

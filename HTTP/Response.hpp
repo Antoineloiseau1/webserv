@@ -14,14 +14,19 @@ class	Server;
 class Response
 {
 	protected:
+
 		Server&								_server;
 		Request&							_request;
 		std::map<std::string, std::string>	_response;
+
+
 	public:
+
 		Response(Request &request, Server &server);
 		virtual ~Response();
 
-		virtual void	executor() = 0;
+		virtual void		executor() = 0;
+		std::string			buildResponse(void);
 
 		std::string	openHtmlFile(std::string f);
 		std::map<std::string, std::string>	getMap();
@@ -62,6 +67,15 @@ class DeleteResponse : public Response
 
 		void	executor();		
 
+};
+
+class BadRequestError: public Response {
+
+	public:
+		BadRequestError(Request request, Server& server);
+		~BadRequestError(void);
+
+		void	executor();
 };
 
 #endif
