@@ -6,7 +6,7 @@
 void	Response::handleCgi() {
 	int pipefd[2];
 
-	std::string arg1 = "form_handler.cgi";
+	std::string arg1 = "data/CGI/form_handler.cgi";
 	const char* cmd1_cstr = arg1.c_str();
 	std::string arg2 = _request.getBody();
 	const char* cmd2_cstr = arg2.c_str();
@@ -52,7 +52,7 @@ Response::Response(Request &request, Server &server) : _server(server), _request
 	else
 		_response["body"] = "Hello World";
 	_response["length"] = "Content-Length: ";
-	_response["length"] += std::to_string(std::strlen(_response[	"body"].c_str()));
+	_response["length"] += std::to_string(std::strlen(_response["body"].c_str()));
 	_response["length"] += "\r";
 	_response["type"] = "Content-Type: text/html\r\n"; //NEED TO PARSE
 	_response["version"] = request.getVersion();
@@ -60,6 +60,10 @@ Response::Response(Request &request, Server &server) : _server(server), _request
 	}
 	catch( std::out_of_range &e) {
 		std::cout << "ERROR: " << e.what() << std::endl;
+	}
+	if (request.getPath().find(".cgi") != std::string::npos) {
+		std::cerr << "Entering handle cgi... \n";
+		handleCgi();
 	}
 }
 
@@ -102,7 +106,8 @@ PostResponse::~PostResponse() {}
 void	PostResponse::executor() {
     //   nom=a&prenom=a&email=a%40q&ville=a
 	std::cout << "EXECUTE POST REQUEST\n";
-	handleCgi();
+
+	// handleCgi();
 }
 
 DeleteResponse::DeleteResponse(Request request, Server& server) : Response(request, server) {}
