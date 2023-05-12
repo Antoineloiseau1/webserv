@@ -4,6 +4,10 @@
 #include <exception>
 
 #define NUSERS 10
+/* A ce stade, pas de monitoring des connections acceptees. pas de pb apparent.*/
+void Server::_watchLoop() {
+	int nev;
+	_socklen = sizeof(_addr);
 
 int	Server::getRequestFd() const { return _requestFd; }
 
