@@ -107,7 +107,7 @@ void	Server::_handler(int client_fd) {
 	else {
 		// main case: handle received data (print for now)
 		_requestBuffer[n] = '\0';
-		printf("request : %s\n", _requestBuffer);
+		// printf("request : %s\n", _requestBuffer);
 		_responder(client_fd);
 	}
 }
@@ -116,7 +116,7 @@ void	Server::_responder(int client_fd) {
 	Request		request(_requestBuffer);
 	Response	response(request, *this);
 	std::string res = response.buildResponse();
-	std::cout << "Response from the server:\n" << res << std::endl;
+	// std::cout << "Response from the server:\n" << res << std::endl;
 	send(client_fd, res.c_str(), res.length(), 0);
 	EV_SET(&_evSet, client_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
 	if (kevent(_kq, &_evSet, 1, NULL, 0, NULL) < 0) {

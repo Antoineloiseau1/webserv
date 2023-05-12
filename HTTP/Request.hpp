@@ -9,11 +9,11 @@
 class Request {
 	private:
 		std::map<std::string, std::string>	_initialRequestLine;
+		std::map<std::string, std::string>	_headers;
 		std::string							_body;
-		// std::map<std::string, std::string>	_headerLines;
 	public:
 		Request(std::string request);
-		~Request(void) {};
+		~Request(void);
 
 		std::string	getType();
 		std::string	getPath();

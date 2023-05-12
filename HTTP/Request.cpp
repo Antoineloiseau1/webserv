@@ -2,19 +2,31 @@
 
 Request::Request(std::string request) {
 	
-	std::string result;
+	std::string line;
 	std::istringstream iss(request);
-	
-	std::getline(iss, result);
-	std::istringstream first_line(result);
 
+	std::getline(iss, line);
+	// Ignore whitepaces
+	while(!line.empty() && line == "\r")
+		getline(iss, line);
+
+	std::istringstream first_line(line);
 	first_line >> this->_initialRequestLine["type"];
 	first_line >> this->_initialRequestLine["path"];
 	this->_initialRequestLine["path"].erase(0, 1);
 	first_line >> this->_initialRequestLine["version"];
-	if (request.find("nom=") != std::string::npos)
-		_body = request.substr(request.find("nom="), request.size() - request.find("nom="));
+
+	getline(iss, line);
+	while(!line.empty() && line != "\r")
+	{
+		int delim = line.find_first_of(':');
+		_headers[line.substr(0, delim)] = line.substr(delim + 2, line.size() - (delim + 2));
+		getline(iss, line);
+	}
+	getline(iss, _body);
 }
+
+Request::~Request(void) {}
 
 std::string	Request::getType() { return _initialRequestLine["type"]; }
 

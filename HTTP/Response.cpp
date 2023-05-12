@@ -5,14 +5,17 @@
 
 Response::Response(Request &request, Server &server) : _server(server), _request(request) {
 	std::string	type[] = { "GET", "POST", "DELETE", "HEAD", "OPTIONS", "PUT", "TRACE", "CONNECT" };
-	enum	mtype { GET, HEAD, POST, DELETE, OTHER };
+	enum	mtype { GET, POST, DELETE, OTHER };
 	int a = 0;
 
 	for (int i = 0; i < 8 ; i++) {
 		if (request.getType() == type[i])
 		{
-			if (i > 3)
-				a = 4;
+			if (i > 2)
+			{
+				a = 3;
+				break;
+			}
 			a = i;
 		}
 	}
@@ -78,7 +81,7 @@ void	Response::DeleteResponse(void) {}
 void	Response::executor(void) {
     //   nom=a&prenom=a&email=a%40q&ville=a
 	std::cout << "EXECUTE POST REQUEST\n";
-	handleCgi();
+	// handleCgi();
 }
 
 void	Response::NotImplemented(void) {
