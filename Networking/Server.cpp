@@ -70,7 +70,7 @@ void	Server::_accepter(int server_fd) {
 		std::cerr << "accept: " << strerror(errno) << std::endl;
 		exit(EXIT_FAILURE);
 	}
-	fcntl(_requestFd, F_SETFL, O_NONBLOCK);
+	// fcntl(_requestFd, F_SETFL, O_NONBLOCK);
 	int opt = 1;
 	if (setsockopt(_requestFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
 		perror("setsockopt : ");
@@ -86,7 +86,7 @@ void	Server::_accepter(int server_fd) {
 // Handle incoming data on accepted connections
 void	Server::_handler(int client_fd) {
 	memset(this->_requestBuffer, 0, sizeof(this->_requestBuffer));
-	ssize_t n = recv(client_fd, _requestBuffer, sizeof(_requestBuffer), 0);
+	int n = recv(client_fd, _requestBuffer, sizeof(_requestBuffer), 0);
 	if (n < 0) {
 		perror("read() failed");
 		EV_SET(&_evSet, client_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
@@ -115,7 +115,7 @@ void	Server::_responder(int client_fd) {
 	Request		request(_requestBuffer);
 	Response	response(request, *this);
 	std::string res = response.buildResponse();
-	std::cout << "Response from the server:\n" << res << std::endl;
+	// std::cout << "Response from the server:\n" << res << std::endl;
 	send(client_fd, res.c_str(), res.length(), 0);
 	EV_SET(&_evSet, client_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
 	if (kevent(_kq, &_evSet, 1, NULL, 0, NULL) < 0) {

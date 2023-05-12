@@ -15,10 +15,11 @@ class Request {
 		Request(std::string request);
 		~Request(void);
 
-		std::string	getType();
-		std::string	getPath();
-		std::string	getVersion();
-		std::string	getBody();
+		std::string							getType();
+		std::string							getPath();
+		std::string							getVersion();
+		std::string							getBody();
+		std::map<std::string, std::string>	getHeaders();
 };
 
 

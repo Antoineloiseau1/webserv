@@ -60,9 +60,48 @@ void	Response::GetResponse(void) {
 		_response["type"] = "Content-Type: text/html\r\n"; //NEED TO PARSE
 }
 
+/*
+REQUEST BODY IN CASE OF UPLOAD EXPECTED:
+------WebKitFormBoundary{boundary}
+Content-Disposition: form-data; name="image"; filename="{filename}"
+Content-Type: {mime-type}
 
+{file-data}
+
+------WebKitFormBoundary{boundary}--*/
 void	Response::PostResponse(void) {
+	/*---------------PARSING POST BODY FOR UPLOADING PICTURE REQUEST ONLY*/
+		// std::map<std::string, std::string>	img_data;
 
+		// std::string content_type = _request.getHeaders()["Content-Type"];
+		// int loc_delim = content_type.find("boundary=") + 9;
+		// std::string	boundary = content_type.substr(loc_delim, content_type.size() - loc_delim);
+
+		// std::string line;
+		// std::istringstream iss(_request.getBody());
+
+		// std::getline(iss, line);
+		// while(!line.empty() && line != "--" + boundary && line != "\r")
+		// {
+		// 	int delim = line.find_first_of(':');
+		// 	img_data[line.substr(0, delim)] = line.substr(delim + 2, line.size() - (delim + 2));
+		// 	getline(iss, line);
+		// }
+		// getline(iss, line);
+		// while(line != "--" + boundary + "--" && line != "\r")
+		// {
+		// 	img_data["img_data"] += line;
+		// 	getline(iss, line);
+		// }
+		// int loc = img_data["Content-Disposition"].find("filename=") + 9;
+		// std::string file_name = img_data["Content-Disposition"].substr(loc, img_data["Content-Disposition"].size() - loc); 
+    	// if (file_name.empty()) {
+		// 	std::cerr << "Failed to extract file data" << std::endl;
+		// 	return;
+		// }
+/*-------------------END OF PARSING FOR UPLOADING PICTURES--------------*/
+
+		/*----------DRAFTING POST RESPONSE-------------------------------*/
 		std::string	file = _request.getPath();
 		if (file != "favicon.ico" && file != " " && !file.empty() && file != "" && file != "data/www/style.css")
 			_response["body"] = openHtmlFile(file);
@@ -75,16 +114,10 @@ void	Response::PostResponse(void) {
 		_response["length"] += std::to_string(std::strlen(_response["body"].c_str()));
 		_response["length"] += "\r\n";
 		_response["type"] = "Content-Type: text/html\r\n"; //NEED TO PARSE
-		executor();
+	
 }
 
 void	Response::DeleteResponse(void) {}
-
-void	Response::executor(void) {
-    //   nom=a&prenom=a&email=a%40q&ville=a
-	std::cout << "EXECUTE POST REQUEST\n";
-	// handleCgi();
-}
 
 void	Response::NotImplemented(void) {
 
