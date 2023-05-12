@@ -45,13 +45,15 @@ void	Response::GetResponse(void) {
 
 
 		std::string	file = _request.getPath();
-		if (file != "favicon.ico" && file != " " && !file.empty() && file != "" && file != "data/www/style.css")
-			_response["body"] = openHtmlFile(file);
-		else
+		if (file == "")
+			_response["body"] = openHtmlFile("data/www/manon.html");
+		else if (file == "favicon.ico" || file == "style.css" || file.empty())
 		{
-			_response["status"] = " 200 OK\r\n";
-			_response["body"] = "GetResponse: Not handled yet\r\n";
+			_response["status"] = " 204 No Content\r\n";
+			_response["body"] = "";
 		}
+		else
+			_response["body"] = openHtmlFile(file);
 		_response["length"] = "Content-Length: ";
 		_response["length"] += std::to_string(std::strlen(_response["body"].c_str()));
 		_response["length"] += "\r\n";
