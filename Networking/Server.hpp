@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mmidon <marvin@42.fr>                      +#+  +:+       +#+        */
+/*   By: anloisea <anloisea@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/04 09:54:40 by mmidon            #+#    #+#             */
-/*   Updated: 2023/05/04 11:14:33 by mmidon           ###   ########.fr       */
+/*   Updated: 2023/05/12 11:19:09 by anloisea         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,7 @@ class Server {
 		int								_requestFd;
 		void							_accepter(int server_fd);
 		void							_handler(int client_fd);
-		void							_responder(int client_fd, Response *responder);
+		void							_responder(int client_fd);
 		void 							_watchLoop();
 		struct kevent					_evSet;
 		struct kevent					_evList[64];

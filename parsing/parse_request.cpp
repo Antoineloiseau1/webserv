@@ -6,7 +6,7 @@
 /*   By: anloisea <anloisea@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/04 10:37:45 by mmidon            #+#    #+#             */
-/*   Updated: 2023/05/11 16:22:30 by anloisea         ###   ########.fr       */
+/*   Updated: 2023/05/12 11:37:22 by anloisea         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,36 +32,3 @@ std::string	cutRequest(std::istringstream &iss, std::string limiter) //cut it in
 	return result;
 }
 
-Response	*requestParse(std::string request, Server &server)
-{
-	//request == par ex, GET /data/www/about.html HTTP/1.1
-	Response	*ret = 0;
-	Request	clientRequest(request);
-	std::string	type[] = { "GET", "POST", "DELETE" };
-	int a = 0;
-
-	for (int i = 0; i < 3 ; i++) {
-		if (clientRequest.getType() == type[i])
-			a = i + 1;
-	}
-	switch (a)
-	{
-		case 1:
-			ret = new GetResponse( request, server );
-			break;
-
-		case 2:
-			ret = new PostResponse( request, server );
-			break;
-
-		case 3:
-			ret = new DeleteResponse( request, server );
-			break;
-		
-		default:
-			std::cout << "############# Bad Request Received #############\n";
-			ret = new BadRequestError( request, server);
-	}
-	
-	return ret;
-}

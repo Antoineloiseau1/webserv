@@ -25,57 +25,18 @@ class Response
 		Response(Request &request, Server &server);
 		virtual ~Response();
 
-		virtual void		executor() = 0;
+		void				executor();
 		std::string			buildResponse(void);
 
 		std::string	openHtmlFile(std::string f);
 		std::map<std::string, std::string>	getMap();
 		void								handleCgi();
-};
+		void								GetResponse();
+		void								PostResponse();
+		void								DeleteResponse();
+		void								NotImplemented();
+		void								BadRequestError();
 
-class GetResponse : public Response
-{
-	private:
-		
-	public:
-		GetResponse(Request request, Server &server);
-		~GetResponse();
-
-		void	executor();		
-
-};
-
-class PostResponse : public Response
-{
-	private:
-		
-	public:
-		PostResponse(Request request, Server &server);
-		~PostResponse();
-
-		void	executor();		
-
-};
-
-class DeleteResponse : public Response
-{
-	private:
-		
-	public:
-		DeleteResponse(Request request, Server &server);
-		~DeleteResponse();
-
-		void	executor();		
-
-};
-
-class BadRequestError: public Response {
-
-	public:
-		BadRequestError(Request request, Server& server);
-		~BadRequestError(void);
-
-		void	executor();
 };
 
 #endif
