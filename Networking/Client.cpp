@@ -1,6 +1,6 @@
 #include "Client.hpp"
 
-Client::Client(int fd) : _fd(fd), _status(0), _request(nullptr) {}
+Client::Client(int fd, ListeningSocket *server) : _fd(fd), _server(server), _status(0), _request(nullptr) {}
 
 Client::~Client() {}
 
@@ -21,3 +21,5 @@ void	Client::createRequest(std::string reqLine) {
 }
 
 Request	*Client::getRequest() { return _request; }
+
+ListeningSocket	*Client::getServer() { return _server; }

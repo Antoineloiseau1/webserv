@@ -3,20 +3,19 @@
 
 #include <string>
 #include "../HTTP/Request.hpp"
-// # include <netinet/in.h>
-// # include <iostream>
-// # include <sys/socket.h>
-// # include <stdio.h>
-// # include <errno.h>
-// # include <unistd.h>
+// #include "ListeningSocket.hpp"
+
+class ListeningSocket;
+
 
 class Client
 {
 	private:
-		int			_fd;
-		std::string	_reqBuf;
-		int			_status;
-		Request		*_request;
+		int				_fd;
+		ListeningSocket	*_server;
+		std::string		_reqBuf;
+		int				_status;
+		Request			*_request;
 
 	public:
 		enum		_status 
@@ -26,16 +25,17 @@ class Client
 			RESPONSE,
 			OVER
 		};
-		Client(int fd);
+		Client(int fd, ListeningSocket *server);
 		~Client();
 
-		int			getFd();
-		int			getStatus();
-		void		setStatus(int status);
-		std::string	getReqBuf();
-		void		addOnReqBuf(std::string buf);
-		void		createRequest(std::string reqLine);
-		Request		*getRequest();
+		int				getFd();
+		int				getStatus();
+		void			setStatus(int status);
+		std::string		getReqBuf();
+		void			addOnReqBuf(std::string buf);
+		void			createRequest(std::string reqLine);
+		Request			*getRequest();
+		ListeningSocket	*getServer();
 
 };
 

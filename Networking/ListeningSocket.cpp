@@ -62,5 +62,6 @@ void	ListeningSocket::deleteClient(int fd) {
 	for (std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++) {
 		if ((*it)->getFd() == fd)
 			_clients.erase(it);
+			break ;
 	}
 }

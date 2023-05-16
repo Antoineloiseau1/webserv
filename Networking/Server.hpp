@@ -32,8 +32,8 @@ class Server {
 		int								_requestFd;
 		void							_accepter(int server_fd, ListeningSocket *socket);
 		void							_refuse(int server_fd);
-		void							_handler(int client_fd);
-		void							_responder(int client_fd);
+		void							_handler(Client *client);
+		void							_responder(Client *client);
 		void 							_watchLoop();
 		struct kevent					_evSet;
 		struct kevent					_evList[64];
