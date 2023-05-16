@@ -8,6 +8,8 @@
 #include <fstream>
 #include "Request.hpp"
 #include "../Networking/Server.hpp"
+#include <array>
+#include <map>
 
 class	Server;
 
@@ -18,6 +20,8 @@ class Response
 		Server&								_server;
 		Request&							_request;
 		std::map<std::string, std::string>	_response;
+		char **envp;
+		std::array<std::string, 6>			_env;
 
 
 	public:
@@ -30,6 +34,7 @@ class Response
 
 		std::string	openHtmlFile(std::string f);
 		std::map<std::string, std::string>	getMap();
+		void								createCgiEnv();
 		void								handleCgi();
 		void								GetResponse();
 		void								PostResponse();

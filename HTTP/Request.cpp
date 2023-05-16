@@ -35,3 +35,5 @@ std::string	Request::getPath() { return _initialRequestLine["path"]; }
 std::string	Request::getVersion() { return _initialRequestLine["version"]; }
 
 std::string	Request::getBody() { return _body; }
+
+std::map<std::string, std::string>	Request::getHeaders() {return _headers; };

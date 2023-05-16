@@ -1,7 +1,10 @@
 #include "Response.hpp"
+#include <map>
 #include <unistd.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <string.h>
+#include <array>
 
 Response::Response(Request &request, Server &server) : _server(server), _request(request) {
 	std::string	type[] = { "GET", "POST", "DELETE", "HEAD", "OPTIONS", "PUT", "TRACE", "CONNECT" };
@@ -57,7 +60,7 @@ void	Response::GetResponse(void) {
 		_response["length"] = "Content-Length: ";
 		_response["length"] += std::to_string(std::strlen(_response["body"].c_str()));
 		_response["length"] += "\r\n";
-		_response["type"] = "Content-Type: text/html\r\n"; //NEED TO PARSE
+		_response["type"] = "Content-Type: text/html\r\n";// NEED TO PARSE
 }
 
 
@@ -70,42 +73,46 @@ Content-Type: {mime-type}
 {file-data}
 
 ------WebKitFormBoundary{boundary}--*/
-void	Response::PostResponse(void) {
-	/*---------------PARSING POST BODY FOR UPLOADING PICTURE REQUEST ONLY*/
-		// std::map<std::string, std::string>	img_data;
+void	Response::PostResponse(void) {/*
+	---------------PARSING POST BODY FOR UPLOADING PICTURE REQUEST ONLY
+		 std::map<std::string, std::string>	img_data;
 
-		// std::string content_type = _request.getHeaders()["Content-Type"];
-		// int loc_delim = content_type.find("boundary=") + 9;
-		// std::string	boundary = content_type.substr(loc_delim, content_type.size() - loc_delim);
+		 std::string content_type = _request.getHeaders()["Content-Type"];
+		 int loc_delim = content_type.find("boundary=") + 9;
+		 std::string	boundary = content_type.substr(loc_delim, content_type.size() - loc_delim);
 
-		// std::string line;
-		// std::istringstream iss(_request.getBody());
+		 std::string line;
+		 std::istringstream iss(_request.getBody());
 
-		// std::getline(iss, line);
-		// while(!line.empty() && line != "--" + boundary && line != "\r")
-		// {
-		// 	int delim = line.find_first_of(':');
-		// 	img_data[line.substr(0, delim)] = line.substr(delim + 2, line.size() - (delim + 2));
-		// 	getline(iss, line);
-		// }
-		// getline(iss, line);
-		// while(line != "--" + boundary + "--" && line != "\r")
-		// {
-		// 	img_data["img_data"] += line;
-		// 	getline(iss, line);
-		// }
-		// int loc = img_data["Content-Disposition"].find("filename=") + 9;
-		// std::string file_name = img_data["Content-Disposition"].substr(loc, img_data["Content-Disposition"].size() - loc); 
-    	// if (file_name.empty()) {
-		// 	std::cerr << "Failed to extract file data" << std::endl;
-		// 	return;
-		// }
+		 std::getline(iss, line);
+		 while(!line.empty() && line != "--" + boundary && line != "\r")
+		 {
+		 	int delim = line.find_first_of(':');
+		 	img_data[line.substr(0, delim)] = line.substr(delim + 2, line.size() - (delim + 2));
+		 	getline(iss, line);
+		 }
+		 getline(iss, line);
+		 while(line != "--" + boundary + "--" && line != "\r")
+		 {
+		 	iprint("HTTP/1.1 200 OK\\r\\nContent-type: text/html\\r\\nContent-Length: 10003\\r\\nConnection: close\\r\\n\\r\\n<html>\\n<head>\\n\t<title>Form Submission Results</title>\\n</head>\\n<body>\\n\t<h1>Form Submission Results</h1>\\n\t<p>Thank you for submitting the form. Here is the information you provided:</p>\\n\t<ul>\\n\t\t<li><strong>Nom:</strong> {nom}</li>\\n\t\t<li><strong>Prenom:</strong> {prenom}</li>\\n\t\t<li><strong>Email:</strong> {email}</li>\\n\t\t<li><strong>Ville:</strong> {ville}</li>\\n\t</ul>\\n</body>\\n</html>".format(nom=nom, prenom=prenom, email=email, ville=ville))
+			mg_data["img_data"] += line;
+		 	getline(iss, line);
+		 }
+		 int loc = img_data["Content-Disposition"].find("filename=") + 9;
+		 std::string file_name = img_data["Content-Disposition"].substr(loc, img_data["Content-Disposition"].size() - loc); 
+    	 if (file_name.empty()) {
+		 	std::cerr << "Failed to extract file data" << std::endl;
+		 	return;
+		 }*/
 /*-------------------END OF PARSING FOR UPLOADING PICTURES--------------*/
 
 		/*----------DRAFTING POST RESPONSE-------------------------------*/
 		std::string	file = _request.getPath();
 		if (file != "favicon.ico" && file != " " && !file.empty() && file != "" && file != "data/www/style.css")
-			_response["body"] = openHtmlFile(file);
+		{ handleCgi();
+			std::cout << "CGI" << std::endl;
+			return;
+		}
 		else
 		{
 			_response["status"] = " 200 OK\r\n";
@@ -114,16 +121,16 @@ void	Response::PostResponse(void) {
 		_response["length"] = "Content-Length: ";
 		_response["length"] += std::to_string(std::strlen(_response["body"].c_str()));
 		_response["length"] += "\r\n";
-		_response["type"] = "Content-Type: text/html\r\n"; //NEED TO PARSE
+		_response["type"] = "Content-Type: text/html\r\n";// NEED TO PARSE
 	
 }
 
 void	Response::DeleteResponse(void) {}
 
 void	Response::executor(void) {
-    //   nom=a&prenom=a&email=a%40q&ville=a
+      // nom=a&prenom=a&email=a%40q&ville=a
 	std::cout << "EXECUTE POST REQUEST\n";
-	// handleCgi();
+	 handleCgi();
 }
 
 void	Response::NotImplemented(void) {
@@ -151,11 +158,22 @@ std::string	Response::openHtmlFile(std::string f)
 	else
 	{
 		_response["status"] = " 200 OK\r\n";
-    	// read the contents of the file into a string variable
+  //  	 read the contents of the file into a string variable
     	std::string content((std::istreambuf_iterator<char>(file)), (std::istreambuf_iterator<char>()));
 		return content;
 	}
 }
+void	Response::createCgiEnv()
+{
+
+		_env[0] = "REQUEST_METHOD=GET";
+		_env[1] = "QUERY_STRING=nom=ui&prenom=uii&email=u%40i&ville=ui";
+		_env[2] = "CONTENT_TYPE=text/html";
+		_env[3] ="CONTENT_LENGTH=500";
+		_env[4] = "HTTP_USER_AGENT=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3";
+		_env[5] = "REMOTE_ADDR=127.0.0.1";
+}
+
 
 void	Response::handleCgi() {
 	int pipefd[2];
@@ -167,28 +185,37 @@ void	Response::handleCgi() {
 	char* const args[] = { const_cast<char*>(cmd1_cstr), const_cast<char*>(cmd2_cstr), NULL };
 
 	if (pipe(pipefd) == -1) {
-		std::cerr << "Erreur lors de la création de la pipe\n";
-		close(_server.getSocket()->getFd());
+		std::cerr << "Error 500\n";//
 		return ;
 	}
-	std::cout << "PIPE a fermer = " <<  pipefd[1] << std::endl;
 	close(pipefd[0]);
 
 	pid_t pid = fork();
 	if (pid == -1) {
-		std::cerr << "Erreur lors du fork\n";
-		close(_server.getSocket()->getFd());
+		std::cerr << "Error 500\n"; //
 		close(pipefd[0]);
 		close(pipefd[1]);
 		return ;	
 	}
 
-	if (pid == 0) { // Processus enfant (script CGI)
+	if (pid == 0) {  //Processus enfant (script CGI)
 		pipefd[1] = _server.getRequestFd();
-		dup2(pipefd[1], STDOUT_FILENO);
-		if (execve("data/CGI/form_handler.cgi", args, _server.getEnvp()) == -1)
+
+		
+		createCgiEnv();
+		char *cgiEnv[_env.size() + 1];
+		size_t i;
+		for (i = 0; i != _env.size(); i++)
 		{
-			std::cerr << "error: " << strerror(errno) << std::endl;
+			std::cout << strdup(const_cast<const char *>(_env[i].c_str())) << std::endl;
+			cgiEnv[i] = strdup(const_cast<const char *>(_env[i].c_str()));
+		}
+		cgiEnv[i] = 0;
+		dup2(pipefd[1], STDOUT_FILENO);
+		std::cerr << "EXECVE" << std::endl;
+		if (execve("data/CGI/form_handler.cgi", args, cgiEnv) == -1)
+		{
+			std::cerr << "error: 500(?)" << strerror(errno) << std::endl;
 		}
 	}
 	close(pipefd[1]);
