@@ -48,6 +48,7 @@ class Server {
 		Server(int domain, int service, int protocole, int *ports, int nbSocket, char **envp);
 		~Server(void);
 		ListeningSocket	*getSocket(void) const;
+		ListeningSocket	*getSocket(int fd);
 		void			start(void);
 		int				getRequestFd() const;
 		char			**getEnvp() const;

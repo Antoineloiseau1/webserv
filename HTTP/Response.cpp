@@ -45,8 +45,6 @@ Response::Response(Request &request, Server &server) : _server(server), _request
 }
 
 void	Response::GetResponse(void) {
-
-
 		std::string	file = _request.getPath();
 		if (file == "")
 			_response["body"] = openHtmlFile("data/www/manon.html");
@@ -62,14 +60,6 @@ void	Response::GetResponse(void) {
 		_response["length"] += "\r\n";
 		_response["type"] = "Content-Type: text/html\r\n";// NEED TO PARSE
 }
-
-/*
-REQUEST BODY IN CASE OF UPLOAD EXPECTED:
-------WebKitFormBoundary{boundary}
-Content-Disposition: form-data; name="image"; filename="{filename}"
-Content-Type: {mime-type}
-
-{file-data}
 
 /*
 REQUEST BODY IN CASE OF UPLOAD EXPECTED:

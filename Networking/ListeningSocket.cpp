@@ -29,8 +29,10 @@ void	ListeningSocket::establishConnection(void) {
 	}
 }
 
-int	ListeningSocket::getFd(void) const { return this->_fd; }
+int	ListeningSocket::getFd(void) const { return Socket::_fd; }
+
 socklen_t	ListeningSocket::getSockLen(void) const { return this->_addrlen; }
+
 struct sockaddr_in	ListeningSocket::getAddress(void) const { return this->_address; }
 
 ListeningSocket::~ListeningSocket(void) { close(this->_fd); }
@@ -61,6 +63,7 @@ Client	*ListeningSocket::getClient(int fd) {
 void	ListeningSocket::deleteClient(int fd) {
 	for (std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++) {
 		if ((*it)->getFd() == fd)
+			std::cout << "test fd client delete : " << (*it)->getFd() << std::endl;
 			_clients.erase(it);
 			break ;
 	}

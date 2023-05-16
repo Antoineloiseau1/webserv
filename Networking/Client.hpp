@@ -12,7 +12,8 @@ class Client
 {
 	private:
 		int				_fd;
-		ListeningSocket	*_server;
+		int				_serverFd;
+		// ListeningSocket	**_server;
 		std::string		_reqBuf;
 		int				_status;
 		Request			*_request;
@@ -25,7 +26,7 @@ class Client
 			RESPONSE,
 			OVER
 		};
-		Client(int fd, ListeningSocket *server);
+		Client(int fd, int serverFd);
 		~Client();
 
 		int				getFd();
@@ -35,7 +36,7 @@ class Client
 		void			addOnReqBuf(std::string buf);
 		void			createRequest(std::string reqLine);
 		Request			*getRequest();
-		ListeningSocket	*getServer();
+		int				getServerFd();
 
 };
 

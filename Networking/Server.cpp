@@ -97,7 +97,7 @@ void	Server::_accepter(int server_fd, ListeningSocket *sock) {
         fprintf(stderr, "Problem adding kevent for client ACCEPTER: %s\n",
         strerror(errno));
     }
-	Client	*newClient = new Client(fd, sock);
+	Client	*newClient = new Client(fd, sock->getFd());
 	sock->setClient(newClient);
 }
 
@@ -126,19 +126,12 @@ void	Server::_handler(Client *client) {
 			strerror(errno));
 		}
 		close(client->getFd());
-		this->_socket[0]->deleteClient(client->getFd());
+		// _socket[0]->deleteClient(client->getFd());
 	}
-	// else if (n == 0) {
-	// 	EV_SET(&_evSet, client_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-	// 	if (kevent(_kq, &_evSet, 1, NULL, 0, NULL) < 0) {
-	// 		fprintf(stderr, "Problem adding kevent listener for client HANDLER 2: %s\n",
-	// 		strerror(errno));
-	// 	}
-	// }
 	else {
 		// main case: handle received data (print for now)
 		_requestBuffer[n] = '\0';
-		std::cout << "DEBUUUG : request buf = " << _requestBuffer << std::endl;
+		// std::cout << "DEBUUUG : request buf = " << _requestBuffer << std::endl;
 		int	bufBytes = client->getReqBuf().size();
 		client->addOnReqBuf(_requestBuffer + bufBytes);
 		std::cout << "DEBUUUG : request line = " << client->getReqBuf() << std::endl;
@@ -148,7 +141,7 @@ void	Server::_handler(Client *client) {
 }
 
 void	Server::_responder(Client *client) {
-	Request		request(_requestBuffer);
+	Request		request(client->getReqBuf());
 	Response	response(request, *this);
 	std::string res = response.buildResponse();
 
@@ -161,10 +154,24 @@ void	Server::_responder(Client *client) {
 		strerror(errno));
 	}
 	close(client->getFd());
-	client->getServer()->deleteClient(client->getFd());
+	// std::cout << "Client test fd : "<< client->getFd() << std::endl;
+	// std::cout << "Socket [0]: "<< _socket[0] << std::endl;
+	// _socket[0]->deleteClient(client->getFd());
 	
 }
 
 ListeningSocket	*Server::getSocket(void) const { return this->_socket[0]; }
+
+ListeningSocket	*Server::getSocket(int fd) {
+	for (std::vector<ListeningSocket*>::iterator it = _socket.begin(); it != _socket.end(); it++)
+	{
+		std::cout << "TEST 1  DANS GET SOCKET = "<< (*it) << std::endl;
+		std::cout << "TEST DANS GET SOCKET = "<< (*it)->getFd() << std::endl;
+		fflush(stdout);
+		if ((*it)->getFd() == fd)
+			return *it;
+	}
+	return nullptr;
+}
 
 Server::~Server(void) { delete this->_socket[0]; }
