@@ -35,3 +35,32 @@ struct sockaddr_in	ListeningSocket::getAddress(void) const { return this->_addre
 
 ListeningSocket::~ListeningSocket(void) { close(this->_fd); }
 
+
+void	ListeningSocket::setClient(Client *newClient) {
+	_clients.push_back(newClient);
+}
+
+int		ListeningSocket::getOpenFd() {
+	int res = 0;
+	
+	for (std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++)
+	{
+		res++;
+	}
+	return res;
+}
+
+Client	*ListeningSocket::getClient(int fd) {
+	for (std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++) {
+		if ((*it)->getFd() == fd)
+			return *it;
+	}
+	return NULL;
+}
+
+void	ListeningSocket::deleteClient(int fd) {
+	for (std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++) {
+		if ((*it)->getFd() == fd)
+			_clients.erase(it);
+	}
+}

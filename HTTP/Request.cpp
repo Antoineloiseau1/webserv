@@ -33,8 +33,8 @@ Request::Request(std::string request) {
 			line.clear();
 			getline(iss, line);
 		}
-		if (_headers["Referer"].find("data/www/upload.html"))
-			parsingBody();
+		// if (_headers["Referer"].find("data/www/upload.html"))
+			// parsingBody();
 	}
 }
 

@@ -3,7 +3,18 @@
 #include "../HTTP/Response.hpp"
 #include <exception>
 
-#define NUSERS 10
+#include "Client.hpp"
+#define MAX_FD 230
+
+int	Server::getOpenFd() {
+	int res = _socket.size(); 
+	
+	for (std::vector<ListeningSocket*>::iterator it = _socket.begin(); it != _socket.end(); it++)
+	{
+		res += (*it)->getOpenFd();
+	}
+	return res;
+}
 
 int	Server::getRequestFd() const { return _requestFd; }
 
@@ -33,7 +44,11 @@ void Server::_watchLoop() {
 					close(_evList[i].ident);
 				}
 			else if ((int)_evList[i].ident == _socket[0]->getFd()) {
-				_accepter(_evList[i].ident);
+				// _accepter(_evList[i].ident);
+				if (getOpenFd() > MAX_FD)
+					_refuse(_evList[i].ident);
+				else
+					_accepter(_evList[i].ident, _socket[0]);
 			}
 			else {
 				if (_evList[i].flags & EVFILT_READ) {
@@ -61,31 +76,45 @@ void	Server::start(void) {
 }
 
 // Handle incoming CONNECTION and add the connection socket to the kqueue
-void	Server::_accepter(int server_fd) {
+void	Server::_accepter(int server_fd, ListeningSocket *sock) {
 	struct sockaddr_in	address;
 	socklen_t			addrlen = sizeof(address);
 
-	_requestFd = accept(server_fd, reinterpret_cast<struct sockaddr *>(&address), &addrlen);
-	if (this->_requestFd == -1) {
+	int fd = accept(server_fd, reinterpret_cast<struct sockaddr *>(&address), &addrlen);
+	if (fd == -1) {
 		std::cerr << "accept: " << strerror(errno) << std::endl;
 		exit(EXIT_FAILURE);
 	}
-	fcntl(_requestFd, F_SETFL, O_NONBLOCK);
+	fcntl(fd, F_SETFL, O_NONBLOCK);
 	int opt = 1;
-	if (setsockopt(_requestFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
+	if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
 		perror("setsockopt : ");
 		exit(EXIT_FAILURE);
 	}
-	EV_SET(&_evSet, _requestFd, EVFILT_READ, EV_ADD, 0, 0, NULL);
+	EV_SET(&_evSet, fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
 	if (kevent(_kq, &_evSet, 1, NULL, 0, NULL) < 0) {
         fprintf(stderr, "Problem adding kevent for client ACCEPTER: %s\n",
         strerror(errno));
     }
+	Client	*newClient = new Client(fd);
+	sock->setClient(newClient);
+}
+
+void	Server::_refuse(int server_fd) {
+	struct sockaddr_in	address;
+	socklen_t			addrlen;
+
+	int fd = accept(server_fd, reinterpret_cast<struct sockaddr *>(&address), &addrlen);
+	if (fd == -1) {
+		std::cerr << "accept: " << strerror(errno) << std::endl;
+		exit(EXIT_FAILURE);
+	}
+	close(fd);
 }
 
 // Handle incoming data on accepted connections
 void	Server::_handler(int client_fd) {
-	memset(this->_requestBuffer, 0, sizeof(this->_requestBuffer));
+	// memset(this->_requestBuffer, 0, sizeof(this->_requestBuffer));
 	ssize_t n = recv(client_fd, _requestBuffer, sizeof(_requestBuffer), 0);
 	if (n < 0) {
 		perror("read() failed");

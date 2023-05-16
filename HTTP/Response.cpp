@@ -76,7 +76,7 @@ Content-Type: {mime-type}
 void	Response::PostResponse(void) {
 	std::string	file = _request.getPath();
 	if (file != "favicon.ico" && file != " " && !file.empty() && file != "" && file != "data/www/style.css")
-	{ handleCgi();
+	{ //handleCgi();
 		std::cout << "CGI" << std::endl;
 		return;
 	}

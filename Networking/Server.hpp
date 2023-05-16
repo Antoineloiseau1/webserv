@@ -30,7 +30,8 @@ class Server {
 		char							_requestBuffer[30000];
 		std::vector<ListeningSocket*>	_socket;
 		int								_requestFd;
-		void							_accepter(int server_fd);
+		void							_accepter(int server_fd, ListeningSocket *socket);
+		void							_refuse(int server_fd);
 		void							_handler(int client_fd);
 		void							_responder(int client_fd);
 		void 							_watchLoop();
@@ -50,6 +51,7 @@ class Server {
 		void			start(void);
 		int				getRequestFd() const;
 		char			**getEnvp() const;
+		int				getOpenFd();
 };
 
 #endif
