@@ -73,56 +73,22 @@ Content-Type: {mime-type}
 {file-data}
 
 ------WebKitFormBoundary{boundary}--*/
-void	Response::PostResponse(void) {/*
-	---------------PARSING POST BODY FOR UPLOADING PICTURE REQUEST ONLY
-		 std::map<std::string, std::string>	img_data;
-
-		 std::string content_type = _request.getHeaders()["Content-Type"];
-		 int loc_delim = content_type.find("boundary=") + 9;
-		 std::string	boundary = content_type.substr(loc_delim, content_type.size() - loc_delim);
-
-		 std::string line;
-		 std::istringstream iss(_request.getBody());
-
-		 std::getline(iss, line);
-		 while(!line.empty() && line != "--" + boundary && line != "\r")
-		 {
-		 	int delim = line.find_first_of(':');
-		 	img_data[line.substr(0, delim)] = line.substr(delim + 2, line.size() - (delim + 2));
-		 	getline(iss, line);
-		 }
-		 getline(iss, line);
-		 while(line != "--" + boundary + "--" && line != "\r")
-		 {
-		 	iprint("HTTP/1.1 200 OK\\r\\nContent-type: text/html\\r\\nContent-Length: 10003\\r\\nConnection: close\\r\\n\\r\\n<html>\\n<head>\\n\t<title>Form Submission Results</title>\\n</head>\\n<body>\\n\t<h1>Form Submission Results</h1>\\n\t<p>Thank you for submitting the form. Here is the information you provided:</p>\\n\t<ul>\\n\t\t<li><strong>Nom:</strong> {nom}</li>\\n\t\t<li><strong>Prenom:</strong> {prenom}</li>\\n\t\t<li><strong>Email:</strong> {email}</li>\\n\t\t<li><strong>Ville:</strong> {ville}</li>\\n\t</ul>\\n</body>\\n</html>".format(nom=nom, prenom=prenom, email=email, ville=ville))
-			mg_data["img_data"] += line;
-		 	getline(iss, line);
-		 }
-		 int loc = img_data["Content-Disposition"].find("filename=") + 9;
-		 std::string file_name = img_data["Content-Disposition"].substr(loc, img_data["Content-Disposition"].size() - loc); 
-    	 if (file_name.empty()) {
-		 	std::cerr << "Failed to extract file data" << std::endl;
-		 	return;
-		 }*/
-/*-------------------END OF PARSING FOR UPLOADING PICTURES--------------*/
-
-		/*----------DRAFTING POST RESPONSE-------------------------------*/
-		std::string	file = _request.getPath();
-		if (file != "favicon.ico" && file != " " && !file.empty() && file != "" && file != "data/www/style.css")
-		{ handleCgi();
-			std::cout << "CGI" << std::endl;
-			return;
-		}
-		else
-		{
-			_response["status"] = " 200 OK\r\n";
-			_response["body"] = "GetResponse: Not handled yet\r\n";
-		}
-		_response["length"] = "Content-Length: ";
-		_response["length"] += std::to_string(std::strlen(_response["body"].c_str()));
-		_response["length"] += "\r\n";
-		_response["type"] = "Content-Type: text/html\r\n";// NEED TO PARSE
-	
+void	Response::PostResponse(void) {
+	std::string	file = _request.getPath();
+	if (file != "favicon.ico" && file != " " && !file.empty() && file != "" && file != "data/www/style.css")
+	{ handleCgi();
+		std::cout << "CGI" << std::endl;
+		return;
+	}
+	else
+	{
+		_response["status"] = " 200 OK\r\n";
+		_response["body"] = "GetResponse: Not handled yet\r\n";
+	}
+	_response["length"] = "Content-Length: ";
+	_response["length"] += std::to_string(std::strlen(_response["body"].c_str()));
+	_response["length"] += "\r\n";
+	_response["type"] = "Content-Type: text/html\r\n";// NEED TO PARSE
 }
 
 void	Response::DeleteResponse(void) {}
@@ -130,7 +96,7 @@ void	Response::DeleteResponse(void) {}
 void	Response::executor(void) {
       // nom=a&prenom=a&email=a%40q&ville=a
 	std::cout << "EXECUTE POST REQUEST\n";
-	 handleCgi();
+	//  handleCgi();
 }
 
 void	Response::NotImplemented(void) {

@@ -80,8 +80,7 @@ void	Server::_accepter(int server_fd) {
 	if (kevent(_kq, &_evSet, 1, NULL, 0, NULL) < 0) {
         fprintf(stderr, "Problem adding kevent for client ACCEPTER: %s\n",
         strerror(errno));
-    
-}
+    }
 }
 
 // Handle incoming data on accepted connections
@@ -97,13 +96,13 @@ void	Server::_handler(int client_fd) {
 		}
 		close(client_fd);
 	}
-	else if (n == 0) {
-		EV_SET(&_evSet, client_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-		if (kevent(_kq, &_evSet, 1, NULL, 0, NULL) < 0) {
-			fprintf(stderr, "Problem adding kevent listener for client HANDLER 2: %s\n",
-			strerror(errno));
-		}
-	}
+	// else if (n == 0) {
+	// 	EV_SET(&_evSet, client_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+	// 	if (kevent(_kq, &_evSet, 1, NULL, 0, NULL) < 0) {
+	// 		fprintf(stderr, "Problem adding kevent listener for client HANDLER 2: %s\n",
+	// 		strerror(errno));
+	// 	}
+	// }
 	else {
 		// main case: handle received data (print for now)
 		_requestBuffer[n] = '\0';
@@ -116,7 +115,7 @@ void	Server::_responder(int client_fd) {
 	Request		request(_requestBuffer);
 	Response	response(request, *this);
 	std::string res = response.buildResponse();
-//	std::cout << "Response from the server:\n" << res << std::endl;
+	std::cout << "Response from the server:\n" << res << std::endl;
 	send(client_fd, res.c_str(), res.length(), 0);
 	EV_SET(&_evSet, client_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
 	if (kevent(_kq, &_evSet, 1, NULL, 0, NULL) < 0) {
