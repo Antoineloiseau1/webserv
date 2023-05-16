@@ -63,6 +63,13 @@ void	Response::GetResponse(void) {
 		_response["type"] = "Content-Type: text/html\r\n";// NEED TO PARSE
 }
 
+/*
+REQUEST BODY IN CASE OF UPLOAD EXPECTED:
+------WebKitFormBoundary{boundary}
+Content-Disposition: form-data; name="image"; filename="{filename}"
+Content-Type: {mime-type}
+
+{file-data}
 
 /*
 REQUEST BODY IN CASE OF UPLOAD EXPECTED:
