@@ -32,7 +32,11 @@ void Server::_watchLoop() {
 			perror("kevent() failed");
 			exit(EXIT_FAILURE);
 		}
+		std::cout << "Test 1 : "<< _socket[0] << std::endl;
+		fflush(stdout);
 		for (int i = 0; i < nev; i++) {
+		std::cout << "Test 2 : "<< _socket[0] << std::endl;
+		fflush(stdout);
 			if (_evList[i].flags & EV_EOF)
 				{
 					std::cout << "EOF: removing client connection from monitoring : " << _evList[i].ident << std::endl;
@@ -44,6 +48,8 @@ void Server::_watchLoop() {
 					close(_evList[i].ident);
 				}
 			else if ((int)_evList[i].ident == _socket[0]->getFd()) {
+					std::cout << "Test 3 : "<< _socket[0] << std::endl;
+		fflush(stdout);
 				// _accepter(_evList[i].ident);
 				if (getOpenFd() > MAX_FD)
 					_refuse(_evList[i].ident);
@@ -80,7 +86,8 @@ void	Server::start(void) {
 void	Server::_accepter(int server_fd, ListeningSocket *sock) {
 	struct sockaddr_in	address;
 	socklen_t			addrlen = sizeof(address);
-
+	std::cout << "Test 4 : "<< _socket[0] << std::endl;
+		fflush(stdout);
 	int fd = accept(server_fd, reinterpret_cast<struct sockaddr *>(&address), &addrlen);
 	if (fd == -1) {
 		std::cerr << "accept: " << strerror(errno) << std::endl;
@@ -98,7 +105,11 @@ void	Server::_accepter(int server_fd, ListeningSocket *sock) {
         strerror(errno));
     }
 	Client	*newClient = new Client(fd, sock->getFd());
+	std::cout << "Test 4.1 : "<< _socket[0] << std::endl;
+	fflush(stdout);
 	sock->setClient(newClient);
+	std::cout << "Test 4.2 : "<< _socket[0] << std::endl;
+	fflush(stdout);
 }
 
 void	Server::_refuse(int server_fd) {
@@ -115,6 +126,8 @@ void	Server::_refuse(int server_fd) {
 
 // Handle incoming data on accepted connections
 void	Server::_handler(Client *client) {
+		std::cout << "Test 5 : "<< _socket[0] << std::endl;
+		fflush(stdout);
 	std::cout << "DEbug = dans handler, client fd : "<< client->getFd() << std::endl;
 	memset(this->_requestBuffer, 0, sizeof(this->_requestBuffer));
 	ssize_t n = recv(client->getFd(), _requestBuffer, sizeof(_requestBuffer), 0);
@@ -130,7 +143,11 @@ void	Server::_handler(Client *client) {
 	}
 	else {
 		// main case: handle received data (print for now)
+		std::cout << "Test 5.1 : "<< _socket[0] << std::endl;
+		fflush(stdout);
 		_requestBuffer[n] = '\0';
+		std::cout << "Test 5.2 : "<< _socket[0] << std::endl;
+		fflush(stdout);
 		// std::cout << "DEBUUUG : request buf = " << _requestBuffer << std::endl;
 		int	bufBytes = client->getReqBuf().size();
 		client->addOnReqBuf(_requestBuffer + bufBytes);
@@ -174,4 +191,6 @@ ListeningSocket	*Server::getSocket(int fd) {
 	return nullptr;
 }
 
-Server::~Server(void) { delete this->_socket[0]; }
+Server::~Server(void) {
+	std::cout << "\n\n ************DELETION DELETION DELETION********* \n";
+	delete this->_socket[0]; }
