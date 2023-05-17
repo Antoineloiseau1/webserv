@@ -35,7 +35,7 @@ class Server {
 		void							_handler(Client *client);
 		void							_responder(Client *client);
 		void 							_watchLoop();
-		struct kevent					_evChange;
+		std::vector<struct kevent>		_evChange;
 		struct kevent					_evList[64];
 		struct sockaddr_storage			_addr;
 		socklen_t						_socklen;
@@ -53,6 +53,9 @@ class Server {
 		int				getRequestFd() const;
 		char			**getEnvp() const;
 		int				getOpenFd();
+
+		void	change_events(std::vector<struct kevent>& change_list, uintptr_t ident, int16_t filter,
+       				uint16_t flags, uint32_t fflags, intptr_t data, void *udata);
 };
 
 #endif

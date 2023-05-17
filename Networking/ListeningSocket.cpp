@@ -40,6 +40,10 @@ ListeningSocket::~ListeningSocket(void) { close(this->_fd); }
 
 void	ListeningSocket::setClient(Client *newClient) {
 	_clients.push_back(newClient);
+	for (std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++) {
+		std::cout << "Printing in set client : "<<_clients[0]->getFd() << std::endl;
+	}
+	std::cout << "Printing in getClient client : "<< this->getClient(newClient->getFd())->getFd() << std::endl;
 }
 
 int		ListeningSocket::getOpenFd() {
@@ -54,16 +58,22 @@ int		ListeningSocket::getOpenFd() {
 
 Client	*ListeningSocket::getClient(int fd) {
 	for (std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++) {
+		std::cout << "Printing in get client : "<<_clients[0]->getFd() << std::endl;
+		std::cout << "\n\nFDa tester: " << fd << "\n\n";
 		if ((*it)->getFd() == fd)
+		{
 			return *it;
+		}
 	}
-	return NULL;
+	std::cout << "----------ATTENTIOn:getClient () return value chelou\n";
+	return  NULL;
 }
 
 void	ListeningSocket::deleteClient(int fd) {
 	for (std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++) {
 		if ((*it)->getFd() == fd)
 			std::cout << "test fd client delete : " << (*it)->getFd() << std::endl;
+			delete *it;
 			_clients.erase(it);
 			break ;
 	}

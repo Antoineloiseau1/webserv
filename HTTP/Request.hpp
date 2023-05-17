@@ -23,6 +23,7 @@ class Request {
 		std::string							getBody();
 
 		void								parsingBody();
+		
 };
 
 

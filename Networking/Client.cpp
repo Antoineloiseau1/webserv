@@ -2,9 +2,13 @@
 
 Client::Client(int fd, int serverFd) : _fd(fd), _serverFd(serverFd), _status(0), _request(nullptr) {
 	_status = INIT;
+		std::cout <<"***********************+++++CLIENT CONSTRUCTOR "<< _fd << "********************\n";
+
 }
 
-Client::~Client() {}
+Client::~Client() {
+	std::cout <<"***********************CLIENT DESTRUCTOR "<< _fd << "********************\n";
+}
 
 int	Client::getFd() { return _fd; }
 
