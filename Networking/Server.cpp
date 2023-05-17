@@ -22,28 +22,31 @@ char	**Server::getEnvp() const { return _envp; }
 
 /* A ce stade, pas de monitoring des connections acceptees. pas de pb apparent.*/
 void Server::_watchLoop() {
-	int nev;
+	int nev = 0;
 	_socklen = sizeof(_addr);
 
 	while(1) {
-
+	std::cout << "\n ++++++ DEBUT while loop : nev = " << nev << std::endl;
 		nev = kevent(_kq, NULL, 0, _evList, 32,  NULL);
 		if (nev < 1) {
 			perror("kevent() failed");
 			exit(EXIT_FAILURE);
 		}
+		std::cout << "\n ++++++ while loop : nev = " << nev << std::endl;
 		for (int i = 0; i < nev; i++) {
+			std::cout << "\n *****DEBUT loop for ***** \n";
 			if (_evList[i].flags & EV_EOF)
 				{
 					std::cout << "EOF: removing client connection from monitoring : " << _evList[i].ident << std::endl;
-					EV_SET(&_evSet, _evList[i].ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-					if (kevent(_kq, &_evSet, 1, NULL, 0, NULL) < 0) {
+					EV_SET(&_evChange, _evList[i].ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+					if (kevent(_kq, &_evChange, 1, NULL, 0, NULL) < 0) {
 						fprintf(stderr, "Problem adding kevent listener for client LOOP: %s\n",
 						strerror(errno));
 					}
 					close(_evList[i].ident);
 				}
 			else if ((int)_evList[i].ident == _socket[0]->getFd()) {
+				std::cout << "\n\n2\n\n";
 				// _accepter(_evList[i].ident);
 				if (getOpenFd() > MAX_FD)
 					_refuse(_evList[i].ident);
@@ -51,11 +54,12 @@ void Server::_watchLoop() {
 					_accepter(_evList[i].ident, _socket[0]);
 			}
 			else {
+				std::cout << "\n\n3\n\n";
 				if (_evList[i].flags & EVFILT_READ) {
 					_handler((_socket[0])->getClient(_evList[i].ident));
 				}
-				
 			}
+			std::cout << "\n *****FIN loop for \n";
 		}
 	}
 }
@@ -68,8 +72,8 @@ Server::Server(int domain, int service, int protocole, int *ports, int nbSocket,
 void	Server::start(void) {
 
 	_kq = kqueue();
-	EV_SET(&_evSet, _socket[0]->getFd(), EVFILT_READ, EV_ADD, 0, 0, NULL);
-	if (kevent(_kq, &_evSet, 1, NULL, 0, NULL) < 0) {
+	EV_SET(&_evChange, _socket[0]->getFd(), EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
+	if (kevent(_kq, &_evChange, 1, NULL, 0, NULL) < 0) {
 		exit(1);
   	}
 	_watchLoop();
@@ -90,8 +94,8 @@ void	Server::_accepter(int server_fd, ListeningSocket *sock) {
 		perror("setsockopt : ");
 		exit(EXIT_FAILURE);
 	}
-	EV_SET(&_evSet, fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
-	if (kevent(_kq, &_evSet, 1, NULL, 0, NULL) < 0) {
+	EV_SET(&_evChange, fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
+	if (kevent(_kq, &_evChange, 1, NULL, 0, NULL) < 0) {
         fprintf(stderr, "Problem adding kevent for client ACCEPTER: %s\n",
         strerror(errno));
     }
@@ -118,12 +122,13 @@ void	Server::_handler(Client *client) {
 	ssize_t n = recv(client->getFd(), _requestBuffer, sizeof(_requestBuffer), 0);
 	if (n < 0) {
 		perror("read() failed");
-		EV_SET(&_evSet, client->getFd(), EVFILT_READ, EV_DELETE, 0, 0, NULL);
-		if (kevent(_kq, &_evSet, 1, NULL, 0, NULL) < 0) {
+		EV_SET(&_evChange, client->getFd(), EVFILT_READ, EV_DELETE, 0, 0, NULL);
+		if (kevent(_kq, &_evChange, 1, NULL, 0, NULL) < 0) {
 			fprintf(stderr, "Problem adding kevent listener for client HANDLER: %s\n",
 			strerror(errno));
 		}
 		close(client->getFd());
+		std::cout << "\n\n\nCLOSED\n\n\n";
 		_socket[0]->deleteClient(client->getFd());
 	}
 	else {
@@ -133,21 +138,38 @@ void	Server::_handler(Client *client) {
 		int	bufBytes = client->getReqBuf().size();
 		client->addOnReqBuf(_requestBuffer + bufBytes);
 		std::cout << "DEBUUUG : request line = " << client->getReqBuf() << std::endl;
-		// std::cout << "*****Request From Client:\n" << client->getReqBuf() << std::endl;
-		_responder(client);
+		if (client->getStatus() == Client::INIT) {
+			client->createRequest(client->getReqBuf());
+			client->setStatus(Client::HEADER_PARSED);
+		}
+		if (client->getRequest()->getType() == "GET") {
+			std::cout << "*****Request From Client:\n" << client->getReqBuf() << std::endl;
+		}
+		else if (client->getRequest()->getType() == "POST")
+		{
+			std::cout << "\n SIZE OF BODY RECEIVED : " << client->getReqBuf().size() << "vs : " << atoi(client->getRequest()->getHeaders()["Content-Length"].c_str()) << std::endl;
+			if (client->getReqBuf().size() < static_cast<unsigned long>(atoi(client->getRequest()->getHeaders()["Content-Length"].c_str())))
+				return;
+			else {
+				client->getRequest()->parsingBody();
+				client->setStatus(Client::BODY_PARSED);
+			}
+		}
+			_responder(client);
+
 	}
 }
 
 void	Server::_responder(Client *client) {
-	Request		request(client->getReqBuf());
-	Response	response(request, *this);
+	
+	Response	response(*(client->getRequest()), *this);
 	std::string res = response.buildResponse();
 
 	std::cout << "Response from the server:\n" << res << std::endl;
 	send(client->getFd(), res.c_str(), res.length(), 0);
 	
-	EV_SET(&_evSet, client->getFd(), EVFILT_READ, EV_DELETE, 0, 0, NULL);
-	if (kevent(_kq, &_evSet, 1, NULL, 0, NULL) < 0) {
+	EV_SET(&_evChange, client->getFd(), EVFILT_READ, EV_DELETE, 0, 0, NULL);
+	if (kevent(_kq, &_evChange, 1, NULL, 0, NULL) < 0) {
 		fprintf(stderr, "Problem adding kevent listener for client RESPON: %s\n",
 		strerror(errno));
 	}

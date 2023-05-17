@@ -8,6 +8,7 @@
 
 class Request {
 	private:
+		std::string							_requestLine;
 		std::map<std::string, std::string>	_initialRequestLine;
 		std::map<std::string, std::string>	_headers;
 		std::string							_body;

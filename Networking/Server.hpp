@@ -35,7 +35,7 @@ class Server {
 		void							_handler(Client *client);
 		void							_responder(Client *client);
 		void 							_watchLoop();
-		struct kevent					_evSet;
+		struct kevent					_evChange;
 		struct kevent					_evList[64];
 		struct sockaddr_storage			_addr;
 		socklen_t						_socklen;

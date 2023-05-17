@@ -1,6 +1,8 @@
 #include "Client.hpp"
 
-Client::Client(int fd, int serverFd) : _fd(fd), _serverFd(serverFd), _status(0), _request(nullptr) {}
+Client::Client(int fd, int serverFd) : _fd(fd), _serverFd(serverFd), _status(0), _request(nullptr) {
+	_status = INIT;
+}
 
 Client::~Client() {}
 

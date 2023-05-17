@@ -21,8 +21,9 @@ class Client
 	public:
 		enum		_status 
 		{
-			STANDBY,
-			RECEIVED,
+			INIT,
+			HEADER_PARSED,
+			BODY_PARSED,
 			RESPONSE,
 			OVER
 		};
