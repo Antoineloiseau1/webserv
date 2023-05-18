@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: anloisea <anloisea@student.42.fr>          +#+  +:+       +#+        */
+/*   By: antoine <antoine@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/04 09:54:40 by mmidon            #+#    #+#             */
-/*   Updated: 2023/05/12 11:19:09 by anloisea         ###   ########.fr       */
+/*   Updated: 2023/05/18 11:12:17 by antoine          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,9 +19,10 @@
 #include <fstream>
 #include <fcntl.h>
 #include <sys/types.h>
-#include <sys/event.h>
+#include <sys/select.h>
 #include <sys/time.h>
 #include "../HTTP/Response.hpp"
+#include <stdlib.h>
 
 class Response;
 
@@ -35,11 +36,11 @@ class Server {
 		void							_handler(Client *client);
 		void							_responder(Client *client);
 		void 							_watchLoop();
-		std::vector<struct kevent>		_evChange;
-		struct kevent					_evList[64];
+		fd_set							_readSet;
+		fd_set							_writeSet;
+		int								_fdMax;
 		struct sockaddr_storage			_addr;
 		socklen_t						_socklen;
-		int								_kq;
 		char							**_envp;
 
 

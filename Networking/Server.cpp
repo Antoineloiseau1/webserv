@@ -34,46 +34,51 @@ void	Server::change_events(std::vector<struct kevent>& change_list, uintptr_t id
 }
 
 /* A ce stade, pas de monitoring des connections acceptees. pas de pb apparent.*/
-void Server::_watchLoop() {
-	int nev = 0;
-	_socklen = sizeof(_addr);
+int	Server::getOpenFd() {
+	int res = _socket.size(); 
+	
+	for (std::vector<ListeningSocket*>::iterator it = _socket.begin(); it != _socket.end(); it++)
+	{
+		res += (*it)->getOpenFd();
+	}
+	return res;
+}
 
-	while(1) {
-	std::cout << "\n ++++++ DEBUT while loop : nev = " << nev << std::endl;
-		for (unsigned int i = 0; i < _evChange.size() ; i++){
-			std::cout<< "EV CHANGE AVANT : pour i = " << i << " ; "<< _evChange[i].ident << "-> ReAD FLAG = "<< (_evChange[i].filter == EVFILT_READ ) << " | " << (_evChange[i].flags & EV_ADD ) << " | " << (_evChange[i].flags & EV_DELETE ) << std::endl;
-		}
-		nev = kevent(_kq, &_evChange[0], _evChange.size(), _evList, 32,  NULL);
-		if (nev < 1) {
-			perror("kevent() failed");
+int	Server::getRequestFd() const { return _requestFd; }
+
+char	**Server::getEnvp() const { return _envp; }
+
+/* A ce stade, pas de monitoring des connections acceptees. pas de pb apparent.*/
+void Server::_watchLoop() {
+	int 	nbEvents;
+	fd_set	tmpRead;
+	fd_set	tmpWrite;
+	FD_ZERO(&tmpRead);
+	FD_ZERO(&tmpWrite);
+
+	while(true) 
+	{
+		tmpRead = _readSet;
+		tmpWrite= _writeSet;
+		nbEvents = select(_fdMax + 1, &tmpRead, &tmpWrite, NULL, NULL);
+		if (nbEvents < 1) {
+			std::cerr << "Error: select(): " << strerror(errno) << std::endl;
 			exit(EXIT_FAILURE);
 		}
-		_evChange.clear();
-		std::cout << "\n ++++++ while loop : nev = " << nev << std::endl;
-		for (int i = 0; i < nev; i++) {
-			std::cout << "\n *****DEBUT loop for ***** \n";
-			if (_evList[i].flags & EV_EOF)
-				{
-					std::cout << "EOF: removing client connection from monitoring : " << _evList[i].ident << std::endl;
-					change_events(_evChange, _evList[i].ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-					close(_evList[i].ident);
-				}
-			else if ((int)_evList[i].ident == _socket[0]->getFd()) {
+		for (int i = 0; i <= _fdMax; i++) 
+		{
+			if(FD_ISSET(i, tmpRead))
+			{
 				if (getOpenFd() > MAX_FD)
-					_refuse(_evList[i].ident);
+					_refuse(i);
+				else if (i == _socket[0]->getFd())
+					_accepter(i, _socket[0]);
 				else
-					_accepter(_evList[i].ident, _socket[0]);
-			}
-			else {
-				if (_evList[i].filter == EVFILT_READ) {
-					if ((_socket[0])->getClient(_evList[i].ident) != NULL)
-					{
-						std::cout << "APPel get CLIENT HANDLER : "<< _evList[i].ident << std::endl;
-						_handler((_socket[0])->getClient(_evList[i].ident));
-					}
+				{
+					_handler(i);
 				}
+				
 			}
-			std::cout << "\n *****FIN loop for \n";
 		}
 	}
 }
@@ -83,10 +88,19 @@ Server::Server(int domain, int service, int protocole, int *ports, int nbSocket,
 		this->_socket.push_back(new ListeningSocket(domain, service, protocole, ports[i]));
 }
 
-void	Server::start(void) {
-
-	_kq = kqueue();
-	change_events(_evChange, _socket[0]->getFd(), EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
+void	Server::start(void)
+{
+	_socklen = sizeof(_addr);
+	FD_ZERO(&_readSet);
+	FD_ZERO(&_writeSet);
+	_fdMax = _socket.front()->getFd();
+	for(std::vector<ListeningSocket*>::iterator it(_socket.begin()); it != _socket.end(); ++it)
+	{
+		ListeningSocket *socket = *it;
+		FD_SET(socket->getFd(), _readSet);
+		if(socket->getFd() > _fdMax)
+			_fdMax = socket->getFd();
+	}
 	_watchLoop();
 }
 
