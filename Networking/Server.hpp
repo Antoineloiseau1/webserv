@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: antoine <antoine@student.42.fr>            +#+  +:+       +#+        */
+/*   By: elpolpa <elpolpa@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/04 09:54:40 by mmidon            #+#    #+#             */
-/*   Updated: 2023/05/18 15:12:23 by antoine          ###   ########.fr       */
+/*   Updated: 2023/05/18 19:34:17 by elpolpa          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@
 #include <cstring>
 #include <string.h>
 
-# define BUFFER_SIZE 424242
+# define BUFFER_SIZE 3000000
 
 class Response;
 
@@ -49,7 +49,6 @@ class Server {
 		char							**_envp;
 
 
-
 	public:
 		Server(int domain, int service, int protocole, int *ports, int nbSocket, char **envp);
 		~Server(void);
@@ -59,6 +58,7 @@ class Server {
 		int				getRequestFd() const;
 		char			**getEnvp() const;
 		int				getOpenFd();
+		static void		exit(int sig);
 
 };
 

@@ -2,9 +2,12 @@
 #include "../parsing/parsing.hpp"
 #include "../HTTP/Response.hpp"
 #include <exception>
+#include <csignal>
 
 #include "Client.hpp"
 #define MAX_FD 230
+
+bool	_alive = true;
 
 int	Server::getRequestFd() const { return _requestFd; }
 
@@ -38,6 +41,14 @@ int	Server::_getFdMax(void) {
 	return(_fdMax);
 }
 
+void	Server::exit(int sig)
+{
+	(void)sig;
+
+	std::cout << "\n" << "exiting...\n";
+	_alive = false;
+}
+
 /* A ce stade, pas de monitoring des connections acceptees. pas de pb apparent.*/
 void Server::_watchLoop() {
 	int 	nbEvents;
@@ -45,8 +56,9 @@ void Server::_watchLoop() {
 	fd_set	tmpWrite;
 	FD_ZERO(&tmpRead);
 	FD_ZERO(&tmpWrite);
+	signal(SIGINT, exit);
 
-	while(true) 
+	while(_alive) 
 	{
 		tmpRead = _readSet;
 		tmpWrite = _writeSet;
@@ -140,28 +152,27 @@ void	Server::_handler(Client *client) {
 	memset(this->_requestBuffer, 0, BUFFER_SIZE);
 
 	ssize_t n = recv(client->getFd(), _requestBuffer, BUFFER_SIZE, 0);
+	std::cout << "***** n = " << n << std::endl;
 	if (n < 0) {
 		std::cerr << "error: recv: " << strerror(errno) << std::endl;
 		FD_CLR(client->getFd(), &_readSet);
 		close(client->getFd());
-		std::cout << "\n\n\nCLOSED\n\n\n";
 		_socket[0]->deleteClient(client->getFd());
 	}
 	else {
 		// main case: handle received data (print for now)
+
 		_requestBuffer[n] = '\0';
 		std::cout << "requestBuffer = " << _requestBuffer << std::endl;
-		// std::cout << "DEBUUUG : request buf = " << _requestBuffer << std::endl;
 		int	bufBytes = client->getReqBuf().size();
-		std::cout << "_socket: " << _socket[0] << std::endl;
 		client->addOnReqBuf(_requestBuffer + bufBytes);
-		// std::cout << "DEBUUUG : request line = " << client->getReqBuf() << std::endl;
 		if (client->getStatus() == Client::INIT) {
 			client->createRequest(client->getReqBuf());
 			client->setStatus(Client::HEADER_PARSED);
 		}
 		if (client->getRequest()->getType() == "GET") {
 			std::cout << "*****Request From Client:\n" << client->getReqBuf() << std::endl;
+			FD_CLR(client->getFd(), &_readSet);
 			FD_SET(client->getFd(), &_writeSet);
 			if (client->getFd() > _fdMax)
 				_fdMax = client->getFd();
@@ -175,6 +186,7 @@ void	Server::_handler(Client *client) {
 				client->getRequest()->parsingBody();
 				client->setStatus(Client::BODY_PARSED);
 				FD_SET(client->getFd(), &_writeSet);
+				FD_CLR(client->getFd(), &_readSet);
 				if (client->getFd() > _fdMax)
 					_fdMax = client->getFd();
 			}
