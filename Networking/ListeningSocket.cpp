@@ -71,10 +71,11 @@ Client	*ListeningSocket::getClient(int fd) {
 
 void	ListeningSocket::deleteClient(int fd) {
 	for (std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++) {
-		if ((*it)->getFd() == fd)
+		if ((*it)->getFd() == fd) {
 			std::cout << "test fd client delete : " << (*it)->getFd() << std::endl;
 			delete *it;
 			_clients.erase(it);
 			break ;
+		}
 	}
 }

@@ -115,6 +115,7 @@ std::string	Response::openHtmlFile(std::string f)
 	std::ifstream file(f);
     if (!file.is_open())
 	{
+		std::cout << "in if: " << f << std::endl;
 		_response["status"] = " 404 Not Found\r\n";
 		return (openHtmlFile("data/www/error/404.html"));
 	}

@@ -6,32 +6,9 @@
 #include "Client.hpp"
 #define MAX_FD 230
 
-int	Server::getOpenFd() {
-	int res = _socket.size(); 
-	
-	for (std::vector<ListeningSocket*>::iterator it = _socket.begin(); it != _socket.end(); it++)
-	{
-		res += (*it)->getOpenFd();
-	}
-	return res;
-}
-
 int	Server::getRequestFd() const { return _requestFd; }
 
 char	**Server::getEnvp() const { return _envp; }
-
-void	Server::change_events(std::vector<struct kevent>& change_list, uintptr_t ident, int16_t filter,
-	uint16_t flags, uint32_t fflags, intptr_t data, void *udata)
-{
-    struct kevent temp_event;
-
-    EV_SET(&temp_event, ident, filter, flags, fflags, data, udata);
-    if (kevent(_kq, &temp_event, 1, NULL, 0, NULL) < 0) {
-        fprintf(stderr, "Problem adding kevent for client ACCEPTER: %s\n",
-        strerror(errno));
-    }
-    change_list.push_back(temp_event);
-}
 
 /* A ce stade, pas de monitoring des connections acceptees. pas de pb apparent.*/
 int	Server::getOpenFd() {
@@ -43,10 +20,6 @@ int	Server::getOpenFd() {
 	}
 	return res;
 }
-
-int	Server::getRequestFd() const { return _requestFd; }
-
-char	**Server::getEnvp() const { return _envp; }
 
 /* A ce stade, pas de monitoring des connections acceptees. pas de pb apparent.*/
 void Server::_watchLoop() {
@@ -67,15 +40,15 @@ void Server::_watchLoop() {
 		}
 		for (int i = 0; i <= _fdMax; i++) 
 		{
-			if(FD_ISSET(i, tmpRead))
+			if(FD_ISSET(i, &tmpRead))
 			{
-				if (getOpenFd() > MAX_FD)
-					_refuse(i);
-				else if (i == _socket[0]->getFd())
+				// if (getOpenFd() > MAX_FD)
+				// 	_refuse(i);
+				if (i == _socket[0]->getFd())
 					_accepter(i, _socket[0]);
 				else
 				{
-					_handler(i);
+					_handler(_socket[0]->getClient(i));
 				}
 				
 			}
@@ -97,7 +70,7 @@ void	Server::start(void)
 	for(std::vector<ListeningSocket*>::iterator it(_socket.begin()); it != _socket.end(); ++it)
 	{
 		ListeningSocket *socket = *it;
-		FD_SET(socket->getFd(), _readSet);
+		FD_SET(socket->getFd(), &_readSet);
 		if(socket->getFd() > _fdMax)
 			_fdMax = socket->getFd();
 	}
@@ -108,6 +81,7 @@ void	Server::start(void)
 void	Server::_accepter(int server_fd, ListeningSocket *sock) {
 	struct sockaddr_in	address;
 	socklen_t			addrlen = sizeof(address);
+
 	int fd = accept(server_fd, reinterpret_cast<struct sockaddr *>(&address), &addrlen);
 	if (fd == -1) {
 		std::cerr << "accept: " << strerror(errno) << std::endl;
@@ -119,8 +93,9 @@ void	Server::_accepter(int server_fd, ListeningSocket *sock) {
 		perror("setsockopt : ");
 		exit(EXIT_FAILURE);
 	}
-	change_events(_evChange, fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
-    // change_events(_evChange, fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
+	FD_SET(fd, &_readSet);
+	if(fd > _fdMax)
+		_fdMax = fd;
 	Client* newClient = new Client(fd, sock->getFd());
 	sock->setClient(newClient);
 }
@@ -145,8 +120,8 @@ void	Server::_handler(Client *client) {
 
 	ssize_t n = recv(client->getFd(), _requestBuffer, sizeof(_requestBuffer), 0);
 	if (n < 0) {
-		perror("read() failed");
-		change_events(_evChange, client->getFd(), EVFILT_READ, EV_DELETE, 0, 0, NULL);
+		std::cerr << "error: recv: " << strerror(errno) << std::endl;
+		FD_CLR(client->getFd(), &_readSet);
 		close(client->getFd());
 		std::cout << "\n\n\nCLOSED\n\n\n";
 		_socket[0]->deleteClient(client->getFd());
@@ -186,7 +161,7 @@ void	Server::_responder(Client *client) {
 
 	std::cout << "Response from the server:\n" << res << std::endl;
 	send(client->getFd(), res.c_str(), res.length(), 0);
-	change_events(_evChange, client->getFd(), EVFILT_READ, EV_DELETE, 0, 0, NULL);
+	FD_CLR(client->getFd(), &_readSet);
 	std::cout << "CLOSING CLIENT FD : " << client ->getFd() << std::endl;
 	close(client->getFd());
 	_socket[0]->deleteClient(client->getFd());
