@@ -3,7 +3,8 @@
 
 #include <string>
 #include "../HTTP/Request.hpp"
-// #include "ListeningSocket.hpp"
+
+#define BUFFER_SIZE 424242
 
 class ListeningSocket;
 
@@ -13,10 +14,9 @@ class Client
 	private:
 		int				_fd;
 		int				_serverFd;
-		// ListeningSocket	**_server;
-		std::string		_reqBuf;
 		int				_status;
 		Request			*_request;
+		char			*_reqBuf;
 
 	public:
 		enum		_status 
@@ -30,14 +30,17 @@ class Client
 		Client(int fd, int serverFd);
 		~Client();
 
+/******************************GETTER*************************************/
 		int				getFd();
 		int				getStatus();
-		void			setStatus(int status);
 		std::string		getReqBuf();
-		void			addOnReqBuf(std::string buf);
-		void			createRequest(std::string reqLine);
 		Request			*getRequest();
 		int				getServerFd();
+
+/******************************SETTER*************************************/
+		void			createRequest(char *reqLine);
+		void			setStatus(int status);
+		void			setReqBuf(char *buf); //sera surement modifier pour concatener
 
 };
 

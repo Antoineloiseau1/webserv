@@ -1,11 +1,18 @@
 #include "Request.hpp"
 #include <fstream>
 
-Request::Request(std::string request) {
+void	Request::separateHeaders(std::string reqString)
+{
+	_headerLine = reqString.substr(0, reqString.find("\r\n\r\n") + 1);
+}
+
+/* Parses only the headers */
+Request::Request(char *requestBuf) {
+	_requestLine = requestBuf;
+	separateHeaders(requestBuf);
 	
-	_requestLine = request;
 	std::string line;
-	std::istringstream iss(request);
+	std::istringstream iss(_headerLine);
 
 	std::getline(iss, line);
 	// Ignore whitepaces
@@ -25,7 +32,6 @@ Request::Request(std::string request) {
 		_headers[line.substr(0, delim)] = line.substr(delim + 2, line.size() - (delim + 2));
 		getline(iss, line);
 	}
-	
 }
 
 void saveImage(const std::string& imageData, const std::string& filePath) {
@@ -109,3 +115,5 @@ std::string	Request::getVersion() { return _initialRequestLine["version"]; }
 std::string	Request::getBody() { return _body; }
 
 std::map<std::string, std::string>	Request::getHeaders() { return _headers; }
+
+int	Request::getHeaderLen() { return _headerLine.size(); }

@@ -149,7 +149,7 @@ void	Server::_refuse(int server_fd) {
 void	Server::_handler(Client *client) {
 	std::cout << "DEbug = dans handler, client fd : "<< client << std::endl;
 
-	memset(this->_requestBuffer, 0, BUFFER_SIZE);
+
 
 	ssize_t n = recv(client->getFd(), _requestBuffer, BUFFER_SIZE, 0);
 	std::cout << "***** n = " << n << std::endl;
@@ -164,21 +164,29 @@ void	Server::_handler(Client *client) {
 
 		_requestBuffer[n] = '\0';
 		std::cout << "requestBuffer = " << _requestBuffer << std::endl;
-		int	bufBytes = client->getReqBuf().size();
-		client->addOnReqBuf(_requestBuffer + bufBytes);
-		if (client->getStatus() == Client::INIT) {
-			client->createRequest(client->getReqBuf());
+/* *****A voir si on arrive toujours a choper tous les headers en 1 passage,
+sinon il faudra sauvegarder le request buffer et concatener**************/
+
+		if (strstr(_requestBuffer, "\r\n\r\n") != nullptr
+			&& client->getStatus() == Client::INIT)
+		{
+			client->createRequest(_requestBuffer);
 			client->setStatus(Client::HEADER_PARSED);
+			client->setReqBuf(_requestBuffer + client->getRequest()->getHeaderLen() + 4);
 		}
-		if (client->getRequest()->getType() == "GET") {
+		if (client->getStatus() == Client::HEADER_PARSED && client->getRequest()->getType() == "GET") {
 			std::cout << "*****Request From Client:\n" << client->getReqBuf() << std::endl;
 			FD_CLR(client->getFd(), &_readSet);
 			FD_SET(client->getFd(), &_writeSet);
 			if (client->getFd() > _fdMax)
 				_fdMax = client->getFd();
 		}
-		else if (client->getRequest()->getType() == "POST")
-		{
+		else if (client->getStatus() == Client::HEADER_PARSED && client->getRequest()->getType() == "POST")
+		{/* -COMPTER LE NOMBRE DE BYTES RECEIVED TO KNOW IF WE HAVE EVERYTHING FROM THE BODY
+			- SI LE BODY CONCERNE UNE IMAGE, IL DOIT ETRE TRANSFERER DIRECTEMENT DANS UN FILE :
+			std::ofstream file("picture.png", std::ofstream::binary | std::ofstream::out);
+			file.write(t, bodySize);
+		*/
 			std::cout << "\n SIZE OF BODY RECEIVED : " << client->getReqBuf().size() << "vs : " << atoi(client->getRequest()->getHeaders()["Content-Length"].c_str()) << std::endl;
 			if (client->getReqBuf().size() < static_cast<unsigned long>(atoi(client->getRequest()->getHeaders()["Content-Length"].c_str())))
 				return;

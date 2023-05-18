@@ -1,7 +1,9 @@
 #include "Client.hpp"
+#include <cstring>
 
 Client::Client(int fd, int serverFd) : _fd(fd), _serverFd(serverFd), _status(0), _request(nullptr) {
 	_status = INIT;
+	memset(this->_reqBuf, 0, BUFFER_SIZE);
 		std::cout <<"***********************+++++CLIENT CONSTRUCTOR "<< _fd << "********************\n";
 
 }
@@ -18,12 +20,12 @@ void	Client::setStatus(int status) { _status = status; }
 
 std::string	Client::getReqBuf() { return _reqBuf; }
 
-void	Client::addOnReqBuf(std::string buf) {
-	_reqBuf += buf;
+void	Client::createRequest(char *reqLine) {
+	_request = new Request(reqLine);
 }
 
-void	Client::createRequest(std::string reqLine) {
-	_request = new Request(reqLine);
+void	Client::setReqBuf(char *buf) { 
+	_reqBuf = buf; /*A MODIFIER ! COPIE PROFONDE A FAIRE*/
 }
 
 Request	*Client::getRequest() { return _request; }

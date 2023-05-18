@@ -9,11 +9,12 @@
 class Request {
 	private:
 		std::string							_requestLine;
+		std::string							_headerLine;
 		std::map<std::string, std::string>	_initialRequestLine;
 		std::map<std::string, std::string>	_headers;
 		std::string							_body;
 	public:
-		Request(std::string request);
+		Request(char *request);
 		~Request(void);
 
 		std::string							getType();
@@ -21,8 +22,10 @@ class Request {
 		std::string							getVersion();
 		std::map<std::string, std::string>	getHeaders();
 		std::string							getBody();
+		int									getHeaderLen();
 
 		void								parsingBody();
+		void								separateHeaders(std::string reqString);
 		
 };
 
