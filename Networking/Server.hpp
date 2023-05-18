@@ -6,7 +6,7 @@
 /*   By: antoine <antoine@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/04 09:54:40 by mmidon            #+#    #+#             */
-/*   Updated: 2023/05/18 11:21:12 by antoine          ###   ########.fr       */
+/*   Updated: 2023/05/18 14:06:22 by antoine          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,6 +37,7 @@ class Server {
 		void							_refuse(int server_fd);
 		void							_handler(Client *client);
 		void							_responder(Client *client);
+		int								_getFdMax(void);
 		void 							_watchLoop();
 		fd_set							_readSet;
 		fd_set							_writeSet;

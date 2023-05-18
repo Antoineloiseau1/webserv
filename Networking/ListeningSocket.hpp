@@ -7,8 +7,6 @@
 
 class ListeningSocket: public Socket {
 
-	private:
-		std::vector<Client*>	_clients;
 	
 	public:
 
@@ -24,6 +22,8 @@ class ListeningSocket: public Socket {
 		int					getFd(void) const;
 		socklen_t			getSockLen(void) const;
 		struct sockaddr_in	getAddress(void) const;
+
+		std::vector<Client*>	clients;
 
 };
 

@@ -74,6 +74,8 @@ void	Response::PostResponse(void) {
 	std::string	file = _request.getPath();
 	if (file != "favicon.ico" && file != " " && !file.empty() && file != "" && file != "data/www/style.css")
 	{ //handleCgi();
+		_response["status"] = "201 Created\r\n";
+		_response["body"] = openHtmlFile("/data/www/error/201.html");
 		std::cout << "CGI" << std::endl;
 		return;
 	}

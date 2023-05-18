@@ -14,11 +14,28 @@ char	**Server::getEnvp() const { return _envp; }
 int	Server::getOpenFd() {
 	int res = _socket.size(); 
 	
-	for (std::vector<ListeningSocket*>::iterator it = _socket.begin(); it != _socket.end(); it++)
+	for (std::vector<ListeningSocket*>::iterator it(_socket.begin()); it != _socket.end(); it++)
 	{
 		res += (*it)->getOpenFd();
 	}
 	return res;
+}
+
+int	Server::_getFdMax(void) {
+	_fdMax = 0;
+	for(std::vector<ListeningSocket*>::iterator s(_socket.begin()); s != _socket.end(); ++s)
+	{
+		ListeningSocket *socket = *s;
+		if(socket->getFd() > _fdMax)
+			_fdMax = socket->getFd();
+		for(std::vector<Client*>::iterator c(socket->clients.begin()); c != socket->clients.end(); ++c)
+		{
+			Client *client = *c;
+			if (client->getFd() > _fdMax)
+				_fdMax = client->getFd();
+		}
+	}
+	return(_fdMax);
 }
 
 /* A ce stade, pas de monitoring des connections acceptees. pas de pb apparent.*/
@@ -32,25 +49,29 @@ void Server::_watchLoop() {
 	while(true) 
 	{
 		tmpRead = _readSet;
-		tmpWrite= _writeSet;
-		nbEvents = select(_fdMax + 1, &tmpRead, &tmpWrite, NULL, NULL);
+		tmpWrite = _writeSet;
+		nbEvents = select(_getFdMax() + 1, &tmpRead, &tmpWrite, NULL, NULL);
 		if (nbEvents < 1) {
 			std::cerr << "Error: select(): " << strerror(errno) << std::endl;
 			exit(EXIT_FAILURE);
 		}
-		for (int i = 0; i <= _fdMax; i++) 
+		if(FD_ISSET(_socket[0]->getFd(), &tmpRead))
 		{
-			if(FD_ISSET(i, &tmpRead))
-			{
-				// if (getOpenFd() > MAX_FD)
-				// 	_refuse(i);
-				if (i == _socket[0]->getFd())
-					_accepter(i, _socket[0]);
-				else
-				{
-					_handler(_socket[0]->getClient(i));
-				}
-				
+			if (getOpenFd() > MAX_FD)
+				_refuse(_socket[0]->getFd());
+			else
+				_accepter(_socket[0]->getFd(), _socket[0]);
+		}
+		for(std::vector<Client*>::iterator it(_socket[0]->clients.begin()); it != _socket[0]->clients.end(); ++it)
+		{
+			Client *client = *it;
+			if(FD_ISSET(client->getFd(), &tmpRead)) {
+				_handler(client);
+				break;
+			}
+			if(FD_ISSET(client->getFd(), &tmpWrite)) {
+				_responder(client);
+				break;
 			}
 		}
 	}
@@ -129,8 +150,10 @@ void	Server::_handler(Client *client) {
 	else {
 		// main case: handle received data (print for now)
 		_requestBuffer[n] = '\0';
+		std::cout << "requestBuffer = " << _requestBuffer << std::endl;
 		// std::cout << "DEBUUUG : request buf = " << _requestBuffer << std::endl;
 		int	bufBytes = client->getReqBuf().size();
+		std::cout << "_socket: " << _socket[0] << std::endl;
 		client->addOnReqBuf(_requestBuffer + bufBytes);
 		// std::cout << "DEBUUUG : request line = " << client->getReqBuf() << std::endl;
 		if (client->getStatus() == Client::INIT) {
@@ -139,6 +162,9 @@ void	Server::_handler(Client *client) {
 		}
 		if (client->getRequest()->getType() == "GET") {
 			std::cout << "*****Request From Client:\n" << client->getReqBuf() << std::endl;
+			FD_SET(client->getFd(), &_writeSet);
+			if (client->getFd() > _fdMax)
+				_fdMax = client->getFd();
 		}
 		else if (client->getRequest()->getType() == "POST")
 		{
@@ -148,9 +174,11 @@ void	Server::_handler(Client *client) {
 			else {
 				client->getRequest()->parsingBody();
 				client->setStatus(Client::BODY_PARSED);
+				FD_SET(client->getFd(), &_writeSet);
+				if (client->getFd() > _fdMax)
+					_fdMax = client->getFd();
 			}
 		}
-		_responder(client);
 	}
 }
 
@@ -162,6 +190,7 @@ void	Server::_responder(Client *client) {
 	std::cout << "Response from the server:\n" << res << std::endl;
 	send(client->getFd(), res.c_str(), res.length(), 0);
 	FD_CLR(client->getFd(), &_readSet);
+	FD_CLR(client->getFd(), &_writeSet);
 	std::cout << "CLOSING CLIENT FD : " << client ->getFd() << std::endl;
 	close(client->getFd());
 	_socket[0]->deleteClient(client->getFd());

@@ -39,9 +39,9 @@ ListeningSocket::~ListeningSocket(void) { close(this->_fd); }
 
 
 void	ListeningSocket::setClient(Client *newClient) {
-	_clients.push_back(newClient);
-	for (std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++) {
-		std::cout << "Printing in set client : "<<_clients[0]->getFd() << std::endl;
+	clients.push_back(newClient);
+	for (std::vector<Client*>::iterator it = clients.begin(); it != clients.end(); it++) {
+		std::cout << "Printing in set client : "<< clients[0]->getFd() << std::endl;
 	}
 	std::cout << "Printing in getClient client : "<< this->getClient(newClient->getFd())->getFd() << std::endl;
 }
@@ -49,7 +49,7 @@ void	ListeningSocket::setClient(Client *newClient) {
 int		ListeningSocket::getOpenFd() {
 	int res = 0;
 	
-	for (std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++)
+	for (std::vector<Client*>::iterator it = clients.begin(); it != clients.end(); it++)
 	{
 		res++;
 	}
@@ -57,8 +57,8 @@ int		ListeningSocket::getOpenFd() {
 }
 
 Client	*ListeningSocket::getClient(int fd) {
-	for (std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++) {
-		std::cout << "Printing in get client : "<<_clients[0]->getFd() << std::endl;
+	for (std::vector<Client*>::iterator it = clients.begin(); it != clients.end(); it++) {
+		std::cout << "Printing in get client : "<<clients[0]->getFd() << std::endl;
 		std::cout << "\n\nFDa tester: " << fd << "\n\n";
 		if ((*it)->getFd() == fd)
 		{
@@ -70,11 +70,11 @@ Client	*ListeningSocket::getClient(int fd) {
 }
 
 void	ListeningSocket::deleteClient(int fd) {
-	for (std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++) {
+	for (std::vector<Client*>::iterator it = clients.begin(); it != clients.end(); it++) {
 		if ((*it)->getFd() == fd) {
 			std::cout << "test fd client delete : " << (*it)->getFd() << std::endl;
 			delete *it;
-			_clients.erase(it);
+			clients.erase(it);
 			break ;
 		}
 	}
