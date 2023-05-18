@@ -137,9 +137,9 @@ void	Server::_refuse(int server_fd) {
 void	Server::_handler(Client *client) {
 	std::cout << "DEbug = dans handler, client fd : "<< client << std::endl;
 
-	memset(this->_requestBuffer, 0, sizeof(this->_requestBuffer));
+	memset(this->_requestBuffer, 0, BUFFER_SIZE);
 
-	ssize_t n = recv(client->getFd(), _requestBuffer, sizeof(_requestBuffer), 0);
+	ssize_t n = recv(client->getFd(), _requestBuffer, BUFFER_SIZE, 0);
 	if (n < 0) {
 		std::cerr << "error: recv: " << strerror(errno) << std::endl;
 		FD_CLR(client->getFd(), &_readSet);

@@ -6,7 +6,7 @@
 /*   By: antoine <antoine@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/04 09:54:40 by mmidon            #+#    #+#             */
-/*   Updated: 2023/05/18 14:06:22 by antoine          ###   ########.fr       */
+/*   Updated: 2023/05/18 15:12:23 by antoine          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,11 +26,13 @@
 #include <cstring>
 #include <string.h>
 
+# define BUFFER_SIZE 424242
+
 class Response;
 
 class Server {
 	private:
-		char							_requestBuffer[30000];
+		char							_requestBuffer[BUFFER_SIZE];
 		std::vector<ListeningSocket*>	_socket;
 		int								_requestFd;
 		void							_accepter(int server_fd, ListeningSocket *socket);
