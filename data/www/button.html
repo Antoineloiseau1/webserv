@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Supprimer une image</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <button id="deleteButton">Supprimer l'image</button>
+
+    <script>
+        $(document).ready(function() {
+            $('#deleteButton').click(function() {
+                $.ajax({
+                    url: 'chemin/vers/l/image.png',
+                    type: 'DELETE',
+                    success: function(response) {
+                        console.log('L\'image a été supprimée avec succès.');
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Une erreur s\'est produite lors de la suppression de l\'image:', error);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
