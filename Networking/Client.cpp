@@ -47,6 +47,10 @@ void	Client::setPreBody() {
 	}
 }
 
+void	Client::writeInFile(char *buf, int size) {
+	_file.write(buf, sizeof(char) * size);
+}
+
 int	Client::getPreBodySize() { return _preBody.size(); }
 
 int	Client::getBodyBufSize() { return _bodyBufSize; }

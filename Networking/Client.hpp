@@ -46,6 +46,7 @@ class Client
 		std::ofstream	getFile();
 		bool			getFileInitStat();
 		int				getPreBodySize();
+		
 
 
 /******************************SETTER*************************************/
@@ -56,6 +57,7 @@ class Client
 		void			initFile();
 		void			setFileInitStat(bool stat); 
 		void			setPreBody();
+		void			writeInFile(char *buf,int size);
 
 };
 

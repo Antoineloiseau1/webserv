@@ -197,29 +197,22 @@ sinon il faudra sauvegarder le request buffer et concatener**************/
 					client->setPreBody();
 					client->setBodyBuf(client->getBodyBuf() + client->getPreBodySize());
 					client->setStatus(Client::PRE_BODY_PARSED);
+					client->writeInFile(client->getBodyBuf(), client->getBodyBufSize());
 					//parser le prebody dans la request
 				}
-				else if (client->getStatus() == Client::PRE_BODY_PARSED) {
-
+				else if (client->getStatus() == Client::PRE_BODY_PARSED && n != 0) {
+					client->writeInFile(_requestBuffer, n);
 				}
-			
+				else if (n == 0) {
+					// client->getRequest()->parsingBody(); REFAIRE LA FONCTION
+					client->setStatus(Client::BODY_PARSED);
+					FD_SET(client->getFd(), &_writeSet);
+					FD_CLR(client->getFd(), &_readSet);
+					//fermer le file;
+					if (client->getFd() > _fdMax)
+						_fdMax = client->getFd();
+				}
 			}
-			// else {
-			// 	if (client->getBodyBuf() < static_cast<unsigned long>(atoi(client->getRequest()->getHeaders()["Content-Length"].c_str())))
-			// 	return;
-			// }
-
-
-			// std::cout << "\n SIZE OF BODY RECEIVED : " << n - client->getRequest()->getHeaderLen() << "vs : " << atoi(client->getRequest()->getHeaders()["Content-Length"].c_str()) << std::endl;
-			
-			// else {
-			// 	client->getRequest()->parsingBody();
-			// 	client->setStatus(Client::BODY_PARSED);
-			// 	FD_SET(client->getFd(), &_writeSet);
-			// 	FD_CLR(client->getFd(), &_readSet);
-			// 	if (client->getFd() > _fdMax)
-			// 		_fdMax = client->getFd();
-			// }
 		}
 	}
 }
