@@ -75,7 +75,7 @@ void	Response::PostResponse(void) {
 	if (file != "favicon.ico" && file != " " && !file.empty() && file != "" && file != "data/www/style.css")
 	{ //handleCgi();
 		_response["status"] = "201 Created\r\n";
-		_response["body"] = openHtmlFile("/data/www/error/201.html");
+		_response["body"] = openHtmlFile("data/www/error/201.html");
 		std::cout << "CGI" << std::endl;
 		return;
 	}
@@ -114,6 +114,7 @@ void	Response::NotImplemented(void) {
 
 std::string	Response::openHtmlFile(std::string f)
 {
+	std::cout << "OPENHTMFILE f = " << f << std::endl;
 	std::ifstream file(f);
     if (!file.is_open())
 	{

@@ -44,6 +44,7 @@ class Server {
 		void 							_watchLoop();
 		fd_set							_readSet;
 		fd_set							_writeSet;
+		fd_set							_errorSet;
 		int								_fdMax;
 		struct sockaddr_storage			_addr;
 		socklen_t						_socklen;
@@ -60,6 +61,7 @@ class Server {
 		char			**getEnvp() const;
 		int				getOpenFd();
 		static void		exit(int sig);
+		void			disconnectClient(Client *client);
 
 };
 

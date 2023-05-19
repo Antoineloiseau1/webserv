@@ -54,15 +54,23 @@ void Server::_watchLoop() {
 	int 	nbEvents;
 	fd_set	tmpRead;
 	fd_set	tmpWrite;
+	fd_set	tmpError;
 	FD_ZERO(&tmpRead);
 	FD_ZERO(&tmpWrite);
+	FD_ZERO(&tmpError);
 	signal(SIGINT, exit);
 
 	while(_alive) 
 	{
 		tmpRead = _readSet;
 		tmpWrite = _writeSet;
-		nbEvents = select(_getFdMax() + 1, &tmpRead, &tmpWrite, NULL, NULL);
+		tmpError = _errorSet;
+		std::cout << "while\n";
+		nbEvents = select(_getFdMax() + 1, &tmpRead, &tmpWrite, &tmpError, NULL);
+		if (FD_ISSET(_socket[0]->getFd(), &tmpError)) {
+			std::cout << "ERROR SET SERVER\n";
+			exit(1);
+		}
 		if (nbEvents < 1) {
 			std::cerr << "Error: select(): " << strerror(errno) << std::endl;
 			exit(EXIT_FAILURE);
@@ -74,16 +82,21 @@ void Server::_watchLoop() {
 			else
 				_accepter(_socket[0]->getFd(), _socket[0]);
 		}
-		for(std::vector<Client*>::iterator it(_socket[0]->clients.begin()); it != _socket[0]->clients.end(); ++it)
+		for(std::vector<Client*>::iterator it = _socket[0]->clients.begin(); it != _socket[0]->clients.end() && nbEvents--; it++)
 		{
+			std::cout << nbEvents << std::endl;
 			Client *client = *it;
+			if (FD_ISSET(client->getFd(), &tmpError)) {
+				std::cout << "ERROR SET CLIENT\n";
+				exit(1);
+			}
 			if(FD_ISSET(client->getFd(), &tmpRead)) {
 				_handler(client);
-				break;
+				//break;
 			}
 			if(FD_ISSET(client->getFd(), &tmpWrite)) {
 				_responder(client);
-				break;
+				//break;
 			}
 		}
 	}
@@ -100,11 +113,13 @@ void	Server::start(void)
 	_socklen = sizeof(_addr);
 	FD_ZERO(&_readSet);
 	FD_ZERO(&_writeSet);
+	FD_ZERO(&_errorSet);
 	_fdMax = _socket.front()->getFd();
 	for(std::vector<ListeningSocket*>::iterator it(_socket.begin()); it != _socket.end(); ++it)
 	{
 		ListeningSocket *socket = *it;
 		FD_SET(socket->getFd(), &_readSet);
+		FD_SET(socket->getFd(), &_errorSet);
 		if(socket->getFd() > _fdMax)
 			_fdMax = socket->getFd();
 	}
@@ -128,6 +143,7 @@ void	Server::_accepter(int server_fd, ListeningSocket *sock) {
 		exit(EXIT_FAILURE);
 	}
 	FD_SET(fd, &_readSet);
+	FD_SET(fd, &_errorSet);
 	if(fd > _fdMax)
 		_fdMax = fd;
 	Client* newClient = new Client(fd, sock->getFd());
@@ -225,8 +241,13 @@ void	Server::_responder(Client *client) {
 
 	std::cout << "Response from the server:\n" << res << std::endl;
 	send(client->getFd(), res.c_str(), res.length(), 0);
+	disconnectClient(client);
+}
+
+void	Server::disconnectClient(Client *client) {
 	FD_CLR(client->getFd(), &_readSet);
 	FD_CLR(client->getFd(), &_writeSet);
+	FD_CLR(client->getFd(), &_errorSet);
 	std::cout << "CLOSING CLIENT FD : " << client ->getFd() << std::endl;
 	close(client->getFd());
 	_socket[0]->deleteClient(client->getFd());
