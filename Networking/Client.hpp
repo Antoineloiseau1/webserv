@@ -20,7 +20,6 @@ class Client
 		char			_bodyBuf[BUFFER_SIZE];
 		int				_bodyBufSize;
 		std::ofstream 	_file;
-		bool			_isFileInit;
 		std::string		_preBody;
 
 	public:
@@ -33,6 +32,7 @@ class Client
 			RESPONSE,
 			OVER
 		};
+		bool			readyForData;
 		Client(int fd, int serverFd);
 		~Client();
 

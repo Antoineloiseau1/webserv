@@ -150,9 +150,9 @@ void	Server::_refuse(int server_fd) {
 void	Server::_handler(Client *client) {
 	std::cout << "DEbug = dans handler, client fd : "<< client << std::endl;
 
+	static long	bytes = 0;
 
-
-	ssize_t n = recv(client->getFd(), _requestBuffer, BUFFER_SIZE, 0);
+	int	n = recv(client->getFd(), _requestBuffer, BUFFER_SIZE, 0);
 	std::cout << "***** n = " << n << std::endl;
 	if (n < 0) {
 		std::cerr << "error: recv: " << strerror(errno) << std::endl;
@@ -174,6 +174,7 @@ sinon il faudra sauvegarder le request buffer et concatener**************/
 			client->createRequest(_requestBuffer);
 			client->setStatus(Client::HEADER_PARSED);
 			client->setBodyBufSize(n - client->getRequest()->getHeaderLen());
+			bytes = client->getBodyBufSize();
 			client->setBodyBuf(_requestBuffer + client->getRequest()->getHeaderLen() + 4);
 		}
 		if (client->getStatus() == Client::HEADER_PARSED && client->getRequest()->getType() == "GET") {
@@ -184,11 +185,8 @@ sinon il faudra sauvegarder le request buffer et concatener**************/
 				_fdMax = client->getFd();
 		}
 		else if (client->getStatus() == Client::HEADER_PARSED && client->getRequest()->getType() == "POST")
-		{/* -COMPTER LE NOMBRE DE BYTES RECEIVED TO KNOW IF WE HAVE EVERYTHING FROM THE BODY
-			- SI LE BODY CONCERNE UNE IMAGE, IL DOIT ETRE TRANSFERER DIRECTEMENT DANS UN FILE :
-			std::ofstream file("picture.png", std::ofstream::binary | std::ofstream::out);
-			file.write(t, bodySize);
-		*/
+		{ 
+			bytes += n;
 			if (client->getRequest()->getHeaders()["Content-Type"].find("multipart/form-data") != std::string::npos) {
 				/* ******trying to upload a file*****************/
 				if (strstr(client->getBodyBuf(), "Content-Type") != nullptr 
@@ -198,19 +196,22 @@ sinon il faudra sauvegarder le request buffer et concatener**************/
 					client->setBodyBuf(client->getBodyBuf() + client->getPreBodySize());
 					client->setStatus(Client::PRE_BODY_PARSED);
 					client->writeInFile(client->getBodyBuf(), client->getBodyBufSize());
+					client->readyForData = true;
 					//parser le prebody dans la request
 				}
-				else if (client->getStatus() == Client::PRE_BODY_PARSED && n != 0) {
-					client->writeInFile(_requestBuffer, n);
-				}
-				else if (n == 0) {
-					// client->getRequest()->parsingBody(); REFAIRE LA FONCTION
+				if (bytes >= atoi(client->getRequest()->getHeaders()["Content-Length"].c_str())) {
+					std::cout << "++++BYTES = "<< bytes << " | atoi = " << atoi(client->getRequest()->getHeaders()["Content-Length"].c_str()) << std::endl;
 					client->setStatus(Client::BODY_PARSED);
 					FD_SET(client->getFd(), &_writeSet);
 					FD_CLR(client->getFd(), &_readSet);
+					bytes = 0;
 					//fermer le file;
 					if (client->getFd() > _fdMax)
 						_fdMax = client->getFd();
+				}
+				else if (client->readyForData) {
+					std::cout << "+++ENTERING GetStatus \n";
+					client->writeInFile(_requestBuffer, n);
 				}
 			}
 		}
