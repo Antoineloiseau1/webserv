@@ -1,6 +1,11 @@
 #include "Client.hpp"
 
-Client::Client(int fd) : _fd(fd), _status(0), _request(nullptr) {}
+Client::Client(int fd, int serverFd) : _fd(fd), _serverFd(serverFd), _status(0), _request(nullptr),
+	_file("picture.png", std::ofstream::binary | std::ofstream::out | std::ofstream::trunc),
+	readyForData(false) {
+	_status = INIT;
+	memset(this->_bodyBuf, 0, BUFFER_SIZE);
+		std::cout <<"***********************+++++CLIENT CONSTRUCTOR "<< _fd << "********************\n";
 
 Client::~Client() {}
 

@@ -13,10 +13,14 @@
 class Client
 {
 	private:
-		int			_fd;
-		std::string	_reqBuf;
-		int			_status;
-		Request		*_request;
+		int				_fd;
+		int				_serverFd;
+		int				_status;
+		Request			*_request;
+		char			_bodyBuf[BUFFER_SIZE];
+		int				_bodyBufSize;
+		std::ofstream 	_file;
+		std::string		_preBody;
 
 	public:
 		enum		_status 
@@ -26,7 +30,8 @@ class Client
 			RESPONSE,
 			OVER
 		};
-		Client(int fd);
+		bool			readyForData;
+		Client(int fd, int serverFd);
 		~Client();
 
 		int			getFd();

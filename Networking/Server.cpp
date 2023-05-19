@@ -113,9 +113,13 @@ void	Server::_refuse(int server_fd) {
 }
 
 // Handle incoming data on accepted connections
-void	Server::_handler(int client_fd) {
-	// memset(this->_requestBuffer, 0, sizeof(this->_requestBuffer));
-	ssize_t n = recv(client_fd, _requestBuffer, sizeof(_requestBuffer), 0);
+void	Server::_handler(Client *client) {
+	std::cout << "DEbug = dans handler, client fd : "<< client << std::endl;
+
+	static long	bytes = 0;
+
+	int	n = recv(client->getFd(), _requestBuffer, BUFFER_SIZE, 0);
+	std::cout << "***** n = " << n << std::endl;
 	if (n < 0) {
 		perror("read() failed");
 		EV_SET(&_evSet, client_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
@@ -135,8 +139,57 @@ void	Server::_handler(int client_fd) {
 	else {
 		// main case: handle received data (print for now)
 		_requestBuffer[n] = '\0';
-		std::cout << "Request From Client:\n" << _requestBuffer << std::endl;
-		_responder(client_fd);
+		std::cout << "requestBuffer = " << _requestBuffer << std::endl;
+/* *****A voir si on arrive toujours a choper tous les headers en 1 passage,
+sinon il faudra sauvegarder le request buffer et concatener**************/
+		if (strstr(_requestBuffer, "\r\n\r\n") != nullptr
+			&& client->getStatus() == Client::INIT)
+		{
+			std::cout << "Je suis dans le parsing header\n";
+			client->createRequest(_requestBuffer);
+			client->setStatus(Client::HEADER_PARSED);
+			client->setBodyBufSize(n - client->getRequest()->getHeaderLen());
+			bytes = client->getBodyBufSize();
+			client->setBodyBuf(_requestBuffer + client->getRequest()->getHeaderLen() + 4);
+		}
+		if (client->getStatus() == Client::HEADER_PARSED && client->getRequest()->getType() == "GET") {
+			std::cout << "*****Request From Client:\n" << _requestBuffer << std::endl;
+			FD_CLR(client->getFd(), &_readSet);
+			FD_SET(client->getFd(), &_writeSet);
+			if (client->getFd() > _fdMax)
+				_fdMax = client->getFd();
+		}
+		else if (client->getStatus() == Client::HEADER_PARSED && client->getRequest()->getType() == "POST")
+		{ 
+			bytes += n;
+			if (client->getRequest()->getHeaders()["Content-Type"].find("multipart/form-data") != std::string::npos) {
+				/* ******trying to upload a file*****************/
+				if (strstr(client->getBodyBuf(), "Content-Type") != nullptr 
+					&& client->getStatus() == Client::HEADER_PARSED)  {
+					std::cout << "+++ENTERING SETPREBODY \n";
+					client->setPreBody();
+					client->setBodyBuf(client->getBodyBuf() + client->getPreBodySize());
+					client->setStatus(Client::PRE_BODY_PARSED);
+					client->writeInFile(client->getBodyBuf(), client->getBodyBufSize());
+					client->readyForData = true;
+					//parser le prebody dans la request
+				}
+				if (bytes >= atoi(client->getRequest()->getHeaders()["Content-Length"].c_str())) {
+					std::cout << "++++BYTES = "<< bytes << " | atoi = " << atoi(client->getRequest()->getHeaders()["Content-Length"].c_str()) << std::endl;
+					client->setStatus(Client::BODY_PARSED);
+					FD_SET(client->getFd(), &_writeSet);
+					FD_CLR(client->getFd(), &_readSet);
+					bytes = 0;
+					//fermer le file;
+					if (client->getFd() > _fdMax)
+						_fdMax = client->getFd();
+				}
+				else if (client->readyForData) {
+					std::cout << "+++ENTERING GetStatus \n";
+					client->writeInFile(_requestBuffer, n);
+				}
+			}
+		}
 	}
 }
 
