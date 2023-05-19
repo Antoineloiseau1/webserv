@@ -3,12 +3,12 @@
 
 #include <string>
 #include "../HTTP/Request.hpp"
-// # include <netinet/in.h>
-// # include <iostream>
-// # include <sys/socket.h>
-// # include <stdio.h>
-// # include <errno.h>
-// # include <unistd.h>
+#include <fstream>
+
+#define BUFFER_SIZE 424242
+
+class ListeningSocket;
+
 
 class Client
 {
@@ -25,8 +25,10 @@ class Client
 	public:
 		enum		_status 
 		{
-			STANDBY,
-			RECEIVED,
+			INIT,
+			HEADER_PARSED,
+			PRE_BODY_PARSED,
+			BODY_PARSED,
 			RESPONSE,
 			OVER
 		};
@@ -34,13 +36,28 @@ class Client
 		Client(int fd, int serverFd);
 		~Client();
 
-		int			getFd();
-		int			getStatus();
-		void		setStatus(int status);
-		std::string	getReqBuf();
-		void		addOnReqBuf(std::string buf);
-		void		createRequest(std::string reqLine);
-		Request		*getRequest();
+/******************************GETTER*************************************/
+		int				getFd();
+		int				getStatus();
+		char 			*getBodyBuf();
+		Request			*getRequest();
+		int				getServerFd();
+		int				getBodyBufSize();
+		std::ofstream	getFile();
+		bool			getFileInitStat();
+		int				getPreBodySize();
+		
+
+
+/******************************SETTER*************************************/
+		void			createRequest(char *reqLine);
+		void			setStatus(int status);
+		void			setBodyBuf(char *buf); //sera surement modifier pour concatener
+		void			setBodyBufSize(int n);
+		void			initFile();
+		void			setFileInitStat(bool stat); 
+		void			setPreBody();
+		void			writeInFile(char *buf,int size);
 
 };
 

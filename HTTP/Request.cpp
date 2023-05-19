@@ -1,40 +1,33 @@
 #include "Request.hpp"
 #include <fstream>
 
-Request::Request(std::string request) {
-	
+void	Request::separateHeaders(std::string reqString)
+{
+	_headerLine = reqString.substr(0, reqString.find("\r\n\r\n") + 2);
+}
+
+/* Parses only the headers */
+Request::Request(char *requestBuf) {
+	_requestLine = requestBuf;
+	separateHeaders(requestBuf);
 	std::string line;
-	std::istringstream iss(request);
+	std::istringstream iss(_headerLine);
 
 	std::getline(iss, line);
 	// Ignore whitepaces
 	while(!line.empty() && line == "\r")
 		getline(iss, line);
-
 	std::istringstream first_line(line);
 	first_line >> this->_initialRequestLine["type"];
 	first_line >> this->_initialRequestLine["path"];
 	this->_initialRequestLine["path"].erase(0, 1);
 	first_line >> this->_initialRequestLine["version"];
-
 	getline(iss, line);
 	while(!line.empty() && line != "\r")
 	{
 		int delim = line.find_first_of(':');
 		_headers[line.substr(0, delim)] = line.substr(delim + 2, line.size() - (delim + 2));
 		getline(iss, line);
-	}
-	if (_initialRequestLine["type"].find("POST") != std::string::npos) {
-		getline(iss, line);
-		while(!line.empty())
-		{	
-			line += "\n";
-			_body += line;
-			line.clear();
-			getline(iss, line);
-		}
-		// if (_headers["Referer"].find("data/www/upload.html"))
-			// parsingBody();
 	}
 }
 
@@ -51,6 +44,24 @@ void saveImage(const std::string& imageData, const std::string& filePath) {
 
 void	Request::parsingBody() {
 /*---------------PARSING POST BODY FOR UPLOADING PICTURE REQUEST ONLY*/
+	std::string line;
+	std::istringstream iss(_requestLine);
+
+	getline(iss, line);
+	while (!line.empty() && _requestLine.find("\r\n\r\n") != std::string::npos) {
+		getline(iss, line);
+	}
+	getline(iss, line);
+	while(!line.empty())
+	{	
+		line += "\n";
+		_body += line;
+		line.clear();
+		getline(iss, line);
+	}
+	std::cout << "TEST BODY = "<< _body << std::endl;
+	if (_headers["Referer"].find("data/www/upload.html"))
+	{
 		std::cout << "---- In parsing body\n";
 
 		std::map<std::string, std::string>	img_data;
@@ -87,6 +98,7 @@ void	Request::parsingBody() {
 		}
 		// std::string filePath = "/data/uploads/" + file_name;
 		// saveImage(img_data["img_data"], filePath);
+	}
 }
 
 Request::~Request(void) {}
@@ -100,3 +112,5 @@ std::string	Request::getVersion() { return _initialRequestLine["version"]; }
 std::string	Request::getBody() { return _body; }
 
 std::map<std::string, std::string>	Request::getHeaders() { return _headers; }
+
+int	Request::getHeaderLen() { return _headerLine.size(); }

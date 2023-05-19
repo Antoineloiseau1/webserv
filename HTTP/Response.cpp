@@ -45,8 +45,6 @@ Response::Response(Request &request, Server &server) : _server(server), _request
 }
 
 void	Response::GetResponse(void) {
-
-
 		std::string	file = _request.getPath();
 		if (file == "")
 			_response["body"] = openHtmlFile("data/www/manon.html");
@@ -63,7 +61,6 @@ void	Response::GetResponse(void) {
 		_response["type"] = "Content-Type: text/html\r\n";// NEED TO PARSE
 }
 
-
 /*
 REQUEST BODY IN CASE OF UPLOAD EXPECTED:
 ------WebKitFormBoundary{boundary}
@@ -77,6 +74,8 @@ void	Response::PostResponse(void) {
 	std::string	file = _request.getPath();
 	if (file != "favicon.ico" && file != " " && !file.empty() && file != "" && file != "data/www/style.css")
 	{ //handleCgi();
+		_response["status"] = "201 Created\r\n";
+		_response["body"] = openHtmlFile("/data/www/error/201.html");
 		std::cout << "CGI" << std::endl;
 		return;
 	}
@@ -118,6 +117,7 @@ std::string	Response::openHtmlFile(std::string f)
 	std::ifstream file(f);
     if (!file.is_open())
 	{
+		std::cout << "in if: " << f << std::endl;
 		_response["status"] = " 404 Not Found\r\n";
 		return (openHtmlFile("data/www/error/404.html"));
 	}

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: anloisea <anloisea@student.42.fr>          +#+  +:+       +#+        */
+/*   By: elpolpa <elpolpa@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/04 09:54:40 by mmidon            #+#    #+#             */
-/*   Updated: 2023/05/12 11:19:09 by anloisea         ###   ########.fr       */
+/*   Updated: 2023/05/19 08:01:39 by elpolpa          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,39 +19,48 @@
 #include <fstream>
 #include <fcntl.h>
 #include <sys/types.h>
-#include <sys/event.h>
+#include <sys/select.h>
 #include <sys/time.h>
 #include "../HTTP/Response.hpp"
+#include <stdlib.h>
+#include <cstring>
+#include <string.h>
+#include <iostream>
+
+// # define BUFFER_SIZE 3000000
 
 class Response;
 
 class Server {
 	private:
-		char							_requestBuffer[30000];
+		char							_requestBuffer[BUFFER_SIZE];
 		std::vector<ListeningSocket*>	_socket;
 		int								_requestFd;
 		void							_accepter(int server_fd, ListeningSocket *socket);
 		void							_refuse(int server_fd);
-		void							_handler(int client_fd);
-		void							_responder(int client_fd);
+		void							_handler(Client *client);
+		void							_responder(Client *client);
+		int								_getFdMax(void);
 		void 							_watchLoop();
-		struct kevent					_evSet;
-		struct kevent					_evList[64];
+		fd_set							_readSet;
+		fd_set							_writeSet;
+		int								_fdMax;
 		struct sockaddr_storage			_addr;
 		socklen_t						_socklen;
-		int								_kq;
 		char							**_envp;
-
 
 
 	public:
 		Server(int domain, int service, int protocole, int *ports, int nbSocket, char **envp);
 		~Server(void);
 		ListeningSocket	*getSocket(void) const;
+		ListeningSocket	*getSocket(int fd);
 		void			start(void);
 		int				getRequestFd() const;
 		char			**getEnvp() const;
 		int				getOpenFd();
+		static void		exit(int sig);
+
 };
 
 #endif
