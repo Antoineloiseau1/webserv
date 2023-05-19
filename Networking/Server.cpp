@@ -191,24 +191,35 @@ sinon il faudra sauvegarder le request buffer et concatener**************/
 		*/
 			if (client->getRequest()->getHeaders()["Content-Type"].find("multipart/form-data") != std::string::npos) {
 				/* ******trying to upload a file*****************/
+				if (strstr(client->getBodyBuf(), "Content-Type") != nullptr 
+					&& client->getStatus() == Client::HEADER_PARSED)  {
+					std::cout << "+++ENTERING SETPREBODY \n";
+					client->setPreBody();
+					client->setBodyBuf(client->getBodyBuf() + client->getPreBodySize());
+					client->setStatus(Client::PRE_BODY_PARSED);
+					//parser le prebody dans la request
+				}
+				else if (client->getStatus() == Client::PRE_BODY_PARSED) {
 
-			}
-			else {
-				if (client->getBodyBuf().size() < static_cast<unsigned long>(atoi(client->getRequest()->getHeaders()["Content-Length"].c_str())))
-				return;
-			}
-
-
-			std::cout << "\n SIZE OF BODY RECEIVED : " << n - client->getRequest()->getHeaderLen() << "vs : " << atoi(client->getRequest()->getHeaders()["Content-Length"].c_str()) << std::endl;
+				}
 			
-			else {
-				client->getRequest()->parsingBody();
-				client->setStatus(Client::BODY_PARSED);
-				FD_SET(client->getFd(), &_writeSet);
-				FD_CLR(client->getFd(), &_readSet);
-				if (client->getFd() > _fdMax)
-					_fdMax = client->getFd();
 			}
+			// else {
+			// 	if (client->getBodyBuf() < static_cast<unsigned long>(atoi(client->getRequest()->getHeaders()["Content-Length"].c_str())))
+			// 	return;
+			// }
+
+
+			// std::cout << "\n SIZE OF BODY RECEIVED : " << n - client->getRequest()->getHeaderLen() << "vs : " << atoi(client->getRequest()->getHeaders()["Content-Length"].c_str()) << std::endl;
+			
+			// else {
+			// 	client->getRequest()->parsingBody();
+			// 	client->setStatus(Client::BODY_PARSED);
+			// 	FD_SET(client->getFd(), &_writeSet);
+			// 	FD_CLR(client->getFd(), &_readSet);
+			// 	if (client->getFd() > _fdMax)
+			// 		_fdMax = client->getFd();
+			// }
 		}
 	}
 }

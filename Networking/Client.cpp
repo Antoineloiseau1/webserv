@@ -1,7 +1,8 @@
 #include "Client.hpp"
 #include <cstring>
 
-Client::Client(int fd, int serverFd) : _fd(fd), _serverFd(serverFd), _status(0), _request(nullptr) {
+Client::Client(int fd, int serverFd) : _fd(fd), _serverFd(serverFd), _status(0), _request(nullptr),
+	_file("picture.png", std::ofstream::binary | std::ofstream::out) {
 	_status = INIT;
 	memset(this->_bodyBuf, 0, BUFFER_SIZE);
 		std::cout <<"***********************+++++CLIENT CONSTRUCTOR "<< _fd << "********************\n";
@@ -18,7 +19,7 @@ int	Client::getStatus() { return _status; }
 
 void	Client::setStatus(int status) { _status = status; }
 
-std::string	Client::getBodyBuf() { return _bodyBuf; }
+char	*Client::getBodyBuf() { return _bodyBuf; }
 
 void	Client::createRequest(char *reqLine) {
 	_request = new Request(reqLine);
@@ -33,6 +34,20 @@ void	Client::setBodyBuf(char *buf) {
 void	Client::setBodyBufSize(int n) { 
 	_bodyBufSize = n;
 }
+
+/*A PARSER DANS LA REQUETE DANS UN SECOND TEMPS*/
+void	Client::setPreBody() {
+	std::string line;
+	std::istringstream iss(_bodyBuf);
+
+	getline(iss, line);
+	while (!line.empty() && line != "\r") {
+		_preBody += line;
+		getline(iss, line);
+	}
+}
+
+int	Client::getPreBodySize() { return _preBody.size(); }
 
 int	Client::getBodyBufSize() { return _bodyBufSize; }
 

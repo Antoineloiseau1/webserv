@@ -3,6 +3,7 @@
 
 #include <string>
 #include "../HTTP/Request.hpp"
+#include <fstream>
 
 #define BUFFER_SIZE 424242
 
@@ -18,12 +19,16 @@ class Client
 		Request			*_request;
 		char			_bodyBuf[BUFFER_SIZE];
 		int				_bodyBufSize;
+		std::ofstream 	_file;
+		bool			_isFileInit;
+		std::string		_preBody;
 
 	public:
 		enum		_status 
 		{
 			INIT,
 			HEADER_PARSED,
+			PRE_BODY_PARSED,
 			BODY_PARSED,
 			RESPONSE,
 			OVER
@@ -34,16 +39,23 @@ class Client
 /******************************GETTER*************************************/
 		int				getFd();
 		int				getStatus();
-		std::string		getBodyBuf();
+		char 			*getBodyBuf();
 		Request			*getRequest();
 		int				getServerFd();
 		int				getBodyBufSize();
+		std::ofstream	getFile();
+		bool			getFileInitStat();
+		int				getPreBodySize();
+
 
 /******************************SETTER*************************************/
 		void			createRequest(char *reqLine);
 		void			setStatus(int status);
 		void			setBodyBuf(char *buf); //sera surement modifier pour concatener
 		void			setBodyBufSize(int n);
+		void			initFile();
+		void			setFileInitStat(bool stat); 
+		void			setPreBody();
 
 };
 
