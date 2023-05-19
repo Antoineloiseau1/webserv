@@ -87,6 +87,7 @@ void Server::_watchLoop() {
 			}
 		}
 	}
+	std::cout << "OUT OF WHILE LOOP \n";
 }
 
 Server::Server(int domain, int service, int protocole, int *ports, int nbSocket, char **envp) : _envp(envp) {
@@ -166,16 +167,17 @@ void	Server::_handler(Client *client) {
 		std::cout << "requestBuffer = " << _requestBuffer << std::endl;
 /* *****A voir si on arrive toujours a choper tous les headers en 1 passage,
 sinon il faudra sauvegarder le request buffer et concatener**************/
-
 		if (strstr(_requestBuffer, "\r\n\r\n") != nullptr
 			&& client->getStatus() == Client::INIT)
 		{
+			std::cout << "Je suis dans le parsing header\n";
 			client->createRequest(_requestBuffer);
 			client->setStatus(Client::HEADER_PARSED);
-			client->setReqBuf(_requestBuffer + client->getRequest()->getHeaderLen() + 4);
+			client->setBodyBufSize(n - client->getRequest()->getHeaderLen());
+			client->setBodyBuf(_requestBuffer + client->getRequest()->getHeaderLen() + 4);
 		}
 		if (client->getStatus() == Client::HEADER_PARSED && client->getRequest()->getType() == "GET") {
-			std::cout << "*****Request From Client:\n" << client->getReqBuf() << std::endl;
+			std::cout << "*****Request From Client:\n" << _requestBuffer << std::endl;
 			FD_CLR(client->getFd(), &_readSet);
 			FD_SET(client->getFd(), &_writeSet);
 			if (client->getFd() > _fdMax)
@@ -187,9 +189,18 @@ sinon il faudra sauvegarder le request buffer et concatener**************/
 			std::ofstream file("picture.png", std::ofstream::binary | std::ofstream::out);
 			file.write(t, bodySize);
 		*/
-			std::cout << "\n SIZE OF BODY RECEIVED : " << client->getReqBuf().size() << "vs : " << atoi(client->getRequest()->getHeaders()["Content-Length"].c_str()) << std::endl;
-			if (client->getReqBuf().size() < static_cast<unsigned long>(atoi(client->getRequest()->getHeaders()["Content-Length"].c_str())))
+			if (client->getRequest()->getHeaders()["Content-Type"].find("multipart/form-data") != std::string::npos) {
+				/* ******trying to upload a file*****************/
+
+			}
+			else {
+				if (client->getBodyBuf().size() < static_cast<unsigned long>(atoi(client->getRequest()->getHeaders()["Content-Length"].c_str())))
 				return;
+			}
+
+
+			std::cout << "\n SIZE OF BODY RECEIVED : " << n - client->getRequest()->getHeaderLen() << "vs : " << atoi(client->getRequest()->getHeaders()["Content-Length"].c_str()) << std::endl;
+			
 			else {
 				client->getRequest()->parsingBody();
 				client->setStatus(Client::BODY_PARSED);

@@ -16,7 +16,8 @@ class Client
 		int				_serverFd;
 		int				_status;
 		Request			*_request;
-		char			*_reqBuf;
+		char			_bodyBuf[BUFFER_SIZE];
+		int				_bodyBufSize;
 
 	public:
 		enum		_status 
@@ -33,14 +34,16 @@ class Client
 /******************************GETTER*************************************/
 		int				getFd();
 		int				getStatus();
-		std::string		getReqBuf();
+		std::string		getBodyBuf();
 		Request			*getRequest();
 		int				getServerFd();
+		int				getBodyBufSize();
 
 /******************************SETTER*************************************/
 		void			createRequest(char *reqLine);
 		void			setStatus(int status);
-		void			setReqBuf(char *buf); //sera surement modifier pour concatener
+		void			setBodyBuf(char *buf); //sera surement modifier pour concatener
+		void			setBodyBufSize(int n);
 
 };
 

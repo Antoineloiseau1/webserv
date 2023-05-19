@@ -25,6 +25,8 @@ int main(int argc, char *argv[], char *envp[]) {
 	
 	server.start();
 
+	std::cout << "REALLY EXITING !\n";
+
 	return 0;
 }
 

@@ -3,7 +3,7 @@
 
 Client::Client(int fd, int serverFd) : _fd(fd), _serverFd(serverFd), _status(0), _request(nullptr) {
 	_status = INIT;
-	memset(this->_reqBuf, 0, BUFFER_SIZE);
+	memset(this->_bodyBuf, 0, BUFFER_SIZE);
 		std::cout <<"***********************+++++CLIENT CONSTRUCTOR "<< _fd << "********************\n";
 
 }
@@ -18,15 +18,23 @@ int	Client::getStatus() { return _status; }
 
 void	Client::setStatus(int status) { _status = status; }
 
-std::string	Client::getReqBuf() { return _reqBuf; }
+std::string	Client::getBodyBuf() { return _bodyBuf; }
 
 void	Client::createRequest(char *reqLine) {
 	_request = new Request(reqLine);
 }
 
-void	Client::setReqBuf(char *buf) { 
-	_reqBuf = buf; /*A MODIFIER ! COPIE PROFONDE A FAIRE*/
+void	Client::setBodyBuf(char *buf) { 
+	for (int i = 0; i < getBodyBufSize(); ++i) {
+        _bodyBuf[i] = buf[i];
+    }
 }
+
+void	Client::setBodyBufSize(int n) { 
+	_bodyBufSize = n;
+}
+
+int	Client::getBodyBufSize() { return _bodyBufSize; }
 
 Request	*Client::getRequest() { return _request; }
 

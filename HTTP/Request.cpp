@@ -3,14 +3,13 @@
 
 void	Request::separateHeaders(std::string reqString)
 {
-	_headerLine = reqString.substr(0, reqString.find("\r\n\r\n") + 1);
+	_headerLine = reqString.substr(0, reqString.find("\r\n\r\n") + 2);
 }
 
 /* Parses only the headers */
 Request::Request(char *requestBuf) {
 	_requestLine = requestBuf;
 	separateHeaders(requestBuf);
-	
 	std::string line;
 	std::istringstream iss(_headerLine);
 
@@ -18,13 +17,11 @@ Request::Request(char *requestBuf) {
 	// Ignore whitepaces
 	while(!line.empty() && line == "\r")
 		getline(iss, line);
-
 	std::istringstream first_line(line);
 	first_line >> this->_initialRequestLine["type"];
 	first_line >> this->_initialRequestLine["path"];
 	this->_initialRequestLine["path"].erase(0, 1);
 	first_line >> this->_initialRequestLine["version"];
-
 	getline(iss, line);
 	while(!line.empty() && line != "\r")
 	{

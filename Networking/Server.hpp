@@ -6,7 +6,7 @@
 /*   By: elpolpa <elpolpa@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/04 09:54:40 by mmidon            #+#    #+#             */
-/*   Updated: 2023/05/18 19:34:17 by elpolpa          ###   ########.fr       */
+/*   Updated: 2023/05/19 08:01:39 by elpolpa          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,8 +25,9 @@
 #include <stdlib.h>
 #include <cstring>
 #include <string.h>
+#include <iostream>
 
-# define BUFFER_SIZE 3000000
+// # define BUFFER_SIZE 3000000
 
 class Response;
 
