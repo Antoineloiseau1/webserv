@@ -13,6 +13,7 @@ class Request {
 		std::map<std::string, std::string>	_initialRequestLine;
 		std::map<std::string, std::string>	_headers;
 		std::string							_body;
+		std::string							_preBody;
 
 	public:
 		Request(char *request);
@@ -25,6 +26,7 @@ class Request {
 		std::string							getVersion();
 		std::map<std::string, std::string>	getHeaders();
 		std::string							getBody();
+		std::string							getPreBody();
 		int									getHeaderLen();
 
 		void								parsingBody();

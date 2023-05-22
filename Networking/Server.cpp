@@ -179,38 +179,43 @@ void	Server::_handler(Client *client) {
 	else {
 		_requestBuffer[n] = '\0';
 		std::cout << "requestBuffer = " << _requestBuffer << std::endl;
+		/*******************POUR TOUT LE MONDE 1 X*****************************/
 		if (strstr(_requestBuffer, "\r\n\r\n") != nullptr
 			&& client->getStatus() == Client::INIT)
 		{
 			std::cout << "Je suis dans le parsing header\n";
 			client->createRequest(_requestBuffer);
 			client->setStatus(Client::HEADER_PARSED);
-			bytes = n - client->getRequest()->getHeaderLen();
-			client->setBodyBufSize(bytes);
-			std::cout << "new bytes = " << bytes << std::endl;
-			if (bytes > 0) {
-				client->setBodyBuf(_requestBuffer + client->getRequest()->getHeaderLen() + 4);
-				client->parsePreBody();
-			}
 		}
+	
 		if (client->getStatus() == Client::HEADER_PARSED 
-			&& (client->getType() == Client::GET || client->getType() == Client::DELETE)) {
+			&& (client->getType() == Client::GET || client->getType() == Client::DELETE))
+		{
 			std::cout << "*****Request From Client:\n" << _requestBuffer << std::endl;
 			FD_CLR(client->getFd(), &_readSet);
 			FD_SET(client->getFd(), &_writeSet);
 			if (client->getFd() > _fdMax)
 				_fdMax = client->getFd();
 		}
+		/* SOIT body buf est vide,
+		SOIT body buf contient le prebody et un peu de data d'image
+		soit body buf contient le user form */
 		else if (client->getStatus() != Client::INIT && client->getType() == Client::POST_DATA)
-		{ 
+		{	
 			bytes += n;
-			if (client->getStatus() < Client::PRE_BODY_PARSED) {
-				client->addOnBodyBuf(_requestBuffer, n);
-				client->parsePreBody();
-			}
-			else if (client->getBodyBufSize() > 0) {
-				client->writeInFile(client->getBodyBuf(), client->getBodyBufSize());
-				client->setBodyBufSize(0);
+			if (client->getStatus() < Client::READY_FOR_DATA) {
+				if (client->getStatus() < Client::PARSING_PREBODY) {
+					std::cout << "++++parsing prebody 1 \n";
+					client->setStatus(Client::PARSING_PREBODY);
+					bytes = n - client->getRequest()->getHeaderLen();
+					if (bytes > 0)
+						client->parsePreBody(_requestBuffer + client->getRequest()->getHeaderLen() + 4, bytes);
+				}
+				else if (client->getStatus() == Client::PARSING_PREBODY){
+					std::cout << "++++parsing prebody 2 \n";
+					client->parsePreBody(_requestBuffer, n);
+					n = 0;
+				}
 			}
 			if (bytes >= atoi(client->getRequest()->getHeaders()["Content-Length"].c_str())) {
 				std::cout << "++++BYTES = "<< bytes << " | atoi = " << atoi(client->getRequest()->getHeaders()["Content-Length"].c_str()) << std::endl;
@@ -222,7 +227,7 @@ void	Server::_handler(Client *client) {
 				bytes = 0;
 				client->getFile().close(); //closing file after finishing to write data
 			}
-			else if (client->getStatus() == Client::PRE_BODY_PARSED) {
+			else if (client->getStatus() == Client::READY_FOR_DATA && n > 0) {
 				std::cout << "+++Writing in file... \n";
 				client->writeInFile(_requestBuffer, n);
 			}

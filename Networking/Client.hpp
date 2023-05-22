@@ -28,7 +28,8 @@ class Client
 		{
 			INIT,
 			HEADER_PARSED,
-			PRE_BODY_PARSED,
+			PARSING_PREBODY,
+			READY_FOR_DATA,
 			BODY_PARSED,
 			RESPONSE,
 			OVER
@@ -40,7 +41,7 @@ class Client
 		Client(int fd, int serverFd);
 		~Client();
 
-		void	parsePreBody();
+		void	parsePreBody(char *buf, int size);
 
 /******************************GETTER*************************************/
 		

@@ -102,7 +102,14 @@ void	Request::parsingBody() {
 }
 
 void	Request::parsingPreBody(std::string	pre_body) {
-	std::cout << "PRINT PRE BODY = " << pre_body << "coucou lala" << std::endl;
+	std::string line;
+	std::istringstream iss(pre_body);
+
+	getline(iss, line);
+	while (!line.empty() && line != "\r") {
+		_preBody += line;
+		getline(iss, line);
+	}
 }
 
 Request::~Request(void) {}
@@ -114,6 +121,8 @@ std::string	Request::getPath() { return _initialRequestLine["path"]; }
 std::string	Request::getVersion() { return _initialRequestLine["version"]; }
 
 std::string	Request::getBody() { return _body; }
+
+std::string	Request::getPreBody() { return _preBody; }
 
 std::map<std::string, std::string>	Request::getHeaders() { return _headers; }
 
