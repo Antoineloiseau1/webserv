@@ -185,47 +185,46 @@ void	Server::_handler(Client *client) {
 			std::cout << "Je suis dans le parsing header\n";
 			client->createRequest(_requestBuffer);
 			client->setStatus(Client::HEADER_PARSED);
-			client->setBodyBufSize(n - client->getRequest()->getHeaderLen());
-			bytes = client->getBodyBufSize();
-			client->setBodyBuf(_requestBuffer + client->getRequest()->getHeaderLen() + 4);
+			bytes = n - client->getRequest()->getHeaderLen();
+			client->setBodyBufSize(bytes);
+			std::cout << "new bytes = " << bytes << std::endl;
+			if (bytes > 0) {
+				client->setBodyBuf(_requestBuffer + client->getRequest()->getHeaderLen() + 4);
+				client->parsePreBody();
+			}
 		}
-		if (client->getStatus() == Client::HEADER_PARSED && client->getRequest()->getType() == "GET") {
+		if (client->getStatus() == Client::HEADER_PARSED 
+			&& (client->getType() == Client::GET || client->getType() == Client::DELETE)) {
 			std::cout << "*****Request From Client:\n" << _requestBuffer << std::endl;
 			FD_CLR(client->getFd(), &_readSet);
 			FD_SET(client->getFd(), &_writeSet);
 			if (client->getFd() > _fdMax)
 				_fdMax = client->getFd();
 		}
-		else if (client->getStatus() != Client::INIT && client->getRequest()->getType() == "POST")
+		else if (client->getStatus() != Client::INIT && client->getType() == Client::POST_DATA)
 		{ 
 			bytes += n;
-			if (client->getRequest()->getHeaders()["Content-Type"].find("multipart/form-data") != std::string::npos) {
-				client->getRequest()->isADataUpload = true;
-	
-				if (strstr(client->getBodyBuf(), "Content-Type") != nullptr 
-					&& client->getStatus() == Client::HEADER_PARSED)  {
-					std::cout << "+++ENTERING SETPREBODY \n";
-					client->setPreBody();
-					client->setBodyBuf(client->getBodyBuf() + client->getPreBodySize());
-					client->setStatus(Client::PRE_BODY_PARSED);
-					client->writeInFile(client->getBodyBuf(), client->getBodyBufSize());
-					client->readyForData = true;
-					//parser le prebody dans la request
-				}
-				if (bytes >= atoi(client->getRequest()->getHeaders()["Content-Length"].c_str())) {
-					std::cout << "++++BYTES = "<< bytes << " | atoi = " << atoi(client->getRequest()->getHeaders()["Content-Length"].c_str()) << std::endl;
-					client->setStatus(Client::BODY_PARSED);
-					FD_SET(client->getFd(), &_writeSet);
-					FD_CLR(client->getFd(), &_readSet);
-					if (client->getFd() > _fdMax)
-						_fdMax = client->getFd();
-					bytes = 0;
-					client->getFile().close(); //closing file after finishing to write data
-				}
-				else if (client->readyForData) {
-					std::cout << "+++Writing in file... \n";
-					client->writeInFile(_requestBuffer, n);
-				}
+			if (client->getStatus() < Client::PRE_BODY_PARSED) {
+				client->addOnBodyBuf(_requestBuffer, n);
+				client->parsePreBody();
+			}
+			else if (client->getBodyBufSize() > 0) {
+				client->writeInFile(client->getBodyBuf(), client->getBodyBufSize());
+				client->setBodyBufSize(0);
+			}
+			if (bytes >= atoi(client->getRequest()->getHeaders()["Content-Length"].c_str())) {
+				std::cout << "++++BYTES = "<< bytes << " | atoi = " << atoi(client->getRequest()->getHeaders()["Content-Length"].c_str()) << std::endl;
+				client->setStatus(Client::BODY_PARSED);
+				FD_SET(client->getFd(), &_writeSet);
+				FD_CLR(client->getFd(), &_readSet);
+				if (client->getFd() > _fdMax)
+					_fdMax = client->getFd();
+				bytes = 0;
+				client->getFile().close(); //closing file after finishing to write data
+			}
+			else if (client->getStatus() == Client::PRE_BODY_PARSED) {
+				std::cout << "+++Writing in file... \n";
+				client->writeInFile(_requestBuffer, n);
 			}
 		}
 	}

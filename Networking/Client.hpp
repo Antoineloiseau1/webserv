@@ -21,6 +21,7 @@ class Client
 		int				_bodyBufSize;
 		std::ofstream 	_file;
 		std::string		_preBody;
+		int				_type;
 
 	public:
 		enum		_status 
@@ -32,11 +33,18 @@ class Client
 			RESPONSE,
 			OVER
 		};
+		enum	_type { GET, POST_DATA, POST_FORM, DELETE };
+
 		bool			readyForData;
+
 		Client(int fd, int serverFd);
 		~Client();
 
+		void	parsePreBody();
+
 /******************************GETTER*************************************/
+		
+		int				getType();
 		int				getFd();
 		int				getStatus();
 		char 			*getBodyBuf();
@@ -51,11 +59,11 @@ class Client
 /******************************SETTER*************************************/
 		void			createRequest(char *reqLine);
 		void			setStatus(int status);
-		void			setBodyBuf(char *buf); //sera surement modifier pour concatener
+		void			setBodyBuf(char *buf);
 		void			setBodyBufSize(int n);
-		// void			initFile();
-		void			setPreBody();
+		void			setPreBody(std::string pre_body);
 		void			writeInFile(char *buf,int size);
+		void			addOnBodyBuf(char *buf, int size);
 
 };
 

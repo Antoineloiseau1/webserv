@@ -17,11 +17,10 @@ class Request {
 	public:
 		Request(char *request);
 		~Request(void);
-
 		
-		bool								isADataUpload;
+		bool								isADataUpload;	
 
-		std::string							getType();
+		std::string							getTypeStr();
 		std::string							getPath();
 		std::string							getVersion();
 		std::map<std::string, std::string>	getHeaders();
@@ -29,6 +28,7 @@ class Request {
 		int									getHeaderLen();
 
 		void								parsingBody();
+		void								parsingPreBody(std::string	pre_body);
 		void								separateHeaders(std::string reqString);
 		
 };

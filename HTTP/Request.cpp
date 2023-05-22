@@ -3,7 +3,8 @@
 
 void	Request::separateHeaders(std::string reqString)
 {
-	_headerLine = reqString.substr(0, reqString.find("\r\n\r\n") + 2);
+	_headerLine = reqString.substr(0, reqString.find("\r\n\r\n") + 4);
+	std::cout << " **** HEADER LINE = " << _headerLine;
 }
 
 /* Parses only the headers */
@@ -14,7 +15,6 @@ Request::Request(char *requestBuf) : isADataUpload(false) {
 	std::istringstream iss(_headerLine);
 
 	std::getline(iss, line);
-	// Ignore whitepaces
 	while(!line.empty() && line == "\r")
 		getline(iss, line);
 	std::istringstream first_line(line);
@@ -101,9 +101,13 @@ void	Request::parsingBody() {
 	}
 }
 
+void	Request::parsingPreBody(std::string	pre_body) {
+	std::cout << "PRINT PRE BODY = " << pre_body << "coucou lala" << std::endl;
+}
+
 Request::~Request(void) {}
 
-std::string	Request::getType() { return _initialRequestLine["type"]; }
+std::string	Request::getTypeStr() { return _initialRequestLine["type"]; }
 
 std::string	Request::getPath() { return _initialRequestLine["path"]; }
 

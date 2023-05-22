@@ -12,7 +12,7 @@ Response::Response(Request &request, Server &server) : _server(server), _request
 	int a = 0;
 
 	for (int i = 0; i < 8 ; i++) {
-		if (request.getType() == type[i])
+		if (request.getTypeStr() == type[i])
 		{
 			if (i > 2)
 			{
