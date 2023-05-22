@@ -14,6 +14,7 @@ class Request {
 		std::map<std::string, std::string>	_headers;
 		std::string							_body;
 		std::string							_preBody;
+		std::string							_formBody;
 
 	public:
 		Request(char *request);
@@ -32,6 +33,7 @@ class Request {
 		void								parsingBody();
 		void								parsingPreBody(std::string	pre_body);
 		void								separateHeaders(std::string reqString);
+		void								setFormBody(std::string body);
 		
 };
 

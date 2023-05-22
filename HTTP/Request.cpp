@@ -112,6 +112,7 @@ void	Request::parsingPreBody(std::string	pre_body) {
 	}
 }
 
+
 Request::~Request(void) {}
 
 std::string	Request::getTypeStr() { return _initialRequestLine["type"]; }
@@ -127,3 +128,7 @@ std::string	Request::getPreBody() { return _preBody; }
 std::map<std::string, std::string>	Request::getHeaders() { return _headers; }
 
 int	Request::getHeaderLen() { return _headerLine.size(); }
+
+void	Request::setFormBody(std::string body) {
+	_formBody = body;
+}

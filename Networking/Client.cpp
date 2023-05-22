@@ -24,10 +24,8 @@ void	Client::createRequest(char *reqLine) {
 		else if (_request->getHeaders()["Content-Type"].find("application/x-www-form-urlencoded") != std::string::npos)
 			_type = POST_FORM;
 	}
-	else if (_request->getTypeStr() == "GET")
-		_type = GET;
-	else if (_request->getTypeStr() == "DELETE")
-		_type = DELETE;
+	else if (_request->getTypeStr() == "GET" || _request->getTypeStr() == "DELETE")
+		_type = GET_DELETE;
 }
 
 void	Client::writeInFile(char *buf, int size) {

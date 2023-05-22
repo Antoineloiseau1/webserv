@@ -33,7 +33,7 @@ class Client
 			RESPONSE,
 			OVER
 		};
-		enum	_type { GET, POST_DATA, POST_FORM, DELETE };
+		enum	_type { GET_DELETE, POST_DATA, POST_FORM };
 
 		bool			readyForData;
 		long			bytes;
