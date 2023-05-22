@@ -177,12 +177,8 @@ void	Server::_handler(Client *client) {
 		_socket[0]->deleteClient(client->getFd());
 	}
 	else {
-		// main case: handle received data (print for now)
-
 		_requestBuffer[n] = '\0';
 		std::cout << "requestBuffer = " << _requestBuffer << std::endl;
-/* *****A voir si on arrive toujours a choper tous les headers en 1 passage,
-sinon il faudra sauvegarder le request buffer et concatener**************/
 		if (strstr(_requestBuffer, "\r\n\r\n") != nullptr
 			&& client->getStatus() == Client::INIT)
 		{
@@ -200,11 +196,12 @@ sinon il faudra sauvegarder le request buffer et concatener**************/
 			if (client->getFd() > _fdMax)
 				_fdMax = client->getFd();
 		}
-		else if (client->getStatus() == Client::HEADER_PARSED && client->getRequest()->getType() == "POST")
+		else if (client->getStatus() != Client::INIT && client->getRequest()->getType() == "POST")
 		{ 
 			bytes += n;
 			if (client->getRequest()->getHeaders()["Content-Type"].find("multipart/form-data") != std::string::npos) {
-				/* ******trying to upload a file*****************/
+				client->getRequest()->isADataUpload = true;
+	
 				if (strstr(client->getBodyBuf(), "Content-Type") != nullptr 
 					&& client->getStatus() == Client::HEADER_PARSED)  {
 					std::cout << "+++ENTERING SETPREBODY \n";
@@ -220,13 +217,13 @@ sinon il faudra sauvegarder le request buffer et concatener**************/
 					client->setStatus(Client::BODY_PARSED);
 					FD_SET(client->getFd(), &_writeSet);
 					FD_CLR(client->getFd(), &_readSet);
-					bytes = 0;
-					//fermer le file;
 					if (client->getFd() > _fdMax)
 						_fdMax = client->getFd();
+					bytes = 0;
+					client->getFile().close(); //closing file after finishing to write data
 				}
 				else if (client->readyForData) {
-					std::cout << "+++ENTERING GetStatus \n";
+					std::cout << "+++Writing in file... \n";
 					client->writeInFile(_requestBuffer, n);
 				}
 			}

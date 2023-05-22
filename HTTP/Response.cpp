@@ -46,6 +46,7 @@ Response::Response(Request &request, Server &server) : _server(server), _request
 
 void	Response::GetResponse(void) {
 		std::string	file = _request.getPath();
+
 		if (file == "")
 			_response["body"] = openHtmlFile("data/www/manon.html");
 		else if (file == "favicon.ico" || file == "style.css" || file.empty())
@@ -61,17 +62,25 @@ void	Response::GetResponse(void) {
 		_response["type"] = "Content-Type: text/html\r\n";// NEED TO PARSE
 }
 
-/*
-REQUEST BODY IN CASE OF UPLOAD EXPECTED:
-------WebKitFormBoundary{boundary}
-Content-Disposition: form-data; name="image"; filename="{filename}"
-Content-Type: {mime-type}
 
-{file-data}
-
-------WebKitFormBoundary{boundary}--*/
 void	Response::PostResponse(void) {
 	std::string	file = _request.getPath();
+
+	if (_request.isADataUpload == true) {
+			std::ifstream sourceFile("picture.png", std::ios::in | std::ios::binary); // Open source file for reading
+			std::ofstream destFile("destination.txt", std::ios::out | std::ios::binary);
+
+			if (sourceFile.is_open() && destFile.is_open()) {
+				// Copy data from source file to destination file
+				destFile << sourceFile.rdbuf();
+				std::cout << "File copied successfully." << std::endl;
+			}
+			else
+				std::cerr << "Failed to open the file." << std::endl;
+    		sourceFile.close();
+    		destFile.close();
+	}
+
 	if (file != "favicon.ico" && file != " " && !file.empty() && file != "" && file != "data/www/style.css")
 	{ //handleCgi();
 		_response["status"] = "201 Created\r\n";

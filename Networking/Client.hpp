@@ -43,8 +43,7 @@ class Client
 		Request			*getRequest();
 		int				getServerFd();
 		int				getBodyBufSize();
-		std::ofstream	getFile();
-		bool			getFileInitStat();
+		std::ofstream	&getFile();
 		int				getPreBodySize();
 		
 
@@ -54,8 +53,7 @@ class Client
 		void			setStatus(int status);
 		void			setBodyBuf(char *buf); //sera surement modifier pour concatener
 		void			setBodyBufSize(int n);
-		void			initFile();
-		void			setFileInitStat(bool stat); 
+		// void			initFile();
 		void			setPreBody();
 		void			writeInFile(char *buf,int size);
 

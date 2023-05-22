@@ -13,9 +13,13 @@ class Request {
 		std::map<std::string, std::string>	_initialRequestLine;
 		std::map<std::string, std::string>	_headers;
 		std::string							_body;
+
 	public:
 		Request(char *request);
 		~Request(void);
+
+		
+		bool								isADataUpload;
 
 		std::string							getType();
 		std::string							getPath();

@@ -59,3 +59,5 @@ int	Client::getBodyBufSize() { return _bodyBufSize; }
 Request	*Client::getRequest() { return _request; }
 
 int	Client::getServerFd() { return _serverFd; }
+
+std::ofstream	&Client::getFile()  { return _file; }

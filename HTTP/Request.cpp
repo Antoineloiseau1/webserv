@@ -7,7 +7,7 @@ void	Request::separateHeaders(std::string reqString)
 }
 
 /* Parses only the headers */
-Request::Request(char *requestBuf) {
+Request::Request(char *requestBuf) : isADataUpload(false) {
 	_requestLine = requestBuf;
 	separateHeaders(requestBuf);
 	std::string line;
