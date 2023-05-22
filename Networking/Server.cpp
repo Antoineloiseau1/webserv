@@ -92,11 +92,9 @@ void Server::_watchLoop() {
 			}
 			if(FD_ISSET(client->getFd(), &tmpRead)) {
 				_handler(client);
-				//break;
 			}
 			if(FD_ISSET(client->getFd(), &tmpWrite)) {
 				_responder(client);
-				//break;
 			}
 		}
 	}
@@ -166,8 +164,6 @@ void	Server::_refuse(int server_fd) {
 void	Server::_handler(Client *client) {
 	std::cout << "DEbug = dans handler, client fd : "<< client << std::endl;
 
-	static long	bytes = 0;
-
 	int	n = recv(client->getFd(), _requestBuffer, BUFFER_SIZE, 0);
 	std::cout << "***** n = " << n << std::endl;
 	if (n < 0) {
@@ -181,8 +177,7 @@ void	Server::_handler(Client *client) {
 		std::cout << "requestBuffer = " << _requestBuffer << std::endl;
 		/*******************POUR TOUT LE MONDE 1 X*****************************/
 		if (strstr(_requestBuffer, "\r\n\r\n") != nullptr
-			&& client->getStatus() == Client::INIT)
-		{
+			&& client->getStatus() == Client::INIT) {
 			std::cout << "Je suis dans le parsing header\n";
 			client->createRequest(_requestBuffer);
 			client->setStatus(Client::HEADER_PARSED);
@@ -202,14 +197,14 @@ void	Server::_handler(Client *client) {
 		soit body buf contient le user form */
 		else if (client->getStatus() != Client::INIT && client->getType() == Client::POST_DATA)
 		{	
-			bytes += n;
+			client->bytes += n;
 			if (client->getStatus() < Client::READY_FOR_DATA) {
 				if (client->getStatus() < Client::PARSING_PREBODY) {
 					std::cout << "++++parsing prebody 1 \n";
 					client->setStatus(Client::PARSING_PREBODY);
-					bytes = n - client->getRequest()->getHeaderLen();
-					if (bytes > 0)
-						client->parsePreBody(_requestBuffer + client->getRequest()->getHeaderLen() + 4, bytes);
+					client->bytes = n - client->getRequest()->getHeaderLen();
+					if (client->bytes > 0)
+						client->parsePreBody(_requestBuffer + client->getRequest()->getHeaderLen() + 4, client->bytes);
 				}
 				else if (client->getStatus() == Client::PARSING_PREBODY){
 					std::cout << "++++parsing prebody 2 \n";
@@ -217,20 +212,42 @@ void	Server::_handler(Client *client) {
 					n = 0;
 				}
 			}
-			if (bytes >= atoi(client->getRequest()->getHeaders()["Content-Length"].c_str())) {
-				std::cout << "++++BYTES = "<< bytes << " | atoi = " << atoi(client->getRequest()->getHeaders()["Content-Length"].c_str()) << std::endl;
+			if (client->bytes >= atoi(client->getRequest()->getHeaders()["Content-Length"].c_str())) {
+				std::cout << "++++BYTES = "<< client->bytes << " | atoi = " << atoi(client->getRequest()->getHeaders()["Content-Length"].c_str()) << std::endl;
 				client->setStatus(Client::BODY_PARSED);
 				FD_SET(client->getFd(), &_writeSet);
 				FD_CLR(client->getFd(), &_readSet);
 				if (client->getFd() > _fdMax)
 					_fdMax = client->getFd();
-				bytes = 0;
+				client->bytes = 0;
 				client->getFile().close(); //closing file after finishing to write data
 			}
 			else if (client->getStatus() == Client::READY_FOR_DATA && n > 0) {
 				std::cout << "+++Writing in file... \n";
 				client->writeInFile(_requestBuffer, n);
 			}
+		}
+		else if (client->getStatus() != Client::INIT && client->getType() == Client::POST_FORM) {
+			if (client->getStatus() < Client::PARSING_PREBODY) {
+				client->bytes = n - client->getRequest()->getHeaderLen();
+				client->setStatus(Client::PARSING_PREBODY);
+				if (client->bytes > 0)
+					client->setFormBody(_requestBuffer + client->getRequest()->getHeaderLen() + 4);
+			}
+			else if (client->getStatus() == Client::PARSING_PREBODY){
+					client->setFormBody(_requestBuffer);
+			}
+			if (client->bytes >= atoi(client->getRequest()->getHeaders()["Content-Length"].c_str())) {
+				std::cout << "++++BYTES = "<< client->bytes << " | atoi = " << atoi(client->getRequest()->getHeaders()["Content-Length"].c_str()) << std::endl;
+				client->setStatus(Client::BODY_PARSED);
+				FD_SET(client->getFd(), &_writeSet);
+				FD_CLR(client->getFd(), &_readSet);
+				if (client->getFd() > _fdMax)
+					_fdMax = client->getFd();
+				client->bytes = 0;
+				client->getFile().close(); //closing file after finishing to write data
+			}
+			std::cout << "PRE BODY FORM = " << client->getFormBody() << std::endl;
 		}
 	}
 }

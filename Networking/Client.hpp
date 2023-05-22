@@ -17,10 +17,9 @@ class Client
 		int				_serverFd;
 		int				_status;
 		Request			*_request;
-		char			_bodyBuf[BUFFER_SIZE];
-		int				_bodyBufSize;
 		std::ofstream 	_file;
 		std::string		_preBody;
+		std::string		_formBody;
 		int				_type;
 
 	public:
@@ -37,34 +36,29 @@ class Client
 		enum	_type { GET, POST_DATA, POST_FORM, DELETE };
 
 		bool			readyForData;
+		long			bytes;
 
 		Client(int fd, int serverFd);
 		~Client();
 
-		void	parsePreBody(char *buf, int size);
+		void			parsePreBody(char *buf, int size);
 
 /******************************GETTER*************************************/
 		
 		int				getType();
 		int				getFd();
 		int				getStatus();
-		char 			*getBodyBuf();
 		Request			*getRequest();
 		int				getServerFd();
-		int				getBodyBufSize();
 		std::ofstream	&getFile();
-		int				getPreBodySize();
-		
+		std::string		getFormBody();
 
 
 /******************************SETTER*************************************/
 		void			createRequest(char *reqLine);
 		void			setStatus(int status);
-		void			setBodyBuf(char *buf);
-		void			setBodyBufSize(int n);
-		void			setPreBody(std::string pre_body);
 		void			writeInFile(char *buf,int size);
-		void			addOnBodyBuf(char *buf, int size);
+		void			setFormBody(std::string buf);
 
 };
 
