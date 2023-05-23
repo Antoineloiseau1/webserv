@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <string.h>
 #include <array>
+#include <sys/stat.h>
 
 Response::Response(Request &request, Server &server, std::string tmp_file) : _server(server),
 	_request(request), _tmpPictFile(tmp_file)
@@ -56,12 +57,37 @@ void	Response::GetResponse(void) {
 			_response["status"] = " 204 No Content\r\n";
 			_response["body"] = "";
 		}
+		else if (file == "data/www/gallery.html")
+		{
+			_response["body"] = "<!DOCTYPE html>\n"
+								"<html>\n"
+								"<head>\n"
+								"<title>Picture Gallery</title>\n"
+								"</head>\n"
+								"<body>\n"
+								"<h1>Picture Gallery</h1>\n";
+
+			// Generate the HTML code for each picture
+			for (std::vector<std::string>::iterator it = _server.pictPaths.begin(); it != _server.pictPaths.end() ; it++) {
+				_response["body"] += "<img src=\"" + *it + "\" alt=\"Picture\">\n";
+				std::cout << "YOUPI UNE PHOTO mise = " << *it << std::endl;
+			}
+			_response["body"] += "</body>\n"
+								"</html>\n";
+		}
 		else
 			_response["body"] = openHtmlFile(file);
 		_response["length"] = "Content-Length: ";
 		_response["length"] += std::to_string(std::strlen(_response["body"].c_str()));
 		_response["length"] += "\r\n";
-		_response["type"] = "Content-Type: text/html\r\n";// NEED TO PARSE
+		_response["type"] = "Content-Type: text/html\r\n";
+		std::cout << "IMPRESSION ULTIME DE FILE = " << file << std::endl;
+		if (file.find("uploads/") != std::string::npos) {
+		_response["length"] = "Content-Length: ";
+		_response["length"] += std::to_string(_contentSize);
+		_response["length"] += "\r\n";
+			_response["type"] = "Content-Type: image/jpeg\r\n";
+		}
 }
 
 
@@ -70,8 +96,8 @@ void	Response::PostResponse(void) {
 
 	std::cout << "JE SUSI DANS LA POST RESPONSE\n";
 	if (_request.isADataUpload == true) {
-			std::ifstream sourceFile(_tmpPictFile, std::ios::in | std::ios::binary); // Open source file for reading
-			std::string filePath = "uploads/" + _request.getFileName(); //ICI ON DOIT CHECKER LE NOM A DONNER
+			std::ifstream sourceFile(_tmpPictFile, std::ios::in | std::ios::binary);
+			std::string filePath = "uploads/" + _request.getFileName(); 
 			std::ofstream destFile(filePath, std::ios::out | std::ios::binary);
 
 			if (sourceFile.is_open() && destFile.is_open()) {
@@ -84,7 +110,6 @@ void	Response::PostResponse(void) {
     		sourceFile.close();
     		destFile.close();
 	}
-
 	if (file != "favicon.ico" && file != " " && !file.empty() && file != "" && file != "data/www/style.css")
 	{ //handleCgi();
 		_response["status"] = "201 Created\r\n";
@@ -125,10 +150,21 @@ void	Response::NotImplemented(void) {
 	_response["connexion"] = "Connexion: close\r\n\r\n";	
 }
 
-std::string	Response::openHtmlFile(std::string f)
+std::string	Response::openHtmlFile(std::string f) /* PROBLEME SI CEST UNE IMAGE A OUVRIR !!*/
 {
-	std::cout << "OPENHTMFILE f = " << f << std::endl;
-	std::ifstream file(f);
+     std::ifstream file;
+    if (f.find("uploads/") != std::string::npos) {
+        file.open(f, std::ios::binary);
+		struct stat fileInfo;
+		if (stat(f.c_str(), &fileInfo) == 0) {
+			_contentSize = static_cast<size_t>(fileInfo.st_size);
+			std::cout << "Content size: " << _contentSize << " bytes" << std::endl;
+		} else {
+			std::cout << "Failed to determine the file size." << std::endl;
+		}
+    } else {
+        file.open(f);
+    }
     if (!file.is_open())
 	{
 		std::cout << "in if: " << f << std::endl;
@@ -143,6 +179,7 @@ std::string	Response::openHtmlFile(std::string f)
 		return content;
 	}
 }
+
 void	Response::createCgiEnv()
 {
 

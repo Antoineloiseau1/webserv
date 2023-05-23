@@ -24,6 +24,7 @@ class Response
 		char **envp;
 		std::array<std::string, 6>			_env;
 		std::string 						_tmpPictFile;
+		size_t								_contentSize;
 
 
 	public:
