@@ -10,7 +10,7 @@ ListeningSocket::ListeningSocket(int domain, int service, int protocole, int por
 
 	/* Binding address and starting to listen*/
 	establishConnection();
-	std::cout << "+++++++ ListeningSocket Constuctor: Server has been opened +++++++" << std::endl << std::endl;
+	std::cout << "+++++++ ListeningSocket Constuctor +++++++" << std::endl << std::endl;
 }
 
 /* Bind socket to address and start to listent */

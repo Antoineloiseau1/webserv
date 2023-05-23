@@ -6,13 +6,15 @@
 /*   By: mmidon <marvin@42.fr>                      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/25 10:15:25 by mmidon            #+#    #+#             */
-/*   Updated: 2023/05/02 15:06:58 by mmidon           ###   ########.fr       */
+/*   Updated: 2023/05/23 08:54:00 by mmidon           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <fstream>
 #include <iostream>
+#include <vector>
 #include <map>
+#include <cstdlib>
 
 #include "parsing.hpp"
 
@@ -28,7 +30,40 @@ std::string trim(const std::string& str, const std::string& whitespace = " \t") 
 	return str.substr(strBegin, strRange);
 }
 
-void data::setSettings() //put all the accepted settings (the keyword will also be the key for the value in the map)
+void	data::makePorts()
+{
+	std::vector<std::string>	portTab;
+	std::string					portStr = getData()["listen"];
+	std::string					tmp;
+	for (size_t	i = 0; portStr[i]; i++)
+	{
+		if (portStr[i] == ' ' && !tmp.empty())
+		{
+			portTab.push_back(tmp);
+			tmp.clear();
+		}
+		else
+			tmp += portStr[i];
+	}
+	if (!tmp.empty())
+		portTab.push_back(tmp);
+
+	if (!portTab.size())
+		throw (WrongDataException());
+	size_t i = 0;
+	int* res = new int[portTab.size()];
+	for (std::vector<std::string>::iterator it = portTab.begin(); it != portTab.end(); it++)
+		res[i++] = atoi((*it).c_str());
+
+	_ports = res;
+	_portsNbr = portTab.size();
+}
+
+int*	data::getPorts() {return _ports;}
+
+int		data::getPortsNbr() { return _portsNbr; }
+
+void	data::setSettings() //put all the accepted settings (the keyword will also be the key for the value in the map)
 {
 	_possibleSettings.push_back("listen");
 	_possibleSettings.push_back("server_name");
@@ -38,7 +73,7 @@ void data::setSettings() //put all the accepted settings (the keyword will also 
 }
 
 
-std::string data::whichSetting(std::string content)
+std::string	data::whichSetting(std::string content)
 {
 	for (size_t i = 0; i != _possibleSettings.size(); i++)
 	{
@@ -78,6 +113,7 @@ void data::fill(std::string conf)
 
 		_config.insert(std::make_pair(setting, line)); //put it in the config variable
 	}
+	makePorts();
 }
 
 std::map<std::string, std::string> data::getData()

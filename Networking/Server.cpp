@@ -15,7 +15,7 @@ char	**Server::getEnvp() const { return _envp; }
 
 /* A ce stade, pas de monitoring des connections acceptees. pas de pb apparent.*/
 int	Server::getOpenFd() {
-	int res = _socket.size(); 
+	int res = _socket.size();
 	
 	for (std::vector<ListeningSocket*>::iterator it(_socket.begin()); it != _socket.end(); it++)
 	{
@@ -65,8 +65,11 @@ void Server::_watchLoop() {
 		tmpRead = _readSet;
 		tmpWrite = _writeSet;
 		tmpError = _errorSet;
-		std::cout << "while\n";
+		std::cout << "before select\n";
 		nbEvents = select(_getFdMax() + 1, &tmpRead, &tmpWrite, &tmpError, NULL);
+		std::cout << "after select\n";
+
+///////////		/!\ work in progress
 		if (FD_ISSET(_socket[0]->getFd(), &tmpError)) {
 			std::cout << "ERROR SET SERVER\n";
 			exit(1);
@@ -75,14 +78,15 @@ void Server::_watchLoop() {
 			std::cerr << "Error: select(): " << strerror(errno) << std::endl;
 			exit(EXIT_FAILURE);
 		}
-		if(FD_ISSET(_socket[0]->getFd(), &tmpRead))
+		if(FD_ISSET(_socket[0]->getFd(), &tmpRead) && _alive)
 		{
 			if (getOpenFd() > MAX_FD)
 				_refuse(_socket[0]->getFd());
 			else
 				_accepter(_socket[0]->getFd(), _socket[0]);
 		}
-		for(std::vector<Client*>::iterator it = _socket[0]->clients.begin(); it != _socket[0]->clients.end() && nbEvents--; it++)
+
+		for(std::vector<Client*>::iterator it = _socket[0]->clients.begin(); it != _socket[0]->clients.end() && nbEvents-- && _alive; it++)
 		{
 			std::cout << nbEvents << std::endl;
 			Client *client = *it;
@@ -98,7 +102,9 @@ void Server::_watchLoop() {
 			}
 		}
 	}
+	///////////		/!\ work in progress
 	std::cout << "OUT OF WHILE LOOP \n";
+
 }
 
 Server::Server(int domain, int service, int protocole, int *ports, int nbSocket, char **envp) : _envp(envp) {

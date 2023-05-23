@@ -1,15 +1,15 @@
 #include "Networking/Server.hpp"
 #include "parsing/parsing.hpp"
 
-#define PORT 8080
 #define FAMILY AF_INET
 #define	SOCKTYPE SOCK_STREAM
 #define PROTOCOLE 0
-#define NBSOCKET 1
 
 void	manage_events() {
 //use poll or kqueue
 }
+
+
 
 int main(int argc, char *argv[], char *envp[]) {
 	if(argc != 2) {
@@ -20,8 +20,8 @@ int main(int argc, char *argv[], char *envp[]) {
 	data data(static_cast<std::string>(argv[1]));
 	if (data.getData().empty())
 		return 1;
-	int ports[2] = {PORT, 4242};
-	Server	server(FAMILY, SOCKTYPE, PROTOCOLE, ports, NBSOCKET, envp);
+	int *ports = data.getPorts();
+	Server	server(FAMILY, SOCKTYPE, PROTOCOLE, ports, data.getPortsNbr(), envp);
 	
 	server.start();
 
