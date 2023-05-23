@@ -7,8 +7,6 @@
 
 #define BUFFER_SIZE 424242
 
-class ListeningSocket;
-
 
 class Client
 {
@@ -17,6 +15,7 @@ class Client
 		int				_serverFd;
 		int				_status;
 		Request			*_request;
+		std::string		_tmpPictFile;
 		std::ofstream 	_file;
 		std::string		_preBody;
 		std::string		_formBody;
@@ -38,10 +37,10 @@ class Client
 		bool			readyForData;
 		long			bytes;
 
-		Client(int fd, int serverFd);
+		Client(int fd, int serverFd, std::string tmp_file);
 		~Client();
 
-		void			parsePreBody(char *buf, int size);
+		int				parsePreBody(char *buf, int size);
 
 /******************************GETTER*************************************/
 		
@@ -52,6 +51,7 @@ class Client
 		int				getServerFd();
 		std::ofstream	&getFile();
 		std::string		getFormBody();
+		std::string		getTmpPictFile();
 
 
 /******************************SETTER*************************************/

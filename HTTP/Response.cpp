@@ -6,7 +6,9 @@
 #include <string.h>
 #include <array>
 
-Response::Response(Request &request, Server &server) : _server(server), _request(request) {
+Response::Response(Request &request, Server &server, std::string tmp_file) : _server(server),
+	_request(request), _tmpPictFile(tmp_file)
+{
 	std::string	type[] = { "GET", "POST", "DELETE", "HEAD", "OPTIONS", "PUT", "TRACE", "CONNECT" };
 	enum	mtype { GET, POST, DELETE, OTHER };
 	int a = 0;
@@ -68,8 +70,9 @@ void	Response::PostResponse(void) {
 
 	std::cout << "JE SUSI DANS LA POST RESPONSE\n";
 	if (_request.isADataUpload == true) {
-			std::ifstream sourceFile("picture.png", std::ios::in | std::ios::binary); // Open source file for reading
-			std::ofstream destFile(_request.getFileName(), std::ios::out | std::ios::binary);
+			std::ifstream sourceFile(_tmpPictFile, std::ios::in | std::ios::binary); // Open source file for reading
+			std::string filePath = "uploads/" + _request.getFileName(); //ICI ON DOIT CHECKER LE NOM A DONNER
+			std::ofstream destFile(filePath, std::ios::out | std::ios::binary);
 
 			if (sourceFile.is_open() && destFile.is_open()) {
 				// Copy data from source file to destination file

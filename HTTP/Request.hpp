@@ -16,7 +16,7 @@ class Request {
 		std::string							_preBody;
 		std::string							_formBody;
 		std::string							_fileName;
-
+		
 	public:
 		Request(char *request);
 		~Request(void);
@@ -36,6 +36,7 @@ class Request {
 		void								parsingPreBody(std::string	pre_body);
 		void								separateHeaders(std::string reqString);
 		void								setFormBody(std::string body);
+		void								setFileName(std::string new_name);
 		
 };
 

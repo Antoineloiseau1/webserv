@@ -110,9 +110,8 @@ void	Request::parsingPreBody(std::string	pre_body) {
 			_fileName = line.substr(line.find("filename=") + 10, line.size() - (line.find("filename=") + 12));
 		line.clear();
 		getline(iss, line);
-	}	
+	}
 }
-
 
 Request::~Request(void) {}
 
@@ -131,6 +130,10 @@ std::map<std::string, std::string>	Request::getHeaders() { return _headers; }
 int	Request::getHeaderLen() { return _headerLine.size(); }
 
 std::string	Request::getFileName() { return _fileName; }
+
+void	Request::setFileName(std::string new_name) {
+	_fileName = new_name;
+}
 
 void	Request::setFormBody(std::string body) {
 	_formBody = body;

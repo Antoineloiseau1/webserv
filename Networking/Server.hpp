@@ -6,7 +6,7 @@
 /*   By: elpolpa <elpolpa@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/04 09:54:40 by mmidon            #+#    #+#             */
-/*   Updated: 2023/05/22 21:56:42 by elpolpa          ###   ########.fr       */
+/*   Updated: 2023/05/23 18:20:28 by elpolpa          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,8 +26,6 @@
 #include <cstring>
 #include <string.h>
 #include <iostream>
-
-// # define BUFFER_SIZE 3000000
 
 class Response;
 
@@ -49,6 +47,7 @@ class Server {
 		struct sockaddr_storage			_addr;
 		socklen_t						_socklen;
 		char							**_envp;
+		std::vector<std::string>		_pictPaths;
 
 
 	public:
@@ -63,6 +62,10 @@ class Server {
 		static void		exit(int sig);
 		void			disconnectClient(Client *client);
 		void			setToWrite(Client *client);
+		
+		void			checkForDupName(std::string &file_name);
+		std::string		addPicture(std::string file_name);
+		void			changeDupName(std::string &file_name);
 
 };
 

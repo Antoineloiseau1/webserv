@@ -2,8 +2,8 @@
 #include <cstring>
 #include <unistd.h>
 
-Client::Client(int fd, int serverFd) : _fd(fd), _serverFd(serverFd), _status(0), _request(nullptr),
-	_file("picture.png", std::ofstream::binary | std::ofstream::out | std::ofstream::trunc),
+Client::Client(int fd, int serverFd, std::string tmp_file) : _fd(fd), _serverFd(serverFd), _status(0), _request(nullptr),
+	_tmpPictFile(tmp_file), _file(tmp_file, std::ofstream::binary | std::ofstream::out | std::ofstream::trunc),
 	readyForData(false), bytes(0) {
 	_status = INIT;
 		std::cout <<"***********************+++++CLIENT CONSTRUCTOR "<< _fd << "********************\n";
@@ -26,19 +26,28 @@ void	Client::createRequest(char *reqLine) {
 	}
 	else if (_request->getTypeStr() == "GET" || _request->getTypeStr() == "DELETE")
 		_type = GET_DELETE;
+	if (_type != POST_DATA) {
+		int result = std::remove(_tmpPictFile.c_str());
+		if (result == 0)
+			std::cout << "File deleted successfully.\n";
+		else
+			std::cout << "Failed to delete the file.\n";
+	}
 }
 
 void	Client::writeInFile(char *buf, int size) {
 	_file.write(buf, sizeof(char) * size);
 }
 
-void	Client::parsePreBody(char *buf, int size) {
+int	Client::parsePreBody(char *buf, int size) {
 	_preBody += buf;
 	if (_preBody.find("Content-Type") != std::string::npos) {
 		_request->parsingPreBody(_preBody);
 		writeInFile(buf + _request->getPreBody().size() + 5, size - _request->getPreBody().size());
 		setStatus(Client::READY_FOR_DATA);
+		return 1;
 	}
+	return 0;
 }
 
 void	Client::setFormBody(std::string buf) {
@@ -62,3 +71,5 @@ std::ofstream	&Client::getFile()  { return _file; }
 int	Client::getType() { return _type; }
 
 std::string	Client::getFormBody() { return _formBody; }
+
+std::string	Client::getTmpPictFile() { return _tmpPictFile; }

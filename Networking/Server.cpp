@@ -124,6 +124,14 @@ void	Server::start(void)
 	_watchLoop();
 }
 
+/* A METTRE DANS LES UTILS*/
+std::string	create_tmp_file_name(int fd) {
+	std::ostringstream oss;
+    oss << "picture" << fd << ".png";
+    std::string s = oss.str();
+	return s;
+}
+
 // Handle incoming CONNECTION and add the connection socket to the kqueue
 void	Server::_accepter(int server_fd, ListeningSocket *sock) {
 	struct sockaddr_in	address;
@@ -144,7 +152,7 @@ void	Server::_accepter(int server_fd, ListeningSocket *sock) {
 	FD_SET(fd, &_errorSet);
 	if(fd > _fdMax)
 		_fdMax = fd;
-	Client* newClient = new Client(fd, sock->getFd());
+	Client* newClient = new Client(fd, sock->getFd(), create_tmp_file_name(fd));
 	sock->setClient(newClient);
 }
 
@@ -199,10 +207,12 @@ void	Server::_handler(Client *client) {
 							client->setStatus(Client::PARSING_PREBODY);
 							client->bytes = n - client->getRequest()->getHeaderLen();
 							if (client->bytes > 0)
-								client->parsePreBody(_requestBuffer + client->getRequest()->getHeaderLen() + 4, client->bytes);
+								if (client->parsePreBody(_requestBuffer + client->getRequest()->getHeaderLen() + 4, client->bytes))
+									client->getRequest()->setFileName(addPicture(client->getRequest()->getFileName()));
 						}
 						else if (client->getStatus() == Client::PARSING_PREBODY){
-							client->parsePreBody(_requestBuffer, n);
+							if (client->parsePreBody(_requestBuffer, n))
+								client->getRequest()->setFileName(addPicture(client->getRequest()->getFileName()));
 							n = 0;
 						}
 					}
@@ -236,7 +246,7 @@ void	Server::_handler(Client *client) {
 
 void	Server::_responder(Client *client) {
 	
-	Response	response(*(client->getRequest()), *this);
+	Response	response(*(client->getRequest()), *this, client->getTmpPictFile());
 	std::string res = response.buildResponse();
 
 	std::cout << "Response from the server:\n" << res << std::endl;
@@ -267,3 +277,27 @@ ListeningSocket	*Server::getSocket(int fd) {
 Server::~Server(void) {
 	std::cout << "\n\n ************DELETION DELETION DELETION********* \n";
 	delete this->_socket[0]; }
+
+
+void	Server::changeDupName(std::string &file_name) {
+	std::string	ext = file_name.substr(file_name.find_last_of('.'), file_name.size() - file_name.find_last_of('.'));
+	std::string	name = file_name.substr(0, file_name.find_last_of('.'));
+
+	file_name = name + "1" + ext;
+}
+
+
+void	Server::checkForDupName(std::string &file_name) {
+	for (std::vector<std::string>::iterator it = _pictPaths.begin(); it != _pictPaths.end(); it++) {
+		if (*it == "/uploads/" + file_name) {
+			changeDupName(file_name);
+			it = _pictPaths.begin();
+		}
+	}
+}
+
+std::string	Server::addPicture(std::string file_name) {
+	checkForDupName(file_name);
+	_pictPaths.push_back("/uploads/" + file_name);
+	return file_name;
+}
