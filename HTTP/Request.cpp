@@ -4,7 +4,6 @@
 void	Request::separateHeaders(std::string reqString)
 {
 	_headerLine = reqString.substr(0, reqString.find("\r\n\r\n") + 4);
-	std::cout << " **** HEADER LINE = " << _headerLine;
 }
 
 /* Parses only the headers */
@@ -104,12 +103,14 @@ void	Request::parsingBody() {
 void	Request::parsingPreBody(std::string	pre_body) {
 	std::string line;
 	std::istringstream iss(pre_body);
-
 	getline(iss, line);
 	while (!line.empty() && line != "\r") {
 		_preBody += line;
+		if (line.find("filename=") != std::string::npos)
+			_fileName = line.substr(line.find("filename=") + 10, line.size() - (line.find("filename=") + 12));
+		line.clear();
 		getline(iss, line);
-	}
+	}	
 }
 
 
@@ -128,6 +129,8 @@ std::string	Request::getPreBody() { return _preBody; }
 std::map<std::string, std::string>	Request::getHeaders() { return _headers; }
 
 int	Request::getHeaderLen() { return _headerLine.size(); }
+
+std::string	Request::getFileName() { return _fileName; }
 
 void	Request::setFormBody(std::string body) {
 	_formBody = body;

@@ -180,7 +180,7 @@ void	Server::_handler(Client *client) {
 	}
 	else {
 		_requestBuffer[n] = '\0';
-		std::cout << "requestBuffer = " << _requestBuffer << std::endl;
+		// std::cout << "requestBuffer = " << _requestBuffer << std::endl;
 		/*******************POUR TOUT LE MONDE 1 X*****************************/
 		if (strstr(_requestBuffer, "\r\n\r\n") != nullptr
 			&& client->getStatus() == Client::INIT) {
@@ -221,7 +221,7 @@ void	Server::_handler(Client *client) {
 			}
 		}
 		if (client->bytes >= atoi(client->getRequest()->getHeaders()["Content-Length"].c_str())) {
-				std::cout << "++++BYTES = "<< client->bytes << " | atoi = " << atoi(client->getRequest()->getHeaders()["Content-Length"].c_str()) << std::endl;
+				// std::cout << "++++BYTES = "<< client->bytes << " | atoi = " << atoi(client->getRequest()->getHeaders()["Content-Length"].c_str()) << std::endl;
 				client->setStatus(Client::BODY_PARSED); //ne sert surement a rien
 				setToWrite(client);
 				client->getRequest()->setFormBody(client->getFormBody());

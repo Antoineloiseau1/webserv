@@ -34,11 +34,9 @@ void	Client::writeInFile(char *buf, int size) {
 
 void	Client::parsePreBody(char *buf, int size) {
 	_preBody += buf;
-	std::cout << "PRE BODY TEST = " << _preBody << " | buf = " << buf << std::endl;
 	if (_preBody.find("Content-Type") != std::string::npos) {
 		_request->parsingPreBody(_preBody);
 		writeInFile(buf + _request->getPreBody().size() + 5, size - _request->getPreBody().size());
-		std::cout <<" SIZE WRITTEN = " << _request->getPreBody().size() << std::endl;
 		setStatus(Client::READY_FOR_DATA);
 	}
 }

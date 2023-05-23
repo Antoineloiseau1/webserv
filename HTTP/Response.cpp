@@ -69,7 +69,7 @@ void	Response::PostResponse(void) {
 	std::cout << "JE SUSI DANS LA POST RESPONSE\n";
 	if (_request.isADataUpload == true) {
 			std::ifstream sourceFile("picture.png", std::ios::in | std::ios::binary); // Open source file for reading
-			std::ofstream destFile("destination.txt", std::ios::out | std::ios::binary);
+			std::ofstream destFile(_request.getFileName(), std::ios::out | std::ios::binary);
 
 			if (sourceFile.is_open() && destFile.is_open()) {
 				// Copy data from source file to destination file

@@ -15,6 +15,7 @@ class Request {
 		std::string							_body;
 		std::string							_preBody;
 		std::string							_formBody;
+		std::string							_fileName;
 
 	public:
 		Request(char *request);
@@ -28,6 +29,7 @@ class Request {
 		std::map<std::string, std::string>	getHeaders();
 		std::string							getBody();
 		std::string							getPreBody();
+		std::string							getFileName();
 		int									getHeaderLen();
 
 		void								parsingBody();
