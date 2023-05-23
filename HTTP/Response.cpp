@@ -69,8 +69,13 @@ void	Response::GetResponse(void) {
 
 			// Generate the HTML code for each picture
 			for (std::vector<std::string>::iterator it = _server.pictPaths.begin(); it != _server.pictPaths.end() ; it++) {
+				_response["body"] += "<div class=\"picture\">\n";
 				_response["body"] += "<img src=\"" + *it + "\" alt=\"Picture\">\n";
-				std::cout << "YOUPI UNE PHOTO mise = " << *it << std::endl;
+				_response["body"] += "<form action=\"/delete\" method=\"POST\">\n";
+				_response["body"] += "<input type=\"hidden\" name=\"image\" value=\"" + *it + "\">\n";
+				_response["body"] += "<input type=\"submit\" value=\"Delete\">\n";
+				_response["body"] += "</form>\n";
+				_response["body"] += "</div>\n";
 			}
 			_response["body"] += "</body>\n"
 								"</html>\n";

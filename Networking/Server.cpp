@@ -188,7 +188,7 @@ void	Server::_handler(Client *client) {
 	}
 	else {
 		_requestBuffer[n] = '\0';
-		// std::cout << "requestBuffer = " << _requestBuffer << std::endl;
+		std::cout << "requestBuffer = " << _requestBuffer << std::endl;
 		/*******************POUR TOUT LE MONDE 1 X*****************************/
 		if (strstr(_requestBuffer, "\r\n\r\n") != nullptr
 			&& client->getStatus() == Client::INIT) {
@@ -221,8 +221,9 @@ void	Server::_handler(Client *client) {
 					if (client->getStatus() < Client::PARSING_PREBODY) {
 						client->bytes = n - client->getRequest()->getHeaderLen();
 						client->setStatus(Client::PARSING_PREBODY);
-						if (client->bytes > 0)
-							client->setFormBody(_requestBuffer + client->getRequest()->getHeaderLen() + 4);
+						if (client->bytes > 0) {
+							client->setFormBody(_requestBuffer + client->getRequest()->getHeaderLen());
+						}
 					}
 					else if (client->getStatus() == Client::PARSING_PREBODY){
 							client->setFormBody(_requestBuffer);
@@ -234,7 +235,7 @@ void	Server::_handler(Client *client) {
 				// std::cout << "++++BYTES = "<< client->bytes << " | atoi = " << atoi(client->getRequest()->getHeaders()["Content-Length"].c_str()) << std::endl;
 				client->setStatus(Client::BODY_PARSED); //ne sert surement a rien
 				setToWrite(client);
-				client->getRequest()->setFormBody(client->getFormBody());
+				client->getRequest()->parseFormBody(client->getFormBody());
 				client->bytes = 0;
 				client->getFile().close(); //closing file after finishing to write data
 		}

@@ -16,12 +16,15 @@ class Request {
 		std::string							_preBody;
 		std::string							_formBody;
 		std::string							_fileName;
+		std::string							_fileToDelete;
+		std::map<std::string, std::string>	_formInfo;
 		
 	public:
 		Request(char *request);
 		~Request(void);
 		
-		bool								isADataUpload;	
+		bool								isADataUpload;
+		bool								isDelete;	
 
 		std::string							getTypeStr();
 		std::string							getPath();
@@ -32,10 +35,9 @@ class Request {
 		std::string							getFileName();
 		int									getHeaderLen();
 
-		void								parsingBody();
 		void								parsingPreBody(std::string	pre_body);
 		void								separateHeaders(std::string reqString);
-		void								setFormBody(std::string body);
+		void								parseFormBody(std::string body);
 		void								setFileName(std::string new_name);
 		
 };

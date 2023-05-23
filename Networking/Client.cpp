@@ -21,8 +21,11 @@ void	Client::createRequest(char *reqLine) {
 			_request->isADataUpload = true;
 			_type = POST_DATA;
 		}
-		else if (_request->getHeaders()["Content-Type"].find("application/x-www-form-urlencoded") != std::string::npos)
+		else if (_request->getHeaders()["Content-Type"].find("application/x-www-form-urlencoded") != std::string::npos) {
 			_type = POST_FORM;
+			if (_request->getPath() == "/delete")
+				_request->isDelete = true;
+		}
 	}
 	else if (_request->getTypeStr() == "GET" || _request->getTypeStr() == "DELETE")
 		_type = GET_DELETE;
@@ -51,7 +54,9 @@ int	Client::parsePreBody(char *buf, int size) {
 }
 
 void	Client::setFormBody(std::string buf) {
+	std::cout << "TEST FORM BODY avant = " << _formBody << std::endl;
 	_formBody += buf;
+	std::cout << "TEST FORM BODY apres = " << _formBody << std::endl;
 }
 
 /********************** GETTERS **************************/
