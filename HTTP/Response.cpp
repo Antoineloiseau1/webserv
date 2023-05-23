@@ -120,7 +120,7 @@ void	Response::PostResponse(void) {
 		_response["status"] = "201 Created\r\n";
 		_response["body"] = openHtmlFile("data/www/error/201.html");
 		std::cout << "CGI" << std::endl;
-		return;
+		return; //a ne pas supprimer
 	}
 	else
 	{
