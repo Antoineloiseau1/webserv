@@ -103,6 +103,7 @@ void	Response::PostResponse(void) {
 	if (_request.isADataUpload == true) {
 			std::ifstream sourceFile(_tmpPictFile, std::ios::in | std::ios::binary);
 			std::string filePath = "uploads/" + _request.getFileName(); 
+			std::cout << "***** FILE PATH = "<< filePath << std::endl;
 			std::ofstream destFile(filePath, std::ios::out | std::ios::binary);
 
 			if (sourceFile.is_open() && destFile.is_open()) {

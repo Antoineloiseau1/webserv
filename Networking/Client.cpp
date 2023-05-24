@@ -5,6 +5,7 @@
 Client::Client(int fd, int serverFd, std::string tmp_file) : _fd(fd), _serverFd(serverFd), _status(0), _request(nullptr),
 	_tmpPictFile(tmp_file), _file(tmp_file, std::ofstream::binary | std::ofstream::out | std::ofstream::trunc),
 	readyForData(false), bytes(0) {
+		// std::cout << "PRINT TMP FILE = "<< tmp_file << std::endl;
 	_status = INIT;
 		std::cout <<"***********************+++++CLIENT CONSTRUCTOR "<< _fd << "********************\n";
 
