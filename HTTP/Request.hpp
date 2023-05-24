@@ -40,6 +40,7 @@ class Request {
 		void								separateHeaders(std::string reqString);
 		void								parseFormBody(std::string body);
 		void								setFileName(std::string new_name);
+		void								setFileToDelete(std::string	file);
 		
 };
 

@@ -35,6 +35,7 @@ Response::Response(Request &request, Server &server, std::string tmp_file) : _se
 			PostResponse();
 			break;
 		case DELETE:
+			_request.setFileToDelete(_request.getFileName());
 			DeleteResponse();
 			break;
 		case OTHER:
@@ -116,14 +117,12 @@ void	Response::GetResponse(void) {
 void	Response::PostResponse(void) {
 	std::string	file = _request.getPath();
 
-	std::cout << "JE SUSI DANS LA POST RESPONSE\n";
 	if (_request.isADataUpload == true) {
 			std::ifstream sourceFile(_tmpPictFile, std::ios::in | std::ios::binary);
 			std::string filePath = "uploads/" + _request.getFileName(); 
 			std::ofstream destFile(filePath, std::ios::out | std::ios::binary);
 
 			if (sourceFile.is_open() && destFile.is_open()) {
-				// Copy data from source file to destination file
 				destFile << sourceFile.rdbuf();
 				std::cout << "File copied successfully." << std::endl;
 			}
@@ -132,42 +131,30 @@ void	Response::PostResponse(void) {
     		sourceFile.close();
     		destFile.close();
 	}
-	if (_request.isDelete) {
-		if (std::remove(_request.getFileToDelete().c_str()) != 0) {
-			std::cerr << "Failed to delete file: " << std::endl;
-			_response["status"] = " 404 Not Found\r\n";
-			_response["body"] = openHtmlFile("data/www/error/404.html");
-		} else {
-			_server.deletePict(_request.getFileToDelete());
-			std::cout << "File deleted successfully" << std::endl;
-			_response["status"] = "200 OK\r\n";
-			_response["body"] = openHtmlFile("data/www/success.html");
-		}
-	}
+	if (_request.isDelete)
+		DeleteResponse();
 	else if (file != "favicon.ico" && file != " " && !file.empty() && file != "" && file != "data/www/style.css")
 	{ //handleCgi();
 		_response["status"] = "201 Created\r\n";
 		_response["body"] = openHtmlFile("data/www/error/201.html");
 		std::cout << "CGI" << std::endl;
-		return; //a ne pas supprimer
+		return; //a ne pas supprimer ??
 	}
-	else
-	{
-		_response["status"] = " 200 OK\r\n";
-		_response["body"] = "GetResponse: Not handled yet\r\n";
-	}
-	_response["length"] = "Content-Length: ";
-	_response["length"] += std::to_string(std::strlen(_response["body"].c_str()));
-	_response["length"] += "\r\n";
-	_response["type"] = "Content-Type: text/html\r\n";// NEED TO PARSE
+	fillGetLength();
+	_response["type"] = "Content-Type: text/html\r\n";// tjrs que du html pour le moment
 }
 
-void	Response::DeleteResponse(void) {}
-
-void	Response::executor(void) {
-      // nom=a&prenom=a&email=a%40q&ville=a
-	std::cout << "EXECUTE POST REQUEST\n";
-	//  handleCgi();
+void	Response::DeleteResponse(void) {
+	if (std::remove(_request.getFileToDelete().c_str()) != 0) {
+		std::cerr << "Failed to delete file: " << std::endl;
+		_response["status"] = " 404 Not Found\r\n";
+		_response["body"] = openHtmlFile("data/www/error/404.html");
+	} else {
+		_server.deletePict(_request.getFileToDelete());
+		std::cout << "File deleted successfully" << std::endl;
+		_response["status"] = "200 OK\r\n";
+		_response["body"] = openHtmlFile("data/www/success.html");
+	}
 }
 
 void	Response::NotImplemented(void) {
