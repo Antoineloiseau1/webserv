@@ -38,7 +38,7 @@ class Server {
 		int								_requestFd;
 		void							_accepter(int server_fd, ListeningSocket *socket);
 		void							_refuse(int server_fd);
-		void							_handler(Client *client, int i);
+		int								_handler(Client *client, int i);
 		void							_responder(Client *client, int i);
 		int								_getFdMax(void);
 		void 							_watchLoop();

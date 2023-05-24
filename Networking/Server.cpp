@@ -10,6 +10,17 @@
 
 bool	_alive = true;
 
+void copy_fd_set(fd_set* src, fd_set* dest) {
+    FD_ZERO(dest);  // Clear the destination fd_set
+    
+    int fd;
+    for (fd = 0; fd < FD_SETSIZE; ++fd) {
+        if (FD_ISSET(fd, src)) {
+            FD_SET(fd, dest);  // Copy the file descriptor to the destination fd_set
+        }
+    }
+}
+
 int	Server::getRequestFd() const { return _requestFd; }
 
 char	**Server::getEnvp() const { return _envp; }
@@ -67,9 +78,12 @@ void Server::_watchLoop() {
 	{
 		if (i >= _data.getPortsNbr())
 			i = 0;
-		tmpRead = _readSet;
-		tmpWrite = _writeSet;
-		tmpError = _errorSet;
+		copy_fd_set(&_readSet, &tmpRead);
+		copy_fd_set(&_writeSet, &tmpWrite);
+		copy_fd_set(&_errorSet, &tmpError);
+		// tmpRead = _readSet;
+		// tmpWrite = _writeSet;
+		// tmpError = _errorSet;
 		std::cout << i << "whille\n";
 		nbEvents = select(_getFdMax() + 1, &tmpRead, &tmpWrite, &tmpError, NULL);
 
@@ -104,7 +118,9 @@ void Server::_watchLoop() {
 				exit(1);
 			}
 			if(FD_ISSET(client->getFd(), &tmpRead)) {
-				_handler(client, i);
+				if (!_handler(client, i))
+					i++;
+					continue ;
 			}
 			if(FD_ISSET(client->getFd(), &tmpWrite)) {
 				_responder(client, i);
@@ -192,15 +208,14 @@ void	Server::setToWrite(Client *client) {
 }
 
 // Handle incoming data on accepted connections
-void	Server::_handler(Client *client, int i) {
+int	Server::_handler(Client *client, int i) {
 
 	int	n = recv(client->getFd(), _requestBuffer, BUFFER_SIZE, 0);
 	// std::cout << "***** n = " << n << std::endl;
-	if (n < 0) { // mettre <=0 et gerer proprement pour la boucle infinie
+	if (n <= 0) { // mettre <=0 et gerer proprement pour la boucle infinie
 		std::cerr << "error: recv: " << strerror(errno) << std::endl;
-		FD_CLR(client->getFd(), &_readSet);
-		close(client->getFd());
-		_socket[i]->deleteClient(client->getFd()); //////////////i
+		disconnectClient(client, i);
+		return 0;
 	}
 	else {
 		_requestBuffer[n] = '\0';
@@ -259,6 +274,7 @@ void	Server::_handler(Client *client, int i) {
 				client->writeInFile(_requestBuffer, n);
 			}
 	}
+	return 1;
 }
 
 void	Server::_responder(Client *client, int i) {
