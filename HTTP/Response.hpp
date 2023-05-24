@@ -10,6 +10,7 @@
 #include "../Networking/Server.hpp"
 #include <array>
 #include <map>
+#include <vector>
 
 class	Server;
 
@@ -22,11 +23,13 @@ class Response
 		std::map<std::string, std::string>	_response;
 		char **envp;
 		std::array<std::string, 6>			_env;
+		std::string 						_tmpPictFile;
+		size_t								_contentSize;
 
 
 	public:
 
-		Response(Request &request, Server &server);
+		Response(Request &request, Server &server, std::string tmp_file);
 		virtual ~Response();
 
 		void				executor();

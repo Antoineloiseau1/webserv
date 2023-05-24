@@ -140,6 +140,14 @@ void	Server::start(void)
 	_watchLoop();
 }
 
+/* A METTRE DANS LES UTILS*/
+std::string	create_tmp_file_name(int fd) {
+	std::ostringstream oss;
+    oss << "picture" << fd << ".png";
+    std::string s = oss.str();
+	return s;
+}
+
 // Handle incoming CONNECTION and add the connection socket to the kqueue
 void	Server::_accepter(int server_fd, ListeningSocket *sock) {
 	struct sockaddr_in	address;
@@ -160,7 +168,7 @@ void	Server::_accepter(int server_fd, ListeningSocket *sock) {
 	FD_SET(fd, &_errorSet);
 	if(fd > _fdMax)
 		_fdMax = fd;
-	Client* newClient = new Client(fd, sock->getFd());
+	Client* newClient = new Client(fd, sock->getFd(), create_tmp_file_name(fd));
 	sock->setClient(newClient);
 }
 
@@ -176,13 +184,19 @@ void	Server::_refuse(int server_fd) {
 	close(fd);
 }
 
+void	Server::setToWrite(Client *client) {
+	FD_CLR(client->getFd(), &_readSet);
+	FD_SET(client->getFd(), &_writeSet);
+	if (client->getFd() > _fdMax)
+		_fdMax = client->getFd();
+}
+
 // Handle incoming data on accepted connections
-void	Server::_handler(Client *client, int i) {
-	std::cout << "DEbug = dans handler, client fd : "<< client << std::endl;
+void	Server::_handler(Client *client) {
 
 	int	n = recv(client->getFd(), _requestBuffer, BUFFER_SIZE, 0);
-	std::cout << "***** bytes read = " << n << std::endl;
-	if (n < 0) {
+	// std::cout << "***** n = " << n << std::endl;
+	if (n < 0) { // mettre <=0 et gerer proprement pour la boucle infinie
 		std::cerr << "error: recv: " << strerror(errno) << std::endl;
 		FD_CLR(client->getFd(), &_readSet);
 		close(client->getFd());
@@ -194,83 +208,62 @@ void	Server::_handler(Client *client, int i) {
 		/*******************POUR TOUT LE MONDE 1 X*****************************/
 		if (strstr(_requestBuffer, "\r\n\r\n") != nullptr
 			&& client->getStatus() == Client::INIT) {
-//			std::cout << "Je suis dans le parsing header\n";
 			client->createRequest(_requestBuffer);
 			client->setStatus(Client::HEADER_PARSED);
 		}
-	
-		if (client->getStatus() == Client::HEADER_PARSED 
-			&& (client->getType() == Client::GET || client->getType() == Client::DELETE))
-		{
-//			std::cout << "*****Request From Client:\n" << _requestBuffer << std::endl;
-			FD_CLR(client->getFd(), &_readSet);
-			FD_SET(client->getFd(), &_writeSet);
-			if (client->getFd() > _fdMax)
-				_fdMax = client->getFd();
-		}
-		/* SOIT body buf est vide,
-		SOIT body buf contient le prebody et un peu de data d'image
-		soit body buf contient le user form */
-		else if (client->getStatus() != Client::INIT && client->getType() == Client::POST_DATA)
-		{	
-			client->bytes += n;
-			if (client->getStatus() < Client::READY_FOR_DATA) {
-				if (client->getStatus() < Client::PARSING_PREBODY) {
-//					std::cout << "++++parsing prebody 1 \n";
-					client->setStatus(Client::PARSING_PREBODY);
-					client->bytes = n - client->getRequest()->getHeaderLen();
-					if (client->bytes > 0)
-						client->parsePreBody(_requestBuffer + client->getRequest()->getHeaderLen() + 4, client->bytes);
-				}
-				else if (client->getStatus() == Client::PARSING_PREBODY){
-//					std::cout << "++++parsing prebody 2 \n";
-					client->parsePreBody(_requestBuffer, n);
-					n = 0;
-				}
+		if (client->getStatus() > Client::INIT) {
+			switch (client->getType()) {
+				case Client::GET_DELETE:
+					setToWrite(client);
+					break;
+				case Client::POST_DATA:
+					client->bytes += n;
+					if (client->getStatus() < Client::READY_FOR_DATA) {
+						if (client->getStatus() < Client::PARSING_PREBODY) {
+							client->setStatus(Client::PARSING_PREBODY);
+							client->bytes = n - client->getRequest()->getHeaderLen();
+							if (client->bytes > 0)
+								if (client->parsePreBody(_requestBuffer + client->getRequest()->getHeaderLen() + 4, client->bytes))
+									client->getRequest()->setFileName(addPicture(client->getRequest()->getFileName()));
+						}
+						else if (client->getStatus() == Client::PARSING_PREBODY){
+							if (client->parsePreBody(_requestBuffer, n))
+								client->getRequest()->setFileName(addPicture(client->getRequest()->getFileName()));
+							n = 0;
+						}
+					}
+					break;
+				case Client::POST_FORM:
+					if (client->getStatus() < Client::PARSING_PREBODY) {
+						client->bytes = n - client->getRequest()->getHeaderLen();
+						client->setStatus(Client::PARSING_PREBODY);
+						if (client->bytes > 0) {
+							client->setFormBody(_requestBuffer + client->getRequest()->getHeaderLen());
+						}
+					}
+					else if (client->getStatus() == Client::PARSING_PREBODY){
+							client->setFormBody(_requestBuffer);
+					}
+					break;
 			}
-			if (client->bytes >= atoi(client->getRequest()->getHeaders()["Content-Length"].c_str())) {
-//				std::cout << "++++BYTES = "<< client->bytes << " | atoi = " << atoi(client->getRequest()->getHeaders()["Content-Length"].c_str()) << std::endl;
-				client->setStatus(Client::BODY_PARSED);
-				FD_SET(client->getFd(), &_writeSet);
-				FD_CLR(client->getFd(), &_readSet);
-				if (client->getFd() > _fdMax)
-					_fdMax = client->getFd();
+		}
+		if (client->bytes >= atoi(client->getRequest()->getHeaders()["Content-Length"].c_str())) {
+				// std::cout << "++++BYTES = "<< client->bytes << " | atoi = " << atoi(client->getRequest()->getHeaders()["Content-Length"].c_str()) << std::endl;
+				client->setStatus(Client::BODY_PARSED); //ne sert surement a rien
+				setToWrite(client);
+				client->getRequest()->parseFormBody(client->getFormBody());
 				client->bytes = 0;
 				client->getFile().close(); //closing file after finishing to write data
-			}
-			else if (client->getStatus() == Client::READY_FOR_DATA && n > 0) {
-//				std::cout << "+++Writing in file... \n";
+		}
+		else if (client->getStatus() == Client::READY_FOR_DATA && n > 0) {
 				client->writeInFile(_requestBuffer, n);
 			}
-		}
-		else if (client->getStatus() != Client::INIT && client->getType() == Client::POST_FORM) {
-			if (client->getStatus() < Client::PARSING_PREBODY) {
-				client->bytes = n - client->getRequest()->getHeaderLen();
-				client->setStatus(Client::PARSING_PREBODY);
-				if (client->bytes > 0)
-					client->setFormBody(_requestBuffer + client->getRequest()->getHeaderLen() + 4);
-			}
-			else if (client->getStatus() == Client::PARSING_PREBODY){
-					client->setFormBody(_requestBuffer);
-			}
-			if (client->bytes >= atoi(client->getRequest()->getHeaders()["Content-Length"].c_str())) {
-				std::cout << "++++BYTES = "<< client->bytes << " | atoi = " << atoi(client->getRequest()->getHeaders()["Content-Length"].c_str()) << std::endl;
-				client->setStatus(Client::BODY_PARSED);
-				FD_SET(client->getFd(), &_writeSet);
-				FD_CLR(client->getFd(), &_readSet);
-				if (client->getFd() > _fdMax)
-					_fdMax = client->getFd();
-				client->bytes = 0;
-				client->getFile().close(); //closing file after finishing to write data
-			}
-//			std::cout << "PRE BODY FORM = " << client->getFormBody() << std::endl;
-		}
 	}
 }
 
 void	Server::_responder(Client *client, int i) {
 	
-	Response	response(*(client->getRequest()), *this);
+	Response	response(*(client->getRequest()), *this, client->getTmpPictFile());
 	std::string res = response.buildResponse();
 
 //	std::cout << "Response from the server:\n" << res << std::endl;
@@ -303,3 +296,27 @@ Server::~Server(void) {
 
 	for (int i = 0; i != _data.getPortsNbr(); i++)
 		delete this->_socket[i]; }
+
+
+void	Server::changeDupName(std::string &file_name) {
+	std::string	ext = file_name.substr(file_name.find_last_of('.'), file_name.size() - file_name.find_last_of('.'));
+	std::string	name = file_name.substr(0, file_name.find_last_of('.'));
+
+	file_name = name + "1" + ext;
+}
+
+
+void	Server::checkForDupName(std::string &file_name) {
+	for (std::vector<std::string>::iterator it = pictPaths.begin(); it != pictPaths.end(); it++) {
+		if (*it == "/uploads/" + file_name) {
+			changeDupName(file_name);
+			it = pictPaths.begin();
+		}
+	}
+}
+
+std::string	Server::addPicture(std::string file_name) {
+	checkForDupName(file_name);
+	pictPaths.push_back("/uploads/" + file_name);
+	return file_name;
+}

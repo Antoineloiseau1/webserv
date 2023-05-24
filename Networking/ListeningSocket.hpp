@@ -7,7 +7,6 @@
 
 class ListeningSocket: public Socket {
 
-	
 	public:
 
 		ListeningSocket(int domain, int service, int protocole, int port);

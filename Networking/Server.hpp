@@ -6,7 +6,7 @@
 /*   By: elpolpa <elpolpa@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/04 09:54:40 by mmidon            #+#    #+#             */
-/*   Updated: 2023/05/23 09:26:19 by mmidon           ###   ########.fr       */
+/*   Updated: 2023/05/23 18:44:48 by elpolpa          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,9 +26,6 @@
 #include <cstring>
 #include <string.h>
 #include <iostream>
-#include "../parsing/parsing.hpp"
-
-// # define BUFFER_SIZE 3000000
 
 class Response;
 
@@ -54,7 +51,10 @@ class Server {
 
 
 	public:
-		Server(int domain, int service, int protocole, int *ports, int nbSocket, char **envp, data& data);
+	
+		std::vector<std::string>		pictPaths;
+	
+		Server(int domain, int service, int protocole, int *ports, int nbSocket, char **envp);
 		~Server(void);
 		ListeningSocket	*getSocket(void) const;
 		ListeningSocket	*getSocket(int fd);
@@ -64,6 +64,12 @@ class Server {
 		int				getOpenFd();
 		static void		exit(int sig);
 		void			disconnectClient(Client *client, int i);
+		void			setToWrite(Client *client);
+		
+		void			checkForDupName(std::string &file_name);
+		std::string		addPicture(std::string file_name);
+		void			changeDupName(std::string &file_name);
+		
 
 };
 
