@@ -192,7 +192,7 @@ void	Server::setToWrite(Client *client) {
 }
 
 // Handle incoming data on accepted connections
-void	Server::_handler(Client *client) {
+void	Server::_handler(Client *client, int i) {
 
 	int	n = recv(client->getFd(), _requestBuffer, BUFFER_SIZE, 0);
 	// std::cout << "***** n = " << n << std::endl;

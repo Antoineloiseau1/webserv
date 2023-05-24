@@ -26,6 +26,7 @@
 #include <cstring>
 #include <string.h>
 #include <iostream>
+#include "../parsing/parsing.hpp"
 
 class Response;
 
@@ -54,7 +55,7 @@ class Server {
 	
 		std::vector<std::string>		pictPaths;
 	
-		Server(int domain, int service, int protocole, int *ports, int nbSocket, char **envp);
+		Server(int domain, int service, int protocole, int *ports, int nbSocket, char **envp, data &data);
 		~Server(void);
 		ListeningSocket	*getSocket(void) const;
 		ListeningSocket	*getSocket(int fd);
