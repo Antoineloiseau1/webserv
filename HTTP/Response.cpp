@@ -52,7 +52,7 @@ void	Response::GetResponse(void) {
 
 		if (file == "")
 			_response["body"] = openHtmlFile("data/www/manon.html");
-		else if (file == "favicon.ico" || file == "style.css" || file.empty())
+		else if(file == "style.css" || file.empty())
 		{
 			_response["status"] = " 204 No Content\r\n";
 			_response["body"] = "";
@@ -66,11 +66,10 @@ void	Response::GetResponse(void) {
 								"</head>\n"
 								"<body>\n"
 								"<h1>Picture Gallery</h1>\n";
-
 			// Generate the HTML code for each picture
 			for (std::vector<std::string>::iterator it = _server.pictPaths.begin(); it != _server.pictPaths.end() ; it++) {
 				_response["body"] += "<div class=\"picture\">\n";
-				_response["body"] += "<img src=\"" + *it + "\" alt=\"Picture\">\n";
+				_response["body"] += "<img src=\"/" +*it + "\" alt=\"Picture\">\n"; //on rajoute un '/' devant le path ici pour que ca marche
 				_response["body"] += "<form action=\"/delete\" method=\"POST\">\n";
 				_response["body"] += "<input type=\"hidden\" name=\"image\" value=\"" + *it + "\">\n";
 				_response["body"] += "<input type=\"submit\" value=\"Delete\">\n";
@@ -103,7 +102,6 @@ void	Response::PostResponse(void) {
 	if (_request.isADataUpload == true) {
 			std::ifstream sourceFile(_tmpPictFile, std::ios::in | std::ios::binary);
 			std::string filePath = "uploads/" + _request.getFileName(); 
-			std::cout << "***** FILE PATH = "<< filePath << std::endl;
 			std::ofstream destFile(filePath, std::ios::out | std::ios::binary);
 
 			if (sourceFile.is_open() && destFile.is_open()) {
@@ -116,6 +114,16 @@ void	Response::PostResponse(void) {
     		sourceFile.close();
     		destFile.close();
 	}
+	if (_request.isDelete) {
+		if (std::remove(_request.getFileToDelete().c_str()) != 0) {
+			std::cerr << "Failed to delete file: " << std::endl;
+			/*RENVOYER UNE ERREUR 404*/
+		} else {
+			std::cout << "File deleted successfully" << std::endl;
+			/*RENVOYER UNE REPONSE 200*/
+		}
+	}
+
 	if (file != "favicon.ico" && file != " " && !file.empty() && file != "" && file != "data/www/style.css")
 	{ //handleCgi();
 		_response["status"] = "201 Created\r\n";
@@ -158,8 +166,9 @@ void	Response::NotImplemented(void) {
 
 std::string	Response::openHtmlFile(std::string f) /* PROBLEME SI CEST UNE IMAGE A OUVRIR !!*/
 {
-     std::ifstream file;
-    if (f.find("uploads/") != std::string::npos) {
+    std::ifstream file;
+
+    if (f.find("uploads/") != std::string::npos || f.find("favicon.ico") != std::string::npos) {
         file.open(f, std::ios::binary);
 		struct stat fileInfo;
 		if (stat(f.c_str(), &fileInfo) == 0) {
@@ -173,7 +182,6 @@ std::string	Response::openHtmlFile(std::string f) /* PROBLEME SI CEST UNE IMAGE 
     }
     if (!file.is_open())
 	{
-		std::cout << "in if: " << f << std::endl;
 		_response["status"] = " 404 Not Found\r\n";
 		return (openHtmlFile("data/www/error/404.html"));
 	}

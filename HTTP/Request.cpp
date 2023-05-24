@@ -85,6 +85,8 @@ void	Request::setFileName(std::string new_name) {
 	_fileName = new_name;
 }
 
+std::string	Request::getFileToDelete() { return _fileToDelete; } 
+
 /*
 image=%2Fuploads%2Fimagetest.jpg -> path extracted
 nom=Demma&prenom=Manon&email=manon.demma%40gmail.com&ville=Nice -> in a map

@@ -118,9 +118,9 @@ void Server::_watchLoop() {
 				exit(1);
 			}
 			if(FD_ISSET(client->getFd(), &tmpRead)) {
-				if (!_handler(client, i))
+				if (!_handler(client, i)){
 					i++;
-					continue ;
+					continue ;}
 			}
 			if(FD_ISSET(client->getFd(), &tmpWrite)) {
 				_responder(client, i);
@@ -219,7 +219,7 @@ int	Server::_handler(Client *client, int i) {
 	}
 	else {
 		_requestBuffer[n] = '\0';
-//		std::cout << "requestBuffer = " << _requestBuffer << std::endl;
+		std::cout << "requestBuffer = " << _requestBuffer << std::endl;
 		/*******************POUR TOUT LE MONDE 1 X*****************************/
 		if (strstr(_requestBuffer, "\r\n\r\n") != nullptr
 			&& client->getStatus() == Client::INIT) {
@@ -309,7 +309,13 @@ ListeningSocket	*Server::getSocket(int fd) {
 
 Server::~Server(void) {
 	std::cout << "\n\n ************DELETION DELETION DELETION********* \n";
-
+	for (std::vector<std::string>::iterator it = pictPaths.begin(); it != pictPaths.end(); it++) {
+		if (std::remove((*it).c_str()) != 0) {
+			std::cerr << "Failed to delete file: " << *it << std::endl;
+		} else {
+			std::cout << "File deleted successfully" << std::endl;
+		}
+	}
 	for (int i = 0; i != _data.getPortsNbr(); i++)
 		delete this->_socket[i]; }
 
@@ -324,7 +330,7 @@ void	Server::changeDupName(std::string &file_name) {
 
 void	Server::checkForDupName(std::string &file_name) {
 	for (std::vector<std::string>::iterator it = pictPaths.begin(); it != pictPaths.end(); it++) {
-		if (*it == "/uploads/" + file_name) {
+		if (*it == "uploads/" + file_name) {
 			changeDupName(file_name);
 			it = pictPaths.begin();
 		}
@@ -333,6 +339,6 @@ void	Server::checkForDupName(std::string &file_name) {
 
 std::string	Server::addPicture(std::string file_name) {
 	checkForDupName(file_name);
-	pictPaths.push_back("/uploads/" + file_name);
+	pictPaths.push_back("uploads/" + file_name);
 	return file_name;
 }

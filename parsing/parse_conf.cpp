@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parse_conf.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mmidon <marvin@42.fr>                      +#+  +:+       +#+        */
+/*   By: elpolpa <elpolpa@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/25 10:15:25 by mmidon            #+#    #+#             */
-/*   Updated: 2023/05/23 08:54:00 by mmidon           ###   ########.fr       */
+/*   Updated: 2023/05/24 15:57:44 by elpolpa          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 #include <vector>
 #include <map>
 #include <cstdlib>
+#include <cstring> //RAJOUTE POUR COMPILER SUR LINUX, VERIF SI STRNCMP OK
 
 #include "parsing.hpp"
 

@@ -34,6 +34,7 @@ class Request {
 		std::string							getPreBody();
 		std::string							getFileName();
 		int									getHeaderLen();
+		std::string							getFileToDelete();
 
 		void								parsingPreBody(std::string	pre_body);
 		void								separateHeaders(std::string reqString);
