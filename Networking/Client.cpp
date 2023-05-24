@@ -24,7 +24,7 @@ void	Client::createRequest(char *reqLine) {
 		}
 		else if (_request->getHeaders()["Content-Type"].find("application/x-www-form-urlencoded") != std::string::npos) {
 			_type = POST_FORM;
-			if (_request->getPath() == "/delete")
+			if (_request->getPath() == "delete")
 				_request->isDelete = true;
 		}
 	}

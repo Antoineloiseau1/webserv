@@ -342,3 +342,12 @@ std::string	Server::addPicture(std::string file_name) {
 	pictPaths.push_back("uploads/" + file_name);
 	return file_name;
 }
+
+void	Server::deletePict(std::string path) {
+	for (std::vector<std::string>::iterator it = pictPaths.begin(); it != pictPaths.end(); it++) {
+		if (path == *it) {
+			pictPaths.erase(it);
+			break;
+		}
+	}
+}

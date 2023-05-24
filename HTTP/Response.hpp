@@ -45,6 +45,9 @@ class Response
 		void								NotImplemented();
 		void								BadRequestError();
 
+		void								fillGetBody(std::string file);
+		void								fillGetLength();
+		void								fillGetType(std::string file);
 };
 
 #endif

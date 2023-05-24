@@ -6,7 +6,7 @@
 /*   By: elpolpa <elpolpa@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/04 09:54:40 by mmidon            #+#    #+#             */
-/*   Updated: 2023/05/23 18:44:48 by elpolpa          ###   ########.fr       */
+/*   Updated: 2023/05/24 19:41:57 by elpolpa          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,6 +70,8 @@ class Server {
 		void			checkForDupName(std::string &file_name);
 		std::string		addPicture(std::string file_name);
 		void			changeDupName(std::string &file_name);
+		
+		void			deletePict(std::string path);
 		
 
 };

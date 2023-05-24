@@ -47,51 +47,69 @@ Response::Response(Request &request, Server &server, std::string tmp_file) : _se
 	_response["connexion"] = "Connexion: close\r\n\r\n";
 }
 
+void	Response::fillGetBody(std::string file) {
+	if (file == "")
+		_response["body"] = openHtmlFile("data/www/manon.html");
+	else if(file == "style.css" || file.empty())
+	{
+		_response["status"] = " 204 No Content\r\n";
+		_response["body"] = "";
+	}
+	else if (file == "data/www/gallery.html")
+	{
+		_response["body"] = "<!DOCTYPE html>\n"
+							"<html>\n"
+							"<head>\n"
+							"<title>Picture Gallery</title>\n"
+							"</head>\n"
+							"<body>\n"
+							"<h1>Picture Gallery</h1>\n";
+		// Generate the HTML code for each picture
+		for (std::vector<std::string>::iterator it = _server.pictPaths.begin(); it != _server.pictPaths.end() ; it++) {
+			_response["body"] += "<div class=\"picture\">\n";
+			_response["body"] += "<img src=\"/" +*it + "\" alt=\"Picture\">\n"; //on rajoute un '/' devant le path ici pour que ca marche
+			_response["body"] += "<form action=\"/delete\" method=\"POST\">\n";
+			_response["body"] += "<input type=\"hidden\" name=\"image\" value=\"" + *it + "\">\n";
+			_response["body"] += "<input type=\"submit\" value=\"Delete\">\n";
+			_response["body"] += "</form>\n";
+			_response["body"] += "</div>\n";
+		}
+		_response["body"] += "</body>\n"
+							"</html>\n";
+		_contentSize = std::strlen(_response["body"].c_str());
+	}
+	else
+		_response["body"] = openHtmlFile(file);
+}
+
+void	Response::fillGetLength() {
+	_response["length"] = "Content-Length: ";
+	// _response["length"] += std::to_string(std::strlen(_response["body"].c_str()));
+	_response["length"] += std::to_string(_contentSize);
+	_response["length"] += "\r\n";
+}
+
+void	Response::fillGetType(std::string file) {
+	_response["type"] = "Content-Type: text/html\r\n"; //Main case
+	if (file.find("uploads/") != std::string::npos)
+	{
+		std::string	ext = file.substr(file.find_last_of('.') + 1, file.size() - file.find_last_of('.') - 1);
+		if (ext == "jpeg" || ext == "jpg")
+			_response["type"] = "Content-Type: image/jpeg\r\n";
+		if (ext == "png")
+			_response["type"] = "Content-Type: image/png\r\n";
+	}
+	if (file.find("favicon.ico") != std::string::npos)
+		_response["type"] = "Content-Type: image/x-icon\r\n";
+}
+
 void	Response::GetResponse(void) {
 		std::string	file = _request.getPath();
 
-		if (file == "")
-			_response["body"] = openHtmlFile("data/www/manon.html");
-		else if(file == "style.css" || file.empty())
-		{
-			_response["status"] = " 204 No Content\r\n";
-			_response["body"] = "";
-		}
-		else if (file == "data/www/gallery.html")
-		{
-			_response["body"] = "<!DOCTYPE html>\n"
-								"<html>\n"
-								"<head>\n"
-								"<title>Picture Gallery</title>\n"
-								"</head>\n"
-								"<body>\n"
-								"<h1>Picture Gallery</h1>\n";
-			// Generate the HTML code for each picture
-			for (std::vector<std::string>::iterator it = _server.pictPaths.begin(); it != _server.pictPaths.end() ; it++) {
-				_response["body"] += "<div class=\"picture\">\n";
-				_response["body"] += "<img src=\"/" +*it + "\" alt=\"Picture\">\n"; //on rajoute un '/' devant le path ici pour que ca marche
-				_response["body"] += "<form action=\"/delete\" method=\"POST\">\n";
-				_response["body"] += "<input type=\"hidden\" name=\"image\" value=\"" + *it + "\">\n";
-				_response["body"] += "<input type=\"submit\" value=\"Delete\">\n";
-				_response["body"] += "</form>\n";
-				_response["body"] += "</div>\n";
-			}
-			_response["body"] += "</body>\n"
-								"</html>\n";
-		}
-		else
-			_response["body"] = openHtmlFile(file);
-		_response["length"] = "Content-Length: ";
-		_response["length"] += std::to_string(std::strlen(_response["body"].c_str()));
-		_response["length"] += "\r\n";
-		_response["type"] = "Content-Type: text/html\r\n";
-		std::cout << "IMPRESSION ULTIME DE FILE = " << file << std::endl;
-		if (file.find("uploads/") != std::string::npos) {
-		_response["length"] = "Content-Length: ";
-		_response["length"] += std::to_string(_contentSize);
-		_response["length"] += "\r\n";
-			_response["type"] = "Content-Type: image/jpeg\r\n";
-		}
+		_response["status"] = " 202 OK\r\n"; //Main case, updated when event in the building of response
+		fillGetBody(file);
+		fillGetLength();
+		fillGetType(file);
 }
 
 
@@ -117,14 +135,16 @@ void	Response::PostResponse(void) {
 	if (_request.isDelete) {
 		if (std::remove(_request.getFileToDelete().c_str()) != 0) {
 			std::cerr << "Failed to delete file: " << std::endl;
-			/*RENVOYER UNE ERREUR 404*/
+			_response["status"] = " 404 Not Found\r\n";
+			_response["body"] = openHtmlFile("data/www/error/404.html");
 		} else {
+			_server.deletePict(_request.getFileToDelete());
 			std::cout << "File deleted successfully" << std::endl;
-			/*RENVOYER UNE REPONSE 200*/
+			_response["status"] = "200 OK\r\n";
+			_response["body"] = openHtmlFile("data/www/success.html");
 		}
 	}
-
-	if (file != "favicon.ico" && file != " " && !file.empty() && file != "" && file != "data/www/style.css")
+	else if (file != "favicon.ico" && file != " " && !file.empty() && file != "" && file != "data/www/style.css")
 	{ //handleCgi();
 		_response["status"] = "201 Created\r\n";
 		_response["body"] = openHtmlFile("data/www/error/201.html");
@@ -161,36 +181,29 @@ void	Response::NotImplemented(void) {
 	_response["length"] = "Content-Length: ";
 	_response["length"] += std::to_string(std::strlen(_response["body"].c_str()));
 	_response["length"] += "\r\n";
-	_response["connexion"] = "Connexion: close\r\n\r\n";	
 }
 
 std::string	Response::openHtmlFile(std::string f) /* PROBLEME SI CEST UNE IMAGE A OUVRIR !!*/
 {
     std::ifstream file;
 
-    if (f.find("uploads/") != std::string::npos || f.find("favicon.ico") != std::string::npos) {
-        file.open(f, std::ios::binary);
+	if (f.find("uploads/") != std::string::npos || f.find("favicon.ico") != std::string::npos)
+		file.open(f, std::ios::binary);
+	else
+		file.open(f);
+	if (file.is_open()) {
 		struct stat fileInfo;
 		if (stat(f.c_str(), &fileInfo) == 0) {
 			_contentSize = static_cast<size_t>(fileInfo.st_size);
 			std::cout << "Content size: " << _contentSize << " bytes" << std::endl;
-		} else {
+		} else
 			std::cout << "Failed to determine the file size." << std::endl;
-		}
-    } else {
-        file.open(f);
-    }
-    if (!file.is_open())
-	{
+		std::string content((std::istreambuf_iterator<char>(file)), (std::istreambuf_iterator<char>()));//  	 read the contents of the file into a string variable
+		return content;
+	}
+	else {
 		_response["status"] = " 404 Not Found\r\n";
 		return (openHtmlFile("data/www/error/404.html"));
-	}
-	else
-	{
-		_response["status"] = " 200 OK\r\n";
-  //  	 read the contents of the file into a string variable
-    	std::string content((std::istreambuf_iterator<char>(file)), (std::istreambuf_iterator<char>()));
-		return content;
 	}
 }
 
