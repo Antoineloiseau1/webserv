@@ -21,7 +21,7 @@ int main(int argc, char *argv[], char *envp[]) {
 	if (data.getData().empty())
 		return 1;
 	int *ports = data.getPorts();
-	Server	server(FAMILY, SOCKTYPE, PROTOCOLE, ports, data.getPortsNbr(), envp);
+	Server	server(FAMILY, SOCKTYPE, PROTOCOLE, ports, data.getPortsNbr(), envp, data);
 	
 	server.start();
 

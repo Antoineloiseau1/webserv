@@ -6,7 +6,7 @@
 /*   By: mmidon <marvin@42.fr>                      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/27 10:31:47 by mmidon            #+#    #+#             */
-/*   Updated: 2023/05/23 08:50:56 by mmidon           ###   ########.fr       */
+/*   Updated: 2023/05/23 09:24:04 by mmidon           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,6 @@
 #include <vector>
 #include <iostream>
 #include <exception>
-#include "../HTTP/Response.hpp"
 
 class data
 {
@@ -52,4 +51,7 @@ class data
 		int									getPortsNbr();
 };
 
-Response	*requestParse(std::string request, Server &server);
+//it can't compile with this
+
+//#include "../HTTP/Response.hpp"
+//Response	*requestParse(std::string request, Server &server);

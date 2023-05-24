@@ -6,7 +6,7 @@
 /*   By: elpolpa <elpolpa@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/04 09:54:40 by mmidon            #+#    #+#             */
-/*   Updated: 2023/05/19 08:01:39 by elpolpa          ###   ########.fr       */
+/*   Updated: 2023/05/23 09:26:19 by mmidon           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,7 @@
 #include <cstring>
 #include <string.h>
 #include <iostream>
+#include "../parsing/parsing.hpp"
 
 // # define BUFFER_SIZE 3000000
 
@@ -33,13 +34,14 @@ class Response;
 
 class Server {
 	private:
+		data							_data;
 		char							_requestBuffer[BUFFER_SIZE];
 		std::vector<ListeningSocket*>	_socket;
 		int								_requestFd;
 		void							_accepter(int server_fd, ListeningSocket *socket);
 		void							_refuse(int server_fd);
-		void							_handler(Client *client);
-		void							_responder(Client *client);
+		void							_handler(Client *client, int i);
+		void							_responder(Client *client, int i);
 		int								_getFdMax(void);
 		void 							_watchLoop();
 		fd_set							_readSet;
@@ -52,7 +54,7 @@ class Server {
 
 
 	public:
-		Server(int domain, int service, int protocole, int *ports, int nbSocket, char **envp);
+		Server(int domain, int service, int protocole, int *ports, int nbSocket, char **envp, data& data);
 		~Server(void);
 		ListeningSocket	*getSocket(void) const;
 		ListeningSocket	*getSocket(int fd);
@@ -61,7 +63,7 @@ class Server {
 		char			**getEnvp() const;
 		int				getOpenFd();
 		static void		exit(int sig);
-		void			disconnectClient(Client *client);
+		void			disconnectClient(Client *client, int i);
 
 };
 

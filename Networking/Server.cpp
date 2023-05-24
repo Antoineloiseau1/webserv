@@ -1,10 +1,11 @@
 #include "Server.hpp"
-#include "../parsing/parsing.hpp"
-#include "../HTTP/Response.hpp"
 #include <exception>
 #include <csignal>
 
+#include "../parsing/parsing.hpp"
+#include "../HTTP/Response.hpp"
 #include "Client.hpp"
+
 #define MAX_FD 230
 
 bool	_alive = true;
@@ -52,6 +53,8 @@ void	Server::exit(int sig)
 /* A ce stade, pas de monitoring des connections acceptees. pas de pb apparent.*/
 void Server::_watchLoop() {
 	int 	nbEvents;
+	int	i = 0;
+
 	fd_set	tmpRead;
 	fd_set	tmpWrite;
 	fd_set	tmpError;
@@ -62,15 +65,16 @@ void Server::_watchLoop() {
 
 	while(_alive) 
 	{
+		if (i >= _data.getPortsNbr())
+			i = 0;
 		tmpRead = _readSet;
 		tmpWrite = _writeSet;
 		tmpError = _errorSet;
-		std::cout << "before select\n";
+		std::cout << i << "whille\n";
 		nbEvents = select(_getFdMax() + 1, &tmpRead, &tmpWrite, &tmpError, NULL);
-		std::cout << "after select\n";
 
 ///////////		/!\ work in progress
-		if (FD_ISSET(_socket[0]->getFd(), &tmpError)) {
+		if (FD_ISSET(_socket[i]->getFd(), &tmpError)) {
 			std::cout << "ERROR SET SERVER\n";
 			exit(1);
 		}
@@ -78,36 +82,45 @@ void Server::_watchLoop() {
 			std::cerr << "Error: select(): " << strerror(errno) << std::endl;
 			exit(EXIT_FAILURE);
 		}
-		if(FD_ISSET(_socket[0]->getFd(), &tmpRead) && _alive)
+		if(FD_ISSET(_socket[i]->getFd(), &tmpRead) && _alive)
 		{
 			if (getOpenFd() > MAX_FD)
-				_refuse(_socket[0]->getFd());
+				_refuse(_socket[i]->getFd());
 			else
-				_accepter(_socket[0]->getFd(), _socket[0]);
+				_accepter(_socket[i]->getFd(), _socket[i]);
 		}
 
-		for(std::vector<Client*>::iterator it = _socket[0]->clients.begin(); it != _socket[0]->clients.end() && nbEvents-- && _alive; it++)
+		size_t j = 0;
+		for(std::vector<Client*>::iterator it = _socket[i]->clients.begin(); it != _socket[i]->clients.end() && nbEvents-- && _alive; it++)
 		{
-			std::cout << nbEvents << std::endl;
+			if (j >= _socket[i]->clients.size()) //else it goes behind the size of client | maybe change it in the loop but ,for now, this works
+			{
+				std::cout << "ALED\n";
+				break;
+			}
+			std::cout << "size : " << _socket[i]->clients.size() << std::endl;
+			std::cout<< "heap buffer overflow " << j++ << std::endl;
+			std::cout << i << "nbevnts "<< nbEvents << std::endl;
 			Client *client = *it;
 			if (FD_ISSET(client->getFd(), &tmpError)) {
 				std::cout << "ERROR SET CLIENT\n";
 				exit(1);
 			}
 			if(FD_ISSET(client->getFd(), &tmpRead)) {
-				_handler(client);
+				_handler(client, i);
 			}
 			if(FD_ISSET(client->getFd(), &tmpWrite)) {
-				_responder(client);
+				_responder(client, i);
 			}
 		}
+		i++;
 	}
 	///////////		/!\ work in progress
 	std::cout << "OUT OF WHILE LOOP \n";
 
 }
 
-Server::Server(int domain, int service, int protocole, int *ports, int nbSocket, char **envp) : _envp(envp) {
+Server::Server(int domain, int service, int protocole, int *ports, int nbSocket, char **envp, data& data) : _data(data), _envp(envp) {
 	for (int i = 0; i < nbSocket; i++)
 		this->_socket.push_back(new ListeningSocket(domain, service, protocole, ports[i]));
 }
@@ -167,24 +180,24 @@ void	Server::_refuse(int server_fd) {
 }
 
 // Handle incoming data on accepted connections
-void	Server::_handler(Client *client) {
+void	Server::_handler(Client *client, int i) {
 	std::cout << "DEbug = dans handler, client fd : "<< client << std::endl;
 
 	int	n = recv(client->getFd(), _requestBuffer, BUFFER_SIZE, 0);
-	std::cout << "***** n = " << n << std::endl;
+	std::cout << "***** bytes read = " << n << std::endl;
 	if (n < 0) {
 		std::cerr << "error: recv: " << strerror(errno) << std::endl;
 		FD_CLR(client->getFd(), &_readSet);
 		close(client->getFd());
-		_socket[0]->deleteClient(client->getFd());
+		_socket[i]->deleteClient(client->getFd()); //////////////i
 	}
 	else {
 		_requestBuffer[n] = '\0';
-		std::cout << "requestBuffer = " << _requestBuffer << std::endl;
+//		std::cout << "requestBuffer = " << _requestBuffer << std::endl;
 		/*******************POUR TOUT LE MONDE 1 X*****************************/
 		if (strstr(_requestBuffer, "\r\n\r\n") != nullptr
 			&& client->getStatus() == Client::INIT) {
-			std::cout << "Je suis dans le parsing header\n";
+//			std::cout << "Je suis dans le parsing header\n";
 			client->createRequest(_requestBuffer);
 			client->setStatus(Client::HEADER_PARSED);
 		}
@@ -192,7 +205,7 @@ void	Server::_handler(Client *client) {
 		if (client->getStatus() == Client::HEADER_PARSED 
 			&& (client->getType() == Client::GET || client->getType() == Client::DELETE))
 		{
-			std::cout << "*****Request From Client:\n" << _requestBuffer << std::endl;
+//			std::cout << "*****Request From Client:\n" << _requestBuffer << std::endl;
 			FD_CLR(client->getFd(), &_readSet);
 			FD_SET(client->getFd(), &_writeSet);
 			if (client->getFd() > _fdMax)
@@ -206,20 +219,20 @@ void	Server::_handler(Client *client) {
 			client->bytes += n;
 			if (client->getStatus() < Client::READY_FOR_DATA) {
 				if (client->getStatus() < Client::PARSING_PREBODY) {
-					std::cout << "++++parsing prebody 1 \n";
+//					std::cout << "++++parsing prebody 1 \n";
 					client->setStatus(Client::PARSING_PREBODY);
 					client->bytes = n - client->getRequest()->getHeaderLen();
 					if (client->bytes > 0)
 						client->parsePreBody(_requestBuffer + client->getRequest()->getHeaderLen() + 4, client->bytes);
 				}
 				else if (client->getStatus() == Client::PARSING_PREBODY){
-					std::cout << "++++parsing prebody 2 \n";
+//					std::cout << "++++parsing prebody 2 \n";
 					client->parsePreBody(_requestBuffer, n);
 					n = 0;
 				}
 			}
 			if (client->bytes >= atoi(client->getRequest()->getHeaders()["Content-Length"].c_str())) {
-				std::cout << "++++BYTES = "<< client->bytes << " | atoi = " << atoi(client->getRequest()->getHeaders()["Content-Length"].c_str()) << std::endl;
+//				std::cout << "++++BYTES = "<< client->bytes << " | atoi = " << atoi(client->getRequest()->getHeaders()["Content-Length"].c_str()) << std::endl;
 				client->setStatus(Client::BODY_PARSED);
 				FD_SET(client->getFd(), &_writeSet);
 				FD_CLR(client->getFd(), &_readSet);
@@ -229,7 +242,7 @@ void	Server::_handler(Client *client) {
 				client->getFile().close(); //closing file after finishing to write data
 			}
 			else if (client->getStatus() == Client::READY_FOR_DATA && n > 0) {
-				std::cout << "+++Writing in file... \n";
+//				std::cout << "+++Writing in file... \n";
 				client->writeInFile(_requestBuffer, n);
 			}
 		}
@@ -253,28 +266,28 @@ void	Server::_handler(Client *client) {
 				client->bytes = 0;
 				client->getFile().close(); //closing file after finishing to write data
 			}
-			std::cout << "PRE BODY FORM = " << client->getFormBody() << std::endl;
+//			std::cout << "PRE BODY FORM = " << client->getFormBody() << std::endl;
 		}
 	}
 }
 
-void	Server::_responder(Client *client) {
+void	Server::_responder(Client *client, int i) {
 	
 	Response	response(*(client->getRequest()), *this);
 	std::string res = response.buildResponse();
 
-	std::cout << "Response from the server:\n" << res << std::endl;
+//	std::cout << "Response from the server:\n" << res << std::endl;
 	send(client->getFd(), res.c_str(), res.length(), 0);
-	disconnectClient(client);
+	disconnectClient(client, i);
 }
 
-void	Server::disconnectClient(Client *client) {
+void	Server::disconnectClient(Client *client, int i) {
 	FD_CLR(client->getFd(), &_readSet);
 	FD_CLR(client->getFd(), &_writeSet);
 	FD_CLR(client->getFd(), &_errorSet);
 	std::cout << "CLOSING CLIENT FD : " << client ->getFd() << std::endl;
 	close(client->getFd());
-	_socket[0]->deleteClient(client->getFd());
+	_socket[i]->deleteClient(client->getFd());
 }
 
 ListeningSocket	*Server::getSocket(void) const { return this->_socket[0]; }
@@ -290,4 +303,6 @@ ListeningSocket	*Server::getSocket(int fd) {
 
 Server::~Server(void) {
 	std::cout << "\n\n ************DELETION DELETION DELETION********* \n";
-	delete this->_socket[0]; }
+
+	for (int i = 0; i != _data.getPortsNbr(); i++)
+		delete this->_socket[i]; }
