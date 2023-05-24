@@ -94,10 +94,7 @@ void Server::_watchLoop() {
 		for(std::vector<Client*>::iterator it = _socket[i]->clients.begin(); it != _socket[i]->clients.end() && nbEvents-- && _alive; it++)
 		{
 			if (j >= _socket[i]->clients.size()) //else it goes behind the size of client | maybe change it in the loop but ,for now, this works
-			{
-				std::cout << "ALED\n";
 				break;
-			}
 			std::cout << "size : " << _socket[i]->clients.size() << std::endl;
 			std::cout<< "heap buffer overflow " << j++ << std::endl;
 			std::cout << i << "nbevnts "<< nbEvents << std::endl;
