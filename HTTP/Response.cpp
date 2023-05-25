@@ -51,7 +51,7 @@ Response::Response(Request &request, Server &server, std::string tmp_file) : _se
 void	Response::fillGetBody(std::string file) {
 	if (file == "")
 		_response["body"] = openHtmlFile("data/www/manon.html");
-	else if(file == "style.css" || file.empty())
+	else if(file == "favicon.ico" || file == "style.css" || file.empty())
 	{
 		_response["status"] = " 204 No Content\r\n";
 		_response["body"] = "";
