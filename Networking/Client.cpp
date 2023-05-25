@@ -26,6 +26,9 @@ void	Client::createRequest(char *reqLine) {
 			_type = POST_FORM;
 			if (_request->getPath() == "delete")
 				_request->isDelete = true;
+			if (_request->getHeaders().find("Transfer-Encoding") != _request->getHeaders().end()
+				&& _request->getHeaders()["Transfer-Encoding"].find("chunked") != std::string::npos)
+				_request->isChunked = true;
 		}
 	}
 	else if (_request->getTypeStr() == "GET" || _request->getTypeStr() == "DELETE")
@@ -55,9 +58,7 @@ int	Client::parsePreBody(char *buf, int size) {
 }
 
 void	Client::setFormBody(std::string buf) {
-	std::cout << "TEST FORM BODY avant = " << _formBody << std::endl;
 	_formBody += buf;
-	std::cout << "TEST FORM BODY apres = " << _formBody << std::endl;
 }
 
 /********************** GETTERS **************************/

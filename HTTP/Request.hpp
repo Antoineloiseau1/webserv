@@ -24,7 +24,8 @@ class Request {
 		~Request(void);
 		
 		bool								isADataUpload;
-		bool								isDelete;	
+		bool								isDelete;
+		bool								isChunked;
 
 		std::string							getTypeStr();
 		std::string							getPath();
@@ -41,6 +42,7 @@ class Request {
 		void								parseFormBody(std::string body);
 		void								setFileName(std::string new_name);
 		void								setFileToDelete(std::string	file);
+		std::string							dechunkBody(std::string body);
 		
 };
 
