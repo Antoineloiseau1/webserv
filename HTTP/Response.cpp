@@ -49,8 +49,10 @@ Response::Response(Request &request, Server &server, std::string tmp_file) : _se
 }
 
 void	Response::fillGetBody(std::string file) {
-	if (file == "")
-		_response["body"] = openHtmlFile("data/www/manon.html");
+	if (file.find("data/www/") == std::string::npos)
+		file = "data/www/" + file;
+	if (file == "data/www/")
+		_response["body"] = openHtmlFile("data/www/index.html");
 	else if(file == "style.css" || file.empty())
 	{
 		_response["status"] = " 204 No Content\r\n";
@@ -80,7 +82,10 @@ void	Response::fillGetBody(std::string file) {
 		_contentSize = std::strlen(_response["body"].c_str());
 	}
 	else
+	{
 		_response["body"] = openHtmlFile(file);
+	}
+
 }
 
 void	Response::fillGetLength() {
@@ -174,6 +179,7 @@ std::string	Response::openHtmlFile(std::string f) /* PROBLEME SI CEST UNE IMAGE 
 {
     std::ifstream file;
 
+	std::cout << "\nFILE TO OPEN " << f << std::endl;
 	if (f.find("uploads/") != std::string::npos || f.find("favicon.ico") != std::string::npos)
 		file.open(f, std::ios::binary);
 	else
