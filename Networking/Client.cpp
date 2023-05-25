@@ -56,15 +56,14 @@ void	Client::writeInFile(char *buf, int size) {
 }
 
 int	Client::parsePreBody(char *buf, int size) {
-	std::cout << "-Pre body initial = " << _preBody << std::endl ;
 	_preBody += buf;
 	if (_preBody.find("Content-Type") != std::string::npos) {
-		std::cout << "---je me fais parser le pre body : size = " << size << "_ buf =" << buf << std::endl ;
+		std::cout << "---je me fais parser le pre body : size = " << size << std::endl ;
 		_request->parsingPreBody(_preBody);
 		writeInFile(buf + _request->getPreBody().size() + 5, size - _request->getPreBody().size());
 		std::cout << "PREBODY SIZE = " << _request->getPreBody().size() << "|" << size - _request->getPreBody().size() << std::endl;
 		ft_putstr(_preBody.c_str());
-		ft_putstr("|FIN \n");
+		ft_putstr("|FIN---");
 		ft_putstr(buf + _request->getPreBody().size() + 5);
 		ft_putstr("FIN \n");
 		setStatus(Client::READY_FOR_DATA);

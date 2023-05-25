@@ -295,7 +295,7 @@ int	Server::_handler(Client *client, int i) {
 				client->getFile().close(); //closing file after finishing to write data
 		}
 		else if (client->getStatus() == Client::READY_FOR_DATA && n > 0) {
-			std::cout << "+++++++++++++++j'ecris dans le file ... \n";
+			std::cout << "+++++++++++++++j'ecris dans le file ... N = " << n << std::endl;
 				client->writeInFile(_requestBuffer, n);
 			}
 	}
