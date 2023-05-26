@@ -49,9 +49,9 @@ Response::Response(Request &request, Server &server, std::string tmp_file) : _se
 }
 
 void	Response::fillGetBody(std::string file) {
-	if (file.find("data/www/") == std::string::npos)
-		file = "data/www/" + file;
-	if (file == "data/www/")
+	// if (file.find("data/www/") == std::string::npos)
+	// 	file = "data/www/" + file;
+	if (file == "")
 		_response["body"] = openHtmlFile("data/www/index.html");
 	else if(file == "style.css" || file.empty())
 	{
