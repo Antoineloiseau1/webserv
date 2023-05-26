@@ -87,7 +87,6 @@ void Server::_watchLoop() {
 		std::cout << i << "whille\n";
 		nbEvents = select(_getFdMax() + 1, &tmpRead, &tmpWrite, &tmpError, NULL);
 
-///////////		/!\ work in progress
 		if (FD_ISSET(_socket[i]->getFd(), &tmpError)) {
 			std::cout << "ERROR SET SERVER\n";
 			exit(1);
@@ -105,14 +104,14 @@ void Server::_watchLoop() {
 		}
 
 		size_t j = 0;
-		for(std::vector<Client*>::iterator it = _socket[i]->clients.begin(); it != _socket[i]->clients.end() && nbEvents-- && _alive; it++)
+		for(size_t k = 0; k != _socket[i]->clients.size() && nbEvents-- && _alive; k++) //hate u
 		{
-			if (j >= _socket[i]->clients.size()) //else it goes behind the size of client | maybe change it in the loop but ,for now, this works
+			if (j >= _socket[i]->clients.size()) //may not be necessary anymore but i'm scared to delete it
 				break;
 			std::cout << "size : " << _socket[i]->clients.size() << std::endl;
 			std::cout<< "heap buffer overflow " << j++ << std::endl;
 			std::cout << i << "nbevnts "<< nbEvents << std::endl;
-			Client *client = *it;
+			Client *client = _socket[i]->clients[k];
 			if (FD_ISSET(client->getFd(), &tmpError)) {
 				std::cout << "ERROR SET CLIENT\n";
 				exit(1);
@@ -128,7 +127,6 @@ void Server::_watchLoop() {
 		}
 		i++;
 	}
-	///////////		/!\ work in progress
 	std::cout << "OUT OF WHILE LOOP \n";
 
 }

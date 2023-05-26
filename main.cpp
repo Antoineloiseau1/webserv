@@ -25,7 +25,6 @@ int main(int argc, char *argv[], char *envp[]) {
 	
 	server.start();
 
-	system("leaks webserv");
 	return 0;
 }
 
