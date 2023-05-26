@@ -22,6 +22,7 @@ Client::Client(int fd, int serverFd, std::string tmp_file) : _fd(fd), _serverFd(
 
 Client::~Client() {
 	std::cout <<"***********************CLIENT DESTRUCTOR "<< _fd << "********************\n";
+	delete (_request);
 }
 
 void	Client::createRequest(char *reqLine) {
@@ -75,6 +76,7 @@ int	Client::parsePreBody(char *buf, int size) {
 void	Client::setFormBody(std::string buf) {
 	_formBody += buf;
 }
+
 
 /********************** GETTERS **************************/
 
