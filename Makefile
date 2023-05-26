@@ -10,7 +10,7 @@ HEADER		= ./includes/
 
 CFLAGS		= -Wall -Wextra -Werror
 
-DEBUG		=	-g -fsanitize=address
+DEBUG		=	#-g -fsanitize=address
 
 RM  		= rm -f
 
