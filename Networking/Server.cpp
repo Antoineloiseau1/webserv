@@ -128,7 +128,6 @@ void Server::_watchLoop() {
 			}
 			if(FD_ISSET(client->getFd(), &tmpRead)) {
 				if (!_handler(client, i)){
-					i++;
 					continue ;}
 			}
 			if(FD_ISSET(client->getFd(), &tmpWrite)) {
@@ -305,7 +304,7 @@ void	Server::_responder(Client *client, int i) {
 	Response	response(*(client->getRequest()), *this, client->getTmpPictFile());
 	std::string res = response.buildResponse();
 
-	// std::cout << "Response from the server:\n" << res << std::endl;
+	std::cout << "Response from the server:\n" << res << std::endl;
 	send(client->getFd(), res.c_str(), res.length(), 0);
 	disconnectClient(client, i);
 }
