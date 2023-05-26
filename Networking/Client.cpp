@@ -2,6 +2,15 @@
 #include <cstring>
 #include <unistd.h>
 
+static void ft_putstr(const char* str) {
+    size_t i = 0;
+    while (str[i] != '\0') {
+        write(1, &str[i], 1);
+        i++;
+    }
+}
+
+
 Client::Client(int fd, int serverFd, std::string tmp_file) : _fd(fd), _serverFd(serverFd), _status(0), _request(nullptr),
 	_tmpPictFile(tmp_file), _file(tmp_file, std::ofstream::binary | std::ofstream::out | std::ofstream::trunc),
 	readyForData(false), bytes(0) {
@@ -26,6 +35,9 @@ void	Client::createRequest(char *reqLine) {
 			_type = POST_FORM;
 			if (_request->getPath() == "delete")
 				_request->isDelete = true;
+			if (_request->getHeaders().find("Transfer-Encoding") != _request->getHeaders().end()
+				&& _request->getHeaders()["Transfer-Encoding"].find("chunked") != std::string::npos)
+				_request->isChunked = true;
 		}
 	}
 	else if (_request->getTypeStr() == "GET" || _request->getTypeStr() == "DELETE")
@@ -46,8 +58,14 @@ void	Client::writeInFile(char *buf, int size) {
 int	Client::parsePreBody(char *buf, int size) {
 	_preBody += buf;
 	if (_preBody.find("Content-Type") != std::string::npos) {
+		std::cout << "---je me fais parser le pre body : size = " << size << std::endl ;
 		_request->parsingPreBody(_preBody);
 		writeInFile(buf + _request->getPreBody().size() + 5, size - _request->getPreBody().size());
+		std::cout << "PREBODY SIZE = " << _request->getPreBody().size() << "|" << size - _request->getPreBody().size() << std::endl;
+		ft_putstr(_preBody.c_str());
+		ft_putstr("|FIN---");
+		ft_putstr(buf + _request->getPreBody().size() + 5);
+		ft_putstr("FIN \n");
 		setStatus(Client::READY_FOR_DATA);
 		return 1;
 	}
@@ -55,9 +73,7 @@ int	Client::parsePreBody(char *buf, int size) {
 }
 
 void	Client::setFormBody(std::string buf) {
-	std::cout << "TEST FORM BODY avant = " << _formBody << std::endl;
 	_formBody += buf;
-	std::cout << "TEST FORM BODY apres = " << _formBody << std::endl;
 }
 
 /********************** GETTERS **************************/

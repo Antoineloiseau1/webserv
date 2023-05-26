@@ -140,7 +140,7 @@ void	Response::PostResponse(void) {
 		DeleteResponse();
 	else if (file != "favicon.ico" && file != " " && !file.empty() && file != "" && file != "data/www/style.css")
 	{ //handleCgi();
-		_response["status"] = "201 Created\r\n";
+		_response["status"] = " 201 Created\r\n";
 		_response["body"] = openHtmlFile("data/www/error/201.html");
 		std::cout << "CGI" << std::endl;
 		return; //a ne pas supprimer ??
@@ -157,7 +157,7 @@ void	Response::DeleteResponse(void) {
 	} else {
 		_server.deletePict(_request.getFileToDelete());
 		std::cout << "File deleted successfully" << std::endl;
-		_response["status"] = "200 OK\r\n";
+		_response["status"] = " 200 OK\r\n";
 		_response["body"] = openHtmlFile("data/www/success.html");
 	}
 }

@@ -10,6 +10,16 @@
 
 bool	_alive = true;
 
+#include <unistd.h>
+
+static void ft_putstr(const char* str) {
+    size_t i = 0;
+    while (str[i] != '\0') {
+        write(1, &str[i], 1);
+        i++;
+    }
+}
+
 void copy_fd_set(fd_set* src, fd_set* dest) {
     FD_ZERO(dest);  // Clear the destination fd_set
     
@@ -84,7 +94,7 @@ void Server::_watchLoop() {
 		// tmpRead = _readSet;
 		// tmpWrite = _writeSet;
 		// tmpError = _errorSet;
-		std::cout << i << "whille\n";
+		// std::cout << i << "whille\n";
 		nbEvents = select(_getFdMax() + 1, &tmpRead, &tmpWrite, &tmpError, NULL);
 
 ///////////		/!\ work in progress
@@ -109,9 +119,9 @@ void Server::_watchLoop() {
 		{
 			if (j >= _socket[i]->clients.size()) //else it goes behind the size of client | maybe change it in the loop but ,for now, this works
 				break;
-			std::cout << "size : " << _socket[i]->clients.size() << std::endl;
-			std::cout<< "heap buffer overflow " << j++ << std::endl;
-			std::cout << i << "nbevnts "<< nbEvents << std::endl;
+			// std::cout << "size : " << _socket[i]->clients.size() << std::endl;
+			// std::cout<< "heap buffer overflow " << j++ << std::endl;
+			// std::cout << i << "nbevnts "<< nbEvents << std::endl;
 			Client *client = *it;
 			if (FD_ISSET(client->getFd(), &tmpError)) {
 				std::cout << "ERROR SET CLIENT\n";
@@ -188,6 +198,7 @@ void	Server::_accepter(int server_fd, ListeningSocket *sock) {
 	sock->setClient(newClient);
 }
 
+/*A SUPPRIMER: NE SERT A RIEN ?*/
 void	Server::_refuse(int server_fd) {
 	struct sockaddr_in	address;
 	socklen_t			addrlen;
@@ -211,7 +222,7 @@ void	Server::setToWrite(Client *client) {
 int	Server::_handler(Client *client, int i) {
 
 	int	n = recv(client->getFd(), _requestBuffer, BUFFER_SIZE, 0);
-	// std::cout << "***** n = " << n << std::endl;
+	std::cout << "***** n = " << n << std::endl;
 	if (n <= 0) { // mettre <=0 et gerer proprement pour la boucle infinie
 		std::cerr << "error: recv: " << strerror(errno) << std::endl;
 		disconnectClient(client, i);
@@ -219,7 +230,8 @@ int	Server::_handler(Client *client, int i) {
 	}
 	else {
 		_requestBuffer[n] = '\0';
-		std::cout << "requestBuffer = " << _requestBuffer << std::endl;
+		std::cout << "requestBuffer = \n" ;
+		ft_putstr(_requestBuffer);
 		/*******************POUR TOUT LE MONDE 1 X*****************************/
 		if (strstr(_requestBuffer, "\r\n\r\n") != nullptr
 			&& client->getStatus() == Client::INIT) {
@@ -237,11 +249,20 @@ int	Server::_handler(Client *client, int i) {
 						if (client->getStatus() < Client::PARSING_PREBODY) {
 							client->setStatus(Client::PARSING_PREBODY);
 							client->bytes = n - client->getRequest()->getHeaderLen();
-							if (client->bytes > 0)
-								if (client->parsePreBody(_requestBuffer + client->getRequest()->getHeaderLen() + 4, client->bytes))
+							if (client->bytes > 0) {
+								std::cout << "JE SUIS POPOPOP: request buffer \n" ;
+								ft_putstr(_requestBuffer);
+								ft_putstr("FIN \n");
+								if (client->parsePreBody(_requestBuffer + client->getRequest()->getHeaderLen(), client->bytes))
 									client->getRequest()->setFileName(addPicture(client->getRequest()->getFileName()));
+								std::cout << "APRES Request buffer: \n" ;
+								ft_putstr(_requestBuffer);
+								ft_putstr("FIN \n");
+								n = 0;
+							}
 						}
 						else if (client->getStatus() == Client::PARSING_PREBODY){
+							std::cout << "JE SUIS LALALAL \n" ;
 							if (client->parsePreBody(_requestBuffer, n))
 								client->getRequest()->setFileName(addPicture(client->getRequest()->getFileName()));
 							n = 0;
@@ -263,14 +284,18 @@ int	Server::_handler(Client *client, int i) {
 			}
 		}
 		if (client->bytes >= atoi(client->getRequest()->getHeaders()["Content-Length"].c_str())) {
-				// std::cout << "++++BYTES = "<< client->bytes << " | atoi = " << atoi(client->getRequest()->getHeaders()["Content-Length"].c_str()) << std::endl;
+				std::cout << "++++BYTES = "<< client->bytes << " | atoi = " << atoi(client->getRequest()->getHeaders()["Content-Length"].c_str()) << std::endl;
 				client->setStatus(Client::BODY_PARSED); //ne sert surement a rien
+				client->writeInFile(_requestBuffer, n);
+				std::cout << "++++Request buffer FINAL: \n" ;
+				ft_putstr(_requestBuffer);
 				setToWrite(client);
 				client->getRequest()->parseFormBody(client->getFormBody());
 				client->bytes = 0;
 				client->getFile().close(); //closing file after finishing to write data
 		}
 		else if (client->getStatus() == Client::READY_FOR_DATA && n > 0) {
+			std::cout << "+++++++++++++++j'ecris dans le file ... N = " << n << std::endl;
 				client->writeInFile(_requestBuffer, n);
 			}
 	}
@@ -282,7 +307,7 @@ void	Server::_responder(Client *client, int i) {
 	Response	response(*(client->getRequest()), *this, client->getTmpPictFile());
 	std::string res = response.buildResponse();
 
-//	std::cout << "Response from the server:\n" << res << std::endl;
+	std::cout << "Response from the server:\n" << res << std::endl;
 	send(client->getFd(), res.c_str(), res.length(), 0);
 	disconnectClient(client, i);
 }
