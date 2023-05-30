@@ -38,7 +38,7 @@ class Response
 		std::string	openHtmlFile(std::string f);
 		std::map<std::string, std::string>	getMap();
 		void								createCgiEnv();
-		void								handleCgi();
+		void								handleCgi(std::string file);
 		void								GetResponse();
 		void								PostResponse();
 		void								DeleteResponse();

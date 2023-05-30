@@ -30,12 +30,12 @@ void copy_fd_set(fd_set* src, fd_set* dest) {
         }
     }
 }
+data			Server::getData() const {return _data; }
 
 int	Server::getRequestFd() const { return _requestFd; }
 
 char	**Server::getEnvp() const { return _envp; }
 
-/* A ce stade, pas de monitoring des connections acceptees. pas de pb apparent.*/
 int	Server::getOpenFd() {
 	int res = _socket.size();
 	
@@ -71,7 +71,6 @@ void	Server::exit(int sig)
 	_alive = false;
 }
 
-/* A ce stade, pas de monitoring des connections acceptees. pas de pb apparent.*/
 void Server::_watchLoop() {
 	int 	nbEvents;
 	int	i = 0;
@@ -94,7 +93,6 @@ void Server::_watchLoop() {
 		// tmpRead = _readSet;
 		// tmpWrite = _writeSet;
 		// tmpError = _errorSet;
-		// std::cout << i << "whille\n";
 		nbEvents = select(_getFdMax() + 1, &tmpRead, &tmpWrite, &tmpError, NULL);
 
 		if (FD_ISSET(_socket[i]->getFd(), &tmpError)) {

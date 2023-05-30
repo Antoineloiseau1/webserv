@@ -6,7 +6,7 @@
 /*   By: elpolpa <elpolpa@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/25 10:15:25 by mmidon            #+#    #+#             */
-/*   Updated: 2023/05/24 15:57:44 by elpolpa          ###   ########.fr       */
+/*   Updated: 2023/05/30 08:52:23 by mmidon           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,8 +69,9 @@ void	data::setSettings() //put all the accepted settings (the keyword will also 
 	_possibleSettings.push_back("listen");
 	_possibleSettings.push_back("server_name");
 	_possibleSettings.push_back("client_max_body_size");
+	_possibleSettings.push_back("cgi_extension");
 
-	//a lot of things to push_back (maybe put it in a file if the subject is ok with that)
+	//a lot of things to push_back
 }
 
 

@@ -109,13 +109,73 @@ void	Response::fillGetType(std::string file) {
 		_response["type"] = "Content-Type: image/x-icon\r\n";
 }
 
-void	Response::GetResponse(void) {
-		std::string	file = _request.getPath();
+std::string	getExtension(std::string &file)
+{
+	int i;
+	try{
+		i = file.find_last_of(".");
+	}
+	catch (std::exception &e)
+	{
+		std::cout << "Exception caugth : " << e.what() << std::endl;
+		return "";
+	}
+	std::string extension = file.substr(i + 1);
+	return extension;
+}
 
-		_response["status"] = " 202 OK\r\n"; //Main case, updated when event in the building of response
-		fillGetBody(file);
-		fillGetLength();
-		fillGetType(file);
+int	isValid(std::string const extension, std::string cgiCase)
+{
+	std::string validExtensions[] = {"html", "png", "jpeg", "css", "ico"};
+
+	if (cgiCase.find(".") == 0)
+		cgiCase.erase(0, 1);
+	std::cout << cgiCase << std::endl;
+	std::cout << extension << std::endl;
+	if (extension == cgiCase)
+		return 0;
+	for (int i = 0; i < 5; i++)
+	{
+		if (extension == validExtensions[i])
+			return i + 1;
+	}
+	return -42;
+}
+
+void	Response::GetResponse(void) {
+	
+		std::string	file = _request.getPath();
+		int type;
+		if (!file.empty())
+		{
+			std::string extension = getExtension(file);
+			type = isValid(extension, _server.getData().getData()["cgi_extension"]);
+		}
+		else
+			type = 42;
+
+		if (type == -42)
+		{
+			std::cout << "probably 404 error" << std::endl;
+			////error aled antoine 404
+		}
+		else if (type)
+		{
+			if (type == 1)
+			{
+				if (file.find("data/www/") == std::string::npos)
+					file = "data/www/" + file;
+			}
+			_response["status"] = " 202 OK\r\n"; //Main case, updated when event in the building of response
+			fillGetBody(file);
+			fillGetLength();
+			fillGetType(file);
+		}
+		else
+		{
+			std::cout << "CGI" << std::endl;
+			handleCgi(file);
+		}
 }
 
 
@@ -139,7 +199,7 @@ void	Response::PostResponse(void) {
 	if (_request.isDelete)
 		DeleteResponse();
 	else if (file != "favicon.ico" && file != " " && !file.empty() && file != "" && file != "data/www/style.css")
-	{ //handleCgi();
+	{ ;
 		_response["status"] = " 201 Created\r\n";
 		_response["body"] = openHtmlFile("data/www/error/201.html");
 		std::cout << "CGI" << std::endl;
@@ -212,33 +272,34 @@ void	Response::createCgiEnv()
 }
 
 
-void	Response::handleCgi() {
+void	Response::handleCgi(std::string file) {
 	int pipefd[2];
 
-	std::string arg1 = "form_handler.cgi";
+	std::string arg1 = file;
 	const char* cmd1_cstr = arg1.c_str();
 	std::string arg2 = _request.getBody();
 	const char* cmd2_cstr = arg2.c_str();
 	char* const args[] = { const_cast<char*>(cmd1_cstr), const_cast<char*>(cmd2_cstr), NULL };
 
 	if (pipe(pipefd) == -1) {
-		std::cerr << "Error 500\n";//
+		std::cerr << "Error 500\n";// antoine oskour
 		return ;
 	}
 	close(pipefd[0]);
 
 	pid_t pid = fork();
 	if (pid == -1) {
-		std::cerr << "Error 500\n"; //
+		std::cerr << "Error 500\n"; // antoine aled
 		close(pipefd[0]);
 		close(pipefd[1]);
-		return ;	
+		return ;
 	}
 
 	if (pid == 0) {  //Processus enfant (script CGI)
 		pipefd[1] = _server.getRequestFd();
 
 		
+		/* //cgiEnv test
 		createCgiEnv();
 		char *cgiEnv[_env.size() + 1];
 		size_t i;
@@ -248,9 +309,10 @@ void	Response::handleCgi() {
 			cgiEnv[i] = strdup(const_cast<const char *>(_env[i].c_str()));
 		}
 		cgiEnv[i] = 0;
+		*/
+		std::cout << "EXECVE "<< pipefd[1] << std::endl;
 		dup2(pipefd[1], STDOUT_FILENO);
-		std::cerr << "EXECVE" << std::endl;
-		if (execve("data/CGI/form_handler.cgi", args, cgiEnv) == -1)
+		if (execve(args[0], args, _server.getEnvp()) == -1)
 		{
 			std::cerr << "error: 500(?)" << strerror(errno) << std::endl;
 		}

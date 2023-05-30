@@ -6,7 +6,7 @@
 /*   By: elpolpa <elpolpa@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/04 09:54:40 by mmidon            #+#    #+#             */
-/*   Updated: 2023/05/24 19:41:57 by elpolpa          ###   ########.fr       */
+/*   Updated: 2023/05/30 09:09:53 by mmidon           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,6 +62,7 @@ class Server {
 		void			start(void);
 		int				getRequestFd() const;
 		char			**getEnvp() const;
+		data			getData() const;
 		int				getOpenFd();
 		static void		exit(int sig);
 		void			disconnectClient(Client *client, int i);

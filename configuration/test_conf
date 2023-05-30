@@ -1,3 +1,4 @@
 		listen					8082 4242 8000 1234;
 		server_name			example.com;
 		client_max_body_size	1023;
+		cgi_extension			.cgi
