@@ -119,7 +119,8 @@ void Server::_watchLoop() {
 }
 
 Server::Server(int domain, int service, int protocole, int *ports, int nbSocket, char **envp, data& data) : _data(data), _envp(envp) {
-	std::cout << "### Server is now open ###" << std::endl;
+	std::cout << "\033[30;42m";
+	std::cout << "### Server is now open ###\033[0m" << std::endl;
 	for (int i = 0; i < nbSocket; i++)
 		this->_socket.push_back(new ListeningSocket(domain, service, protocole, ports[i]));
 }
@@ -267,6 +268,8 @@ void	Server::_responder(Client *client, int i) {
 	Response	response(*(client->getRequest()), *this, client->getTmpPictFile(), client->getFd());
 	std::string res = response.buildResponse();
 
+	std::cout << "\033[36m";
+	std::cout << "#### return status from server:\033[1m\033[94m" << response.getMap()["status"] << "\033[0m" << std::endl;
 	send(client->getFd(), res.c_str(), res.length(), 0);
 	disconnectClient(client, i);
 }
@@ -289,7 +292,8 @@ ListeningSocket	*Server::getSocket(int fd) {
 }
 
 Server::~Server(void) {
-	std::cout << "\n\n ######## Closing Server ######### \n";
+	std::cout << "\n\n \033[36;41m######## Closing Server ######### \n";
+	std::cout << "\033[0m";
 	for (std::vector<std::string>::iterator it = pictPaths.begin(); it != pictPaths.end(); it++) {
 		if (std::remove((*it).c_str()) != 0)
 			std::cerr << "Failed to delete file: " << *it << std::endl;
