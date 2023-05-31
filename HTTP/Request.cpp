@@ -31,7 +31,8 @@ Request::Request(char *requestBuf) : isADataUpload(false), isDelete(false), isCh
 	}
 	_headers["formbody"] = _requestLine.substr(_requestLine.find_last_of("\r"));
 	std::cout << "\033[36m#### Request from client: \033[1;94m" << _initialRequestLine["type"] << " " << _initialRequestLine["path"];
-	std::cout << "\033[0m" << std::endl;
+	std::cout << "\033[0m" << std::endl << std::endl << requestBuf;
+
 }
 
 void	Request::parsingPreBody(std::string	pre_body) {

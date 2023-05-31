@@ -11,21 +11,23 @@ Response::Response(Request &request, Server &server, std::string tmp_file, int f
 	_request(request), _tmpPictFile(tmp_file)
 {
 	std::string	type[] = { "GET", "POST", "DELETE", "HEAD", "OPTIONS", "PUT", "TRACE", "CONNECT" };
-	enum	mtype { GET, POST, DELETE, OTHER };
-	int a = 0;
+	enum		mtype { GET, POST, DELETE, OTHER };
+	int			a = 0;
 
-	for (int i = 0; i < 8 ; i++) {
+	for (int i = 0; i < 8; i++)
+	{
 		if (request.getTypeStr() == type[i])
 		{
+			a = i;
 			if (i > 2)
 			{
 				a = 3;
 				break;
 			}
-			a = i;
+			break;
 		}
+		a = i;
 	}
-
 	switch (a)
 	{
 		case GET:
@@ -154,38 +156,31 @@ int	isValid(std::string const extension, std::string cgiCase)
 
 void	Response::GetResponse(int fd) {
 	
-		std::string	file = _request.getPath();
-		int type;
-		if (!file.empty())
+		_file = _request.getPath();
+		int type = -1;
+		if (!_file.empty())
 		{
-			std::string extension = getExtension(file);
+			std::string extension = getExtension(_file);
 			type = isValid(extension, _server.getData().getData()["cgi_extension"]);
 		}
 		else
-			type = 42;
-
+			_file = "data/www/index.html";
 		if (type == -42)
-		{
-			std::cout << "probably 404 error" << std::endl;
-			////error aled antoine 404
-		}
+			BadRequestError();
 		else if (type)
 		{
 			if (type == 1)
 			{
-				if (file.find("data/www/") == std::string::npos)
-					file = "data/www/" + file;
+				if (_file.find("data/www/") == std::string::npos)
+					_file = "data/www/" + _file;
 			}
-			_response["status"] = " 202 OK\r\n"; //Main case, updated when event in the building of response
-			fillGetBody(file);
+			_response["status"] = " 200 OK\r\n"; //Main case, updated when event in the building of response
+			fillGetBody(_file);
 			fillGetLength();
-			fillGetType(file);
+			fillGetType(_file);
 		}
 		else
-		{
-			std::cout << "CGI" << std::endl;
-			handleCgi(file, fd);
-		}
+			handleCgi(_file, fd);
 }
 
 
@@ -236,34 +231,19 @@ void	Response::DeleteResponse(void) {
 	}
 }
 
-void	Response::NotImplemented(void) {
-
-	std::ifstream error("data/www/error/501.html");
-    std::string content((std::istreambuf_iterator<char>(error)), (std::istreambuf_iterator<char>()));
-
-	_response["status"] = " 501 Not Implemented\r\n";
-	_response["body"] = content;
-	_response["type"] = "Content-Type: text/html\r\n";
-	_response["length"] = "Content-Length: ";
-	_response["length"] += std::to_string(std::strlen(_response["body"].c_str()));
-	_response["length"] += "\r\n";
-}
-
 std::string	Response::openHtmlFile(std::string f) /* PROBLEME SI CEST UNE IMAGE A OUVRIR !!*/
 {
     std::ifstream file;
 
-	std::cout << "\nFILE TO OPEN " << f << std::endl;
 	if (f.find("uploads/") != std::string::npos || f.find("favicon.ico") != std::string::npos)
 		file.open(f, std::ios::binary);
 	else
 		file.open(f);
 	if (file.is_open()) {
 		struct stat fileInfo;
-		if (stat(f.c_str(), &fileInfo) == 0) {
+		if (stat(f.c_str(), &fileInfo) == 0)
 			_contentSize = static_cast<size_t>(fileInfo.st_size);
-			std::cout << "Content size: " << _contentSize << " bytes" << std::endl;
-		} else
+		else
 			std::cout << "Failed to determine the file size." << std::endl;
 		std::string content((std::istreambuf_iterator<char>(file)), (std::istreambuf_iterator<char>()));//  	 read the contents of the file into a string variable
 		return content;
@@ -352,6 +332,24 @@ void	Response::BadRequestError(void) {
 }
 /************************************************************************************************/
 
+
+/********************************** NotImplemented **********************************************/
+void	Response::NotImplemented(void) {
+
+	std::ifstream error("data/www/error/501.html");
+    std::string content((std::istreambuf_iterator<char>(error)), (std::istreambuf_iterator<char>()));
+
+	_response["status"] = " 501 Not Implemented\r\n";
+	_response["body"] = content;
+	_response["type"] = "Content-Type: text/html\r\n";
+	_response["length"] = "Content-Length: ";
+	_response["length"] += std::to_string(std::strlen(_response["body"].c_str()));
+	_response["length"] += "\r\n";
+}
+/************************************************************************************************/
+
 std::map<std::string, std::string>	Response::getMap() { return _response; }
+
+std::string	Response::getFile(void) {return _file; }
 
 Response::~Response() {}
