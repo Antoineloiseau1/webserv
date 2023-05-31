@@ -6,7 +6,7 @@
 /*   By: elpolpa <elpolpa@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/25 10:15:25 by mmidon            #+#    #+#             */
-/*   Updated: 2023/05/30 08:52:23 by mmidon           ###   ########.fr       */
+/*   Updated: 2023/05/31 10:47:54 by mmidon           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,6 +69,7 @@ void	data::setSettings() //put all the accepted settings (the keyword will also 
 	_possibleSettings.push_back("listen");
 	_possibleSettings.push_back("server_name");
 	_possibleSettings.push_back("client_max_body_size");
+	_possibleSettings.push_back("autoindex");
 	_possibleSettings.push_back("cgi_extension");
 
 	//a lot of things to push_back
@@ -93,7 +94,7 @@ void data::fill(std::string conf)
 
 	std::fstream file(conf); //can't fine if i need ofstream or ifstream so fstream
 	if (!file.is_open())
-		throw CantOpenFileException(); //exception may not be the best choice
+		throw CantOpenFileException();
 
 	setSettings();
 
@@ -112,7 +113,11 @@ void data::fill(std::string conf)
 		std::string line = content.substr(pos, content.find(";", pos) - pos); //find the content at the end of the line
 		line = trim(line); //spaces handling
 
-
+		if (line.empty()) //error handling
+		{
+			_config.erase(_config.begin(), _config.end());
+			throw (WrongDataException());
+		}
 		_config.insert(std::make_pair(setting, line)); //put it in the config variable
 	}
 	makePorts();

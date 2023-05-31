@@ -2,3 +2,4 @@
 		server_name			example.com;
 		client_max_body_size	1023;
 		cgi_extension			.cgi
+		autoindex	on;

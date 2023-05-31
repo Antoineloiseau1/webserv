@@ -52,7 +52,17 @@ void	Response::fillGetBody(std::string file) {
 	// if (file.find("data/www/") == std::string::npos)
 	// 	file = "data/www/" + file;
 	if (file == "")
-		_response["body"] = openHtmlFile("data/www/index.html");
+	{
+		if (_server.getData().getData()["autoindex"] == "on")
+			_response["body"] = openHtmlFile("data/www/index.html");
+		else if (_server.getData().getData()["autoindex"] == "off" || _server.getData().getData()["autoindex"].empty())
+			_response["body"] = openHtmlFile("data/www/manon.html");
+		else
+		{
+			std::cout << "Error in config file\n"; //maybe better error handling later
+			exit(1);
+		}
+	}
 	else if(file == "style.css" || file.empty())
 	{
 		_response["status"] = " 204 No Content\r\n";
