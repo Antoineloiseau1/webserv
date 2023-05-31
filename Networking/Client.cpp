@@ -2,26 +2,17 @@
 #include <cstring>
 #include <unistd.h>
 
-static void ft_putstr(const char* str) {
-    size_t i = 0;
-    while (str[i] != '\0') {
-        write(1, &str[i], 1);
-        i++;
-    }
-}
 
 
 Client::Client(int fd, int serverFd, std::string tmp_file) : _fd(fd), _serverFd(serverFd), _status(0), _request(nullptr),
-	_tmpPictFile(tmp_file), _file(tmp_file, std::ofstream::binary | std::ofstream::out | std::ofstream::trunc),
-	readyForData(false), bytes(0) {
+	_tmpPictFile(tmp_file), _file(tmp_file, std::ofstream::binary | std::ofstream::out | std::ofstream::trunc), readyForData(false), bytes(0) {
 		// std::cout << "PRINT TMP FILE = "<< tmp_file << std::endl;
 	_status = INIT;
-		std::cout <<"***********************+++++CLIENT CONSTRUCTOR "<< _fd << "********************\n";
-
+	std::cout << std::endl << "****** New connexion on server from client fd: "<< _fd << " *******\n";
 }
 
 Client::~Client() {
-	std::cout <<"***********************CLIENT DESTRUCTOR "<< _fd << "********************\n";
+	std::cout << "***** Closing connexion of client: " << _fd << " ******\n";
 	delete (_request);
 }
 
@@ -52,30 +43,20 @@ void	Client::createRequest(char *reqLine) {
 	}
 }
 
-void	Client::writeInFile(char *buf, int size) {
-	_file.write(buf, sizeof(char) * size);
-}
+void	Client::writeInFile(char *buf, int size) { _file.write(buf, sizeof(char) * size); }
 
 int	Client::parsePreBody(char *buf, int size) {
 	_preBody += buf;
 	if (_preBody.find("Content-Type") != std::string::npos) {
-		std::cout << "---je me fais parser le pre body : size = " << size << std::endl ;
 		_request->parsingPreBody(_preBody);
 		writeInFile(buf + _request->getPreBody().size() + 5, size - _request->getPreBody().size());
-		std::cout << "PREBODY SIZE = " << _request->getPreBody().size() << "|" << size - _request->getPreBody().size() << std::endl;
-		ft_putstr(_preBody.c_str());
-		ft_putstr("|FIN---");
-		ft_putstr(buf + _request->getPreBody().size() + 5);
-		ft_putstr("FIN \n");
 		setStatus(Client::READY_FOR_DATA);
 		return 1;
 	}
 	return 0;
 }
 
-void	Client::setFormBody(std::string buf) {
-	_formBody += buf;
-}
+void	Client::setFormBody(std::string buf) { _formBody += buf; }
 
 
 /********************** GETTERS **************************/

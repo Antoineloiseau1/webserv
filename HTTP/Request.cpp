@@ -82,9 +82,7 @@ int	Request::getHeaderLen() { return _headerLine.size(); }
 
 std::string	Request::getFileName() { return _fileName; }
 
-void	Request::setFileName(std::string new_name) {
-	_fileName = new_name;
-}
+void	Request::setFileName(std::string new_name) { _fileName = new_name; }
 
 std::string	Request::getFileToDelete() { return _fileToDelete; } 
 

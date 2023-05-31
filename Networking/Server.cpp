@@ -12,14 +12,6 @@ bool	_alive = true;
 
 #include <unistd.h>
 
-static void ft_putstr(const char* str) {
-    size_t i = 0;
-    while (str[i] != '\0') {
-        write(1, &str[i], 1);
-        i++;
-    }
-}
-
 void copy_fd_set(fd_set* src, fd_set* dest) {
     FD_ZERO(dest);  // Clear the destination fd_set
     
@@ -90,9 +82,6 @@ void Server::_watchLoop() {
 		copy_fd_set(&_readSet, &tmpRead);
 		copy_fd_set(&_writeSet, &tmpWrite);
 		copy_fd_set(&_errorSet, &tmpError);
-		// tmpRead = _readSet;
-		// tmpWrite = _writeSet;
-		// tmpError = _errorSet;
 		nbEvents = select(_getFdMax() + 1, &tmpRead, &tmpWrite, &tmpError, NULL);
 
 		if (FD_ISSET(_socket[i]->getFd(), &tmpError)) {
@@ -111,33 +100,26 @@ void Server::_watchLoop() {
 				_accepter(_socket[i]->getFd(), _socket[i]);
 		}
 
-		size_t j = 0;
 		for(size_t k = 0; k != _socket[i]->clients.size() && nbEvents-- && _alive; k++) //hate u
 		{
-			if (j >= _socket[i]->clients.size()) //may not be necessary anymore but i'm scared to delete it
-				break;
-			std::cout << "size : " << _socket[i]->clients.size() << std::endl;
-			std::cout << i << " nbevnts "<< nbEvents << std::endl;
 			Client *client = _socket[i]->clients[k];
 			if (FD_ISSET(client->getFd(), &tmpError)) {
 				std::cout << "ERROR SET CLIENT\n";
 				exit(1);
 			}
 			if(FD_ISSET(client->getFd(), &tmpRead)) {
-				if (!_handler(client, i)){
-					continue ;}
+				if (!_handler(client, i))
+					continue;
 			}
-			if(FD_ISSET(client->getFd(), &tmpWrite)) {
+			if(FD_ISSET(client->getFd(), &tmpWrite))
 				_responder(client, i);
-			}
 		}
 		i++;
 	}
-	std::cout << "OUT OF WHILE LOOP \n";
-
 }
 
 Server::Server(int domain, int service, int protocole, int *ports, int nbSocket, char **envp, data& data) : _data(data), _envp(envp) {
+	std::cout << "### Server is now open ###" << std::endl;
 	for (int i = 0; i < nbSocket; i++)
 		this->_socket.push_back(new ListeningSocket(domain, service, protocole, ports[i]));
 }
@@ -216,19 +198,15 @@ void	Server::setToWrite(Client *client) {
 int	Server::_handler(Client *client, int i) {
 
 	int	n = recv(client->getFd(), _requestBuffer, BUFFER_SIZE, 0);
-	std::cout << "***** n = " << n << std::endl;
-	if (n <= 0) { // mettre <=0 et gerer proprement pour la boucle infinie
+	if (n <= 0) {
 		std::cerr << "error: recv: " << strerror(errno) << std::endl;
 		disconnectClient(client, i);
 		return 0;
 	}
 	else {
 		_requestBuffer[n] = '\0';
-		std::cout << "requestBuffer = \n" ;
-		ft_putstr(_requestBuffer);
 		/*******************POUR TOUT LE MONDE 1 X*****************************/
-		if (strstr(_requestBuffer, "\r\n\r\n") != nullptr
-			&& client->getStatus() == Client::INIT) {
+		if (strstr(_requestBuffer, "\r\n\r\n") && client->getStatus() == Client::INIT) {
 			client->createRequest(_requestBuffer);
 			client->setStatus(Client::HEADER_PARSED);
 		}
@@ -244,19 +222,13 @@ int	Server::_handler(Client *client, int i) {
 							client->setStatus(Client::PARSING_PREBODY);
 							client->bytes = n - client->getRequest()->getHeaderLen();
 							if (client->bytes > 0) {
-								std::cout << "JE SUIS POPOPOP: request buffer \n" ;
-								ft_putstr(_requestBuffer);
-								ft_putstr("FIN \n");
 								if (client->parsePreBody(_requestBuffer + client->getRequest()->getHeaderLen(), client->bytes))
 									client->getRequest()->setFileName(addPicture(client->getRequest()->getFileName()));
-								std::cout << "APRES Request buffer: \n" ;
-								ft_putstr(_requestBuffer);
-								ft_putstr("FIN \n");
 								n = 0;
 							}
 						}
-						else if (client->getStatus() == Client::PARSING_PREBODY){
-							std::cout << "JE SUIS LALALAL \n" ;
+						else if (client->getStatus() == Client::PARSING_PREBODY)
+						{
 							if (client->parsePreBody(_requestBuffer, n))
 								client->getRequest()->setFileName(addPicture(client->getRequest()->getFileName()));
 							n = 0;
@@ -267,9 +239,8 @@ int	Server::_handler(Client *client, int i) {
 					if (client->getStatus() < Client::PARSING_PREBODY) {
 						client->bytes = n - client->getRequest()->getHeaderLen();
 						client->setStatus(Client::PARSING_PREBODY);
-						if (client->bytes > 0) {
+						if (client->bytes > 0)
 							client->setFormBody(_requestBuffer + client->getRequest()->getHeaderLen());
-						}
 					}
 					else if (client->getStatus() == Client::PARSING_PREBODY){
 							client->setFormBody(_requestBuffer);
@@ -278,18 +249,13 @@ int	Server::_handler(Client *client, int i) {
 			}
 		}
 		if (client->bytes >= atoi(client->getRequest()->getHeaders()["Content-Length"].c_str())) {
-				std::cout << "++++BYTES = "<< client->bytes << " | atoi = " << atoi(client->getRequest()->getHeaders()["Content-Length"].c_str()) << std::endl;
-				client->setStatus(Client::BODY_PARSED); //ne sert surement a rien
 				client->writeInFile(_requestBuffer, n);
-				std::cout << "++++Request buffer FINAL: \n" ;
-				ft_putstr(_requestBuffer);
 				setToWrite(client);
 				client->getRequest()->parseFormBody(client->getFormBody());
 				client->bytes = 0;
 				client->getFile().close(); //closing file after finishing to write data
 		}
 		else if (client->getStatus() == Client::READY_FOR_DATA && n > 0) {
-			std::cout << "+++++++++++++++j'ecris dans le file ... N = " << n << std::endl;
 				client->writeInFile(_requestBuffer, n);
 			}
 	}
@@ -301,7 +267,6 @@ void	Server::_responder(Client *client, int i) {
 	Response	response(*(client->getRequest()), *this, client->getTmpPictFile(), client->getFd());
 	std::string res = response.buildResponse();
 
-	std::cout << "Response from the server:\n" << res << std::endl;
 	send(client->getFd(), res.c_str(), res.length(), 0);
 	disconnectClient(client, i);
 }
@@ -310,12 +275,9 @@ void	Server::disconnectClient(Client *client, int i) {
 	FD_CLR(client->getFd(), &_readSet);
 	FD_CLR(client->getFd(), &_writeSet);
 	FD_CLR(client->getFd(), &_errorSet);
-	std::cout << "CLOSING CLIENT FD : " << client->getFd() << std::endl;
 	close(client->getFd());
 	_socket[i]->deleteClient(client->getFd());
 }
-
-ListeningSocket	*Server::getSocket(void) const { return this->_socket[0]; }
 
 ListeningSocket	*Server::getSocket(int fd) {
 	for (std::vector<ListeningSocket*>::iterator it = _socket.begin(); it != _socket.end(); it++)
@@ -327,13 +289,12 @@ ListeningSocket	*Server::getSocket(int fd) {
 }
 
 Server::~Server(void) {
-	std::cout << "\n\n ************DELETION DELETION DELETION********* \n";
+	std::cout << "\n\n ######## Closing Server ######### \n";
 	for (std::vector<std::string>::iterator it = pictPaths.begin(); it != pictPaths.end(); it++) {
-		if (std::remove((*it).c_str()) != 0) {
+		if (std::remove((*it).c_str()) != 0)
 			std::cerr << "Failed to delete file: " << *it << std::endl;
-		} else {
+		else
 			std::cout << "File deleted successfully" << std::endl;
-		}
 	}
 	for (int i = 0; i != _data.getPortsNbr(); i++)
 		delete this->_socket[i]; }

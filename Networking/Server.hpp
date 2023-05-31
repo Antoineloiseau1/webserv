@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: elpolpa <elpolpa@student.42.fr>            +#+  +:+       +#+        */
+/*   By: anloisea <anloisea@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/04 09:54:40 by mmidon            #+#    #+#             */
-/*   Updated: 2023/05/30 09:09:53 by mmidon           ###   ########.fr       */
+/*   Updated: 2023/05/31 11:31:10 by anloisea         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,7 +57,6 @@ class Server {
 	
 		Server(int domain, int service, int protocole, int *ports, int nbSocket, char **envp, data &data);
 		~Server(void);
-		ListeningSocket	*getSocket(void) const;
 		ListeningSocket	*getSocket(int fd);
 		void			start(void);
 		int				getRequestFd() const;
