@@ -6,16 +6,13 @@
 
 Client::Client(int fd, int serverFd, std::string tmp_file) : _fd(fd), _serverFd(serverFd), _status(0), _request(nullptr),
 	_tmpPictFile(tmp_file), _file(tmp_file, std::ofstream::binary | std::ofstream::out | std::ofstream::trunc), readyForData(false), bytes(0) {
+		// std::cout << "PRINT TMP FILE = "<< tmp_file << std::endl;
 	_status = INIT;
-	std::cout << "\033[1m\033[32m";
-	std::cout << std::endl << "****** New connexion on server from client fd: "<< _fd << " *******\n";
-	std::cout << "\033[0m";
+	std::cout << std::endl << "\033[1;32m****** New connexion on server from client fd: "<< _fd << " *******\n\033[0m";
 }
 
 Client::~Client() {
-	std::cout << "\033[1;31m";
-	std::cout << "***** Closing connexion of client: " << _fd << " ******\n";
-	std::cout << "\033[0m";
+	std::cout << "\033[1;31m***** Closing connexion of client: " << _fd << " ******\n\033[0m";
 	delete (_request);
 }
 
@@ -38,11 +35,8 @@ void	Client::createRequest(char *reqLine) {
 	else if (_request->getTypeStr() == "GET" || _request->getTypeStr() == "DELETE")
 		_type = GET_DELETE;
 	if (_type != POST_DATA) {
-		int result = std::remove(_tmpPictFile.c_str());
-		if (result == 0)
-			std::cout << "File deleted successfully.\n";
-		else
-			std::cout << "Failed to delete the file.\n";
+		if (std::remove(_tmpPictFile.c_str()))
+			std::cout << "error: Failed to delete file.\n";
 	}
 }
 
