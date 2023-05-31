@@ -218,13 +218,13 @@ void	Response::PostResponse(int fd) {
 }
 
 void	Response::DeleteResponse(void) {
-	_request.setFileToDelete(_request.getPath().c_str());
-	if (std::remove(_request.getFileToDelete().c_str()) != 0) {
+	_file = _request.getPath();
+	if (std::remove(_file.c_str()) != 0) {
 		std::cerr << "Failed to delete file: " << std::endl;
 		_response["status"] = " 404 Not Found\r\n";
 		_response["body"] = openHtmlFile("data/www/error/404.html");
 	} else {
-		_server.deletePict(_request.getFileToDelete());
+		_server.deletePict(_file);
 		std::cout << "File deleted successfully" << std::endl;
 		_response["status"] = " 200 OK\r\n";
 		_response["body"] = openHtmlFile("data/www/success.html");
