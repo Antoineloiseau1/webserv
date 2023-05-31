@@ -7,7 +7,7 @@
 #include <array>
 #include <sys/stat.h>
 
-Response::Response(Request &request, Server &server, std::string tmp_file) : _server(server),
+Response::Response(Request &request, Server &server, std::string tmp_file, int fd) : _server(server),
 	_request(request), _tmpPictFile(tmp_file)
 {
 	std::string	type[] = { "GET", "POST", "DELETE", "HEAD", "OPTIONS", "PUT", "TRACE", "CONNECT" };
@@ -29,7 +29,7 @@ Response::Response(Request &request, Server &server, std::string tmp_file) : _se
 	switch (a)
 	{
 		case GET:
-			GetResponse();
+			GetResponse(fd);
 			break;
 		case POST:
 			PostResponse();
@@ -142,7 +142,7 @@ int	isValid(std::string const extension, std::string cgiCase)
 	return -42;
 }
 
-void	Response::GetResponse(void) {
+void	Response::GetResponse(int fd) {
 	
 		std::string	file = _request.getPath();
 		int type;
@@ -174,7 +174,7 @@ void	Response::GetResponse(void) {
 		else
 		{
 			std::cout << "CGI" << std::endl;
-			handleCgi(file);
+			handleCgi(file, fd);
 		}
 }
 
@@ -272,7 +272,7 @@ void	Response::createCgiEnv()
 }
 
 
-void	Response::handleCgi(std::string file) {
+void	Response::handleCgi(std::string file, int fd) {
 	int pipefd[2];
 
 	std::string arg1 = file;
@@ -295,26 +295,13 @@ void	Response::handleCgi(std::string file) {
 		return ;
 	}
 
-	if (pid == 0) {  //Processus enfant (script CGI)
-		pipefd[1] = _server.getRequestFd();
+	if (pid == 0) {  //Processus enfant 
+		pipefd[1] = fd;
 
-		
-		/* //cgiEnv test
-		createCgiEnv();
-		char *cgiEnv[_env.size() + 1];
-		size_t i;
-		for (i = 0; i != _env.size(); i++)
-		{
-			std::cout << strdup(const_cast<const char *>(_env[i].c_str())) << std::endl;
-			cgiEnv[i] = strdup(const_cast<const char *>(_env[i].c_str()));
-		}
-		cgiEnv[i] = 0;
-		*/
-		std::cout << "EXECVE "<< pipefd[1] << std::endl;
 		dup2(pipefd[1], STDOUT_FILENO);
 		if (execve(args[0], args, _server.getEnvp()) == -1)
 		{
-			std::cerr << "error: 500(?)" << strerror(errno) << std::endl;
+			std::cerr << "error: 500(?)" << strerror(errno) << std::endl; //antoine error
 		}
 	}
 	close(pipefd[1]);

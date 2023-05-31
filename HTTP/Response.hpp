@@ -29,7 +29,7 @@ class Response
 
 	public:
 
-		Response(Request &request, Server &server, std::string tmp_file);
+		Response(Request &request, Server &server, std::string tmp_file, int fd);
 		virtual ~Response();
 
 		void				executor();
@@ -38,8 +38,8 @@ class Response
 		std::string	openHtmlFile(std::string f);
 		std::map<std::string, std::string>	getMap();
 		void								createCgiEnv();
-		void								handleCgi(std::string file);
-		void								GetResponse();
+		void								handleCgi(std::string file, int fd);
+		void								GetResponse(int fd);
 		void								PostResponse();
 		void								DeleteResponse();
 		void								NotImplemented();

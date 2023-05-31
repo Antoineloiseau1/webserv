@@ -117,8 +117,7 @@ void Server::_watchLoop() {
 			if (j >= _socket[i]->clients.size()) //may not be necessary anymore but i'm scared to delete it
 				break;
 			std::cout << "size : " << _socket[i]->clients.size() << std::endl;
-			std::cout<< "heap buffer overflow " << j++ << std::endl;
-			std::cout << i << "nbevnts "<< nbEvents << std::endl;
+			std::cout << i << " nbevnts "<< nbEvents << std::endl;
 			Client *client = _socket[i]->clients[k];
 			if (FD_ISSET(client->getFd(), &tmpError)) {
 				std::cout << "ERROR SET CLIENT\n";
@@ -299,7 +298,7 @@ int	Server::_handler(Client *client, int i) {
 
 void	Server::_responder(Client *client, int i) {
 	
-	Response	response(*(client->getRequest()), *this, client->getTmpPictFile());
+	Response	response(*(client->getRequest()), *this, client->getTmpPictFile(), client->getFd());
 	std::string res = response.buildResponse();
 
 	std::cout << "Response from the server:\n" << res << std::endl;
@@ -311,7 +310,7 @@ void	Server::disconnectClient(Client *client, int i) {
 	FD_CLR(client->getFd(), &_readSet);
 	FD_CLR(client->getFd(), &_writeSet);
 	FD_CLR(client->getFd(), &_errorSet);
-	std::cout << "CLOSING CLIENT FD : " << client ->getFd() << std::endl;
+	std::cout << "CLOSING CLIENT FD : " << client->getFd() << std::endl;
 	close(client->getFd());
 	_socket[i]->deleteClient(client->getFd());
 }
