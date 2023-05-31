@@ -29,6 +29,7 @@ Request::Request(char *requestBuf) : isADataUpload(false), isDelete(false), isCh
 		_headers[line.substr(0, delim)] = line.substr(delim + 2, line.size() - (delim + 2));
 		getline(iss, line);
 	}
+	_headers["formbody"] = _requestLine.substr(_requestLine.find_last_of("\r"));
 }
 
 void	Request::parsingPreBody(std::string	pre_body) {

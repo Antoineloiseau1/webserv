@@ -40,7 +40,7 @@ class Response
 		void								createCgiEnv();
 		void								handleCgi(std::string file, int fd);
 		void								GetResponse(int fd);
-		void								PostResponse();
+		void								PostResponse(int fd);
 		void								DeleteResponse();
 		void								NotImplemented();
 		void								BadRequestError();

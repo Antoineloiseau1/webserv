@@ -32,7 +32,7 @@ Response::Response(Request &request, Server &server, std::string tmp_file, int f
 			GetResponse(fd);
 			break;
 		case POST:
-			PostResponse();
+			PostResponse(fd);
 			break;
 		case DELETE:
 			_request.setFileToDelete(_request.getFileName());
@@ -179,9 +179,13 @@ void	Response::GetResponse(int fd) {
 }
 
 
-void	Response::PostResponse(void) {
+void	Response::PostResponse(int fd) {
 	std::string	file = _request.getPath();
-
+	if (!isValid(getExtension(file), _server.getData().getData()["cgi_extension"]))
+	{
+		handleCgi(file, fd); //maybe a bool
+		return; //a ne pas supprimer ??
+	}
 	if (_request.isADataUpload == true) {
 			std::ifstream sourceFile(_tmpPictFile, std::ios::in | std::ios::binary);
 			std::string filePath = "uploads/" + _request.getFileName(); 
@@ -264,7 +268,8 @@ void	Response::createCgiEnv()
 {
 
 		_env[0] = "REQUEST_METHOD=GET";
-		_env[1] = "QUERY_STRING=nom=ui&prenom=uii&email=u%40i&ville=ui";
+		_env[1] = "QUERY_STRING=nom=";
+		_env[1] += _request.getHeaders()["formbody"];
 		_env[2] = "CONTENT_TYPE=text/html";
 		_env[3] ="CONTENT_LENGTH=500";
 		_env[4] = "HTTP_USER_AGENT=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3";
@@ -298,8 +303,17 @@ void	Response::handleCgi(std::string file, int fd) {
 	if (pid == 0) {  //Processus enfant 
 		pipefd[1] = fd;
 
+		createCgiEnv();
+		char *cgiEnv[_env.size() + 1];
+		size_t i;
+		for (i = 0; i != _env.size(); i++)
+		{
+			std::cout << strdup(const_cast<const char *>(_env[i].c_str())) << std::endl;
+			cgiEnv[i] = strdup(const_cast<const char *>(_env[i].c_str()));
+		}
+		cgiEnv[i] = 0;
 		dup2(pipefd[1], STDOUT_FILENO);
-		if (execve(args[0], args, _server.getEnvp()) == -1)
+		if (execve(args[0], args, cgiEnv) == -1)
 		{
 			std::cerr << "error: 500(?)" << strerror(errno) << std::endl; //antoine error
 		}
