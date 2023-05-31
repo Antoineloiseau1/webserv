@@ -136,6 +136,4 @@ void	Request::parseFormBody(std::string body) {
 	}	
 }
 
-void	Request::setFileToDelete(std::string file) {
-	_fileToDelete = file;
-}
+void	Request::setFileToDelete(std::string file) { _fileToDelete = file; }

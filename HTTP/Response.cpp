@@ -14,7 +14,7 @@ Response::Response(Request &request, Server &server, std::string tmp_file, int f
 	enum		mtype { GET, POST, DELETE, OTHER };
 	int			a = 0;
 
-	for (int i = 0; i < 8; i++)
+	for (int i = 0; i < 8; i++)		// Possibilité de faire plus propre ?
 	{
 		if (request.getTypeStr() == type[i])
 		{
@@ -37,7 +37,6 @@ Response::Response(Request &request, Server &server, std::string tmp_file, int f
 			PostResponse(fd);
 			break;
 		case DELETE:
-			_request.setFileToDelete(_request.getFileName());
 			DeleteResponse();
 			break;
 		case OTHER:
@@ -219,6 +218,7 @@ void	Response::PostResponse(int fd) {
 }
 
 void	Response::DeleteResponse(void) {
+	_request.setFileToDelete(_request.getPath().c_str());
 	if (std::remove(_request.getFileToDelete().c_str()) != 0) {
 		std::cerr << "Failed to delete file: " << std::endl;
 		_response["status"] = " 404 Not Found\r\n";
