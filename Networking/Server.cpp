@@ -120,7 +120,8 @@ void Server::_watchLoop() {
 
 Server::Server(int domain, int service, int protocole, int *ports, int nbSocket, char **envp, data& data) : _data(data), _envp(envp) {
 	std::cout << "\033[30;42m";
-	std::cout << "### Server is now open ###\033[0m" << std::endl;
+	std::cout << "### Server is now open ###\033[0m" << std::endl << std::endl;
+
 	for (int i = 0; i < nbSocket; i++)
 		this->_socket.push_back(new ListeningSocket(domain, service, protocole, ports[i]));
 }

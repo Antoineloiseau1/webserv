@@ -10,7 +10,7 @@ ListeningSocket::ListeningSocket(int domain, int service, int protocole, int por
 
 	/* Binding address and starting to listen*/
 	establishConnection();
-	std::cout << "+++++++ Server is now listening on port " << port <<  " +++++++" << std::endl;
+	std::cout << "+++++++ Server is now listening on port \033[30;43m" << port <<  "\033[0m +++++++" << std::endl;
 }
 
 /* Bind socket to address and start to listent */
