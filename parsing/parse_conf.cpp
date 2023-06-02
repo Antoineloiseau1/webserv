@@ -6,7 +6,7 @@
 /*   By: anloisea <anloisea@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/25 10:15:25 by mmidon            #+#    #+#             */
-/*   Updated: 2023/06/02 09:13:12 by mmidon           ###   ########.fr       */
+/*   Updated: 2023/06/02 10:55:34 by mmidon           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,29 +87,50 @@ std::string	data::whichSetting(std::string content)
 	return "";
 }
 
-void data::fill(std::fstream &file, std::string route)
+bool	isRooted(std::string const newRoute, std::vector<std::string>& _routes)
+{
+	for (std::vector<std::string>::iterator it = _routes.begin(); it != _routes.end(); it++)
+	{
+		if (*it == newRoute)
+			return true;
+	}
+	return false;
+}
+
+void data::fill(std::fstream &file, std::string route) //at first call:  route="default"
 {
 	std::size_t	 pos = 0;
 	std::string content;
 	std::string setting;
 
+	if (isRooted(route, _routes))
+	{
+		_config.erase(_config.begin(), _config.end());
+		throw (WrongDataException());
+	}
+	_routes.push_back(route);
+	getline(file, content);
+	content = trim(content);
+	if (content != "{" && isRoute)
+	{
+		_config.erase(_config.begin(), _config.end());
+		throw(WrongDataException());
+	}
 
 	while (getline(file, content) && isRoute >= 0) //so it doesnt accept random empty lines
 	{
 		content = trim(content);
-		if (content == "{")
+		if (content == "{" && isRoute) //parsing route syntax
 		{
 			if (isRoute == 1)
-				continue ;
-			else
 			{
 				_config.erase(_config.begin(), _config.end());
 				throw (WrongDataException());
 			}
 		}
-		else if (content == "}")
+		else if (content == "}") //end of route
 		{
-			isRoute--;
+			isRoute--;// exiting the route
 			return;
 		}
 		setting = whichSetting(content); //find which setting is at the beginning of the line (ignore spaces and tabs)
@@ -123,10 +144,11 @@ void data::fill(std::fstream &file, std::string route)
 		pos = content.find(setting) + std::strlen(setting.c_str());
 		std::string line = content.substr(pos, content.find(";", pos) - pos); //find the content at the end of the line
 		line = trim(line); //spaces handling
-		if (setting == "location")
+
+		if (setting == "location") //route handling
 		{
-			isRoute++;
-			fill(file, line);
+			isRoute++; //entering a route
+			fill(file, line); //recursive
 		}
 
 		if (line.empty()) //error handling
@@ -137,7 +159,7 @@ void data::fill(std::fstream &file, std::string route)
 		_config[route].insert(std::make_pair(setting, line)); //put it in the config variable
 	}
 
-	if (isRoute != 0)
+	if (isRoute != 0) //if the int isnt 0 then it's a route parsing error
 		{
 			_config.erase(_config.begin(), _config.end());
 			throw (WrongDataException());

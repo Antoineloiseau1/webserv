@@ -5,5 +5,10 @@
 		autoindex	on;
 		location /data
 		{
+			cgi_extension			.php
 			autoindex off
+		}
+		location /data
+		{
+			cgi_extension			.cgi
 		}

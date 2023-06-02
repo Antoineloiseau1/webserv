@@ -6,7 +6,7 @@
 /*   By: mmidon <marvin@42.fr>                      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/27 10:31:47 by mmidon            #+#    #+#             */
-/*   Updated: 2023/06/02 09:11:48 by mmidon           ###   ########.fr       */
+/*   Updated: 2023/06/02 10:48:37 by mmidon           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,7 @@ class data
 		std::map<std::string, std::map<std::string, std::string> >	_config;
 		std::string							_name;
 		std::vector<std::string>			_possibleSettings;
+		std::vector<std::string>			_routes;
 		void								fill(std::fstream &file, std::string route);
 		int*								_ports;
 		int									_portsNbr;
