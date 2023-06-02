@@ -33,7 +33,6 @@ class Response
 		Response(Request &request, Server &server, std::string tmp_file, int fd);
 		virtual ~Response();
 
-		void				executor();
 		std::string			buildResponse(void);
 
 		std::string	openHtmlFile(std::string f);
@@ -46,6 +45,12 @@ class Response
 		void								DeleteResponse();
 		void								NotImplemented();
 		void								BadRequestError();
+		bool								checkPermissions(const char *directory, std::string file);
+
+		void								notFound404(void);
+		void								forbidden403(void);
+		void								ok200(void);
+		void								noContent204(void);
 
 		void								fillGetBody(std::string file);
 		void								fillGetLength();

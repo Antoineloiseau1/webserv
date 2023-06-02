@@ -94,10 +94,7 @@ void	Response::fillGetBody(std::string file) {
 		_contentSize = std::strlen(_response["body"].c_str());
 	}
 	else
-	{
 		_response["body"] = openHtmlFile(file);
-	}
-
 }
 
 void	Response::fillGetLength() {
@@ -138,15 +135,15 @@ std::string	getExtension(std::string &file)
 
 int	isValid(std::string const extension, std::string cgiCase)
 {
-	std::string validExtensions[] = {"html", "png", "jpeg", "css", "ico"};
+	std::string validExtensions[] = {"html", "png", "jpeg", "css", "ico", "jpg"};
 
 	if (cgiCase.find(".") == 0)
 		cgiCase.erase(0, 1);
 	std::cout << cgiCase << std::endl;
-	std::cout << extension << std::endl;
+	std::cout << "in isValid: extension: " << extension << std::endl;
 	if (extension == cgiCase)
 		return 0;
-	for (int i = 0; i < 5; i++)
+	for (int i = 0; i < 6; i++)
 	{
 		if (extension == validExtensions[i])
 			return i + 1;
@@ -219,53 +216,13 @@ void	Response::PostResponse(int fd) {
 }
 
 void	Response::DeleteResponse(void) {
-	struct dirent	*currentDir;
-	struct stat		sfile;
-	DIR				*fd;
 
-	fd = opendir("uploads");
-	if (fd == NULL)
-	{
-		_response["status"] = " 404 Not Found\r\n";
-		_response["body"] = openHtmlFile("data/www/error/404.html");
-		return ;
-	}
-	currentDir = readdir(fd);
 	_file = _request.getPath();
-	while(currentDir)
-	{
-		if (_file == ("uploads/" + std::string(currentDir->d_name)))
-		{
-			if (stat(_file.c_str(), &sfile) == -1)
-			{
-				_response["status"] = " 404 Not Found\r\n";
-				_response["body"] = openHtmlFile("data/www/error/404.html");
-				return ;
-			}
-			if(!(sfile.st_mode & S_IRUSR))
-			{
-				_response["status"] = " 403 Forbidden\r\n";
-				_response["body"] = openHtmlFile("data/www/error/403.html");
-				closedir(fd);
-				return ;
-			}
-			else
-			{
-				std::remove(_file.c_str());
-				_server.deletePict(_file);
-				std::cout << "File deleted successfully" << std::endl;
-				_response["status"] = " 200 OK\r\n";
-				_response["body"] = openHtmlFile("data/www/success.html");
-				closedir(fd);
-				return ;
-			}
-		}
-		currentDir = readdir(fd);
-	}
-	if (currentDir == NULL) {
-		_response["status"] = " 404 Not Found\r\n";
-		_response["body"] = openHtmlFile("data/www/error/404.html");
-		closedir(fd);
+	if(checkPermissions("uploads", _file)) {
+		std::remove(_file.c_str());
+		_server.deletePict(_file);
+		noContent204();
+		std::cout << "File deleted successfully" << std::endl;
 	}
 }
 
@@ -273,6 +230,11 @@ std::string	Response::openHtmlFile(std::string f) /* PROBLEME SI CEST UNE IMAGE 
 {
     std::ifstream file;
 
+	if(checkPermissions(f.substr(0, f.find_last_of('/')).c_str(), f) == false)
+	{
+		_response["status"] = " 403 Forbidden\r\n";
+		return openHtmlFile("data/www/error/403.html");
+	}
 	if (f.find("uploads/") != std::string::npos || f.find("favicon.ico") != std::string::npos)
 		file.open(f, std::ios::binary);
 	else
@@ -385,6 +347,71 @@ void	Response::NotImplemented(void) {
 	_response["length"] += "\r\n";
 }
 /************************************************************************************************/
+
+bool	Response::checkPermissions(const char *directory, std::string file)
+{
+	struct dirent	*currentDir;
+	struct stat		sfile;
+	DIR				*fd;
+
+	fd = opendir(directory);
+	if (fd == NULL)
+	{
+		notFound404();
+		return false;
+	}
+	currentDir = readdir(fd);
+	while(currentDir)
+	{
+		if (file == (std::string(directory) + "/" + std::string(currentDir->d_name)))
+		{
+			if (stat(file.c_str(), &sfile) == -1)
+			{
+				notFound404();
+				closedir(fd);
+				return false;
+			}
+			if(!(sfile.st_mode & S_IRUSR))
+			{
+				forbidden403();
+				closedir(fd);
+				return false;
+			}
+			else
+			{
+				closedir(fd);
+				return true;
+			}
+		}
+		currentDir = readdir(fd);
+	}
+	if(currentDir == NULL) //file not found
+	{
+		notFound404();
+		return false;
+	}
+	return true;
+}
+
+void	Response::notFound404() {
+	_response["status"] = " 404 Not Found\r\n";
+	_response["body"] = openHtmlFile("data/www/error/404.html");
+}
+
+void	Response::ok200() {
+	_response["status"] = " 200 OK\r\n";
+	_response["body"] = openHtmlFile("data/www/error/200.html");
+}
+
+void	Response::forbidden403() {
+	_response["status"] = " 403 Forbidden\r\n";
+	_response["body"] = openHtmlFile("data/www/error/403.html");
+}
+
+void	Response::noContent204() {
+	_response["status"] = " 204 No Content\r\n";
+	_response["body"] = openHtmlFile("data/www/error/204.html");
+}
 
 std::map<std::string, std::string>	Response::getMap() { return _response; }
 
