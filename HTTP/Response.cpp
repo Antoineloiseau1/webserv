@@ -54,9 +54,9 @@ void	Response::fillGetBody(std::string file) {
 	// 	file = "data/www/" + file;
 	if (file == "")
 	{
-		if (_server.getData().getData()["autoindex"] == "on")
+		if (_server.getData().getData()["default"]["autoindex"] == "on")
 			_response["body"] = openHtmlFile("data/www/index.html");
-		else if (_server.getData().getData()["autoindex"] == "off" || _server.getData().getData()["autoindex"].empty())
+		else if (_server.getData().getData()["default"]["autoindex"] == "off" || _server.getData().getData()["autoindex"].empty())
 			_response["body"] = openHtmlFile("data/www/manon.html");
 		else
 		{
@@ -160,7 +160,7 @@ void	Response::GetResponse(int fd) {
 		if (!_file.empty())
 		{
 			std::string extension = getExtension(_file);
-			type = isValid(extension, _server.getData().getData()["cgi_extension"]);
+			type = isValid(extension, _server.getData().getData()["default"]["cgi_extension"]);
 		}
 		else
 			_file = "data/www/index.html";
@@ -185,7 +185,7 @@ void	Response::GetResponse(int fd) {
 
 void	Response::PostResponse(int fd) {
 	std::string	file = _request.getPath();
-	if (!isValid(getExtension(file), _server.getData().getData()["cgi_extension"]))
+	if (!isValid(getExtension(file), _server.getData().getData()["default"]["cgi_extension"]))
 	{
 		handleCgi(file, fd); //maybe a bool
 		return; //a ne pas supprimer ??

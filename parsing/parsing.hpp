@@ -6,7 +6,7 @@
 /*   By: mmidon <marvin@42.fr>                      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/27 10:31:47 by mmidon            #+#    #+#             */
-/*   Updated: 2023/05/23 09:24:04 by mmidon           ###   ########.fr       */
+/*   Updated: 2023/06/02 09:11:48 by mmidon           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,10 +20,10 @@
 class data
 {
 	private:
-		std::map<std::string, std::string>	_config;
+		std::map<std::string, std::map<std::string, std::string> >	_config;
 		std::string							_name;
 		std::vector<std::string>			_possibleSettings;
-		void								fill(std::string conf);
+		void								fill(std::fstream &file, std::string route);
 		int*								_ports;
 		int									_portsNbr;
 	public:
@@ -33,6 +33,8 @@ class data
 		void								makePorts();
 		void								setSettings();
 		std::string							whichSetting(std::string line);
+
+		int									isRoute;
 
 		//random exceptions just in case
 		class	CantOpenFileException : public std::exception{
@@ -46,7 +48,7 @@ class data
 
 		//get
 		
-		std::map<std::string, std::string>	getData();
+		std::map<std::string, std::map<std::string, std::string> > getData();
 		int*								getPorts();
 		int									getPortsNbr();
 };
