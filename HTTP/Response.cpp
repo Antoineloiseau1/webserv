@@ -6,6 +6,7 @@
 #include <string.h>
 #include <array>
 #include <sys/stat.h>
+#include <dirent.h>
 
 Response::Response(Request &request, Server &server, std::string tmp_file, int fd) : _server(server),
 	_request(request), _tmpPictFile(tmp_file)
@@ -218,16 +219,53 @@ void	Response::PostResponse(int fd) {
 }
 
 void	Response::DeleteResponse(void) {
-	_file = _request.getPath();
-	if (std::remove(_file.c_str()) != 0) {
-		std::cerr << "Failed to delete file: " << std::endl;
+	struct dirent	*currentDir;
+	struct stat		sfile;
+	DIR				*fd;
+
+	fd = opendir("uploads");
+	if (fd == NULL)
+	{
 		_response["status"] = " 404 Not Found\r\n";
 		_response["body"] = openHtmlFile("data/www/error/404.html");
-	} else {
-		_server.deletePict(_file);
-		std::cout << "File deleted successfully" << std::endl;
-		_response["status"] = " 200 OK\r\n";
-		_response["body"] = openHtmlFile("data/www/success.html");
+		return ;
+	}
+	currentDir = readdir(fd);
+	_file = _request.getPath();
+	while(currentDir)
+	{
+		if (_file == ("uploads/" + std::string(currentDir->d_name)))
+		{
+			if (stat(_file.c_str(), &sfile) == -1)
+			{
+				_response["status"] = " 404 Not Found\r\n";
+				_response["body"] = openHtmlFile("data/www/error/404.html");
+				return ;
+			}
+			if(!(sfile.st_mode & S_IRUSR))
+			{
+				_response["status"] = " 403 Forbidden\r\n";
+				_response["body"] = openHtmlFile("data/www/error/403.html");
+				closedir(fd);
+				return ;
+			}
+			else
+			{
+				std::remove(_file.c_str());
+				_server.deletePict(_file);
+				std::cout << "File deleted successfully" << std::endl;
+				_response["status"] = " 200 OK\r\n";
+				_response["body"] = openHtmlFile("data/www/success.html");
+				closedir(fd);
+				return ;
+			}
+		}
+		currentDir = readdir(fd);
+	}
+	if (currentDir == NULL) {
+		_response["status"] = " 404 Not Found\r\n";
+		_response["body"] = openHtmlFile("data/www/error/404.html");
+		closedir(fd);
 	}
 }
 
