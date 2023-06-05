@@ -1,14 +1,10 @@
-		listen					8082 4242 8000 1234;
-		server_name			example.com;
-		client_max_body_size	1023;
+		server_name			example.com
+		listen					8082 4242 8000 1234
+		client_max_body_size	1023
 		cgi_extension			.cgi
 		autoindex	on;
-		location /data
+		location data/www/manon.html
 		{
 			cgi_extension			.php
 			autoindex off
-		}
-		location /data
-		{
-			cgi_extension			.cgi
 		}

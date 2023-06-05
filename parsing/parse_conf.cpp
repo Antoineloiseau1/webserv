@@ -6,7 +6,7 @@
 /*   By: anloisea <anloisea@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/25 10:15:25 by mmidon            #+#    #+#             */
-/*   Updated: 2023/06/02 10:55:34 by mmidon           ###   ########.fr       */
+/*   Updated: 2023/06/05 09:17:31 by mmidon           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,6 +59,7 @@ void	data::makePorts()
 	_ports = res;
 	_portsNbr = portTab.size();
 }
+std::vector<std::string>	data::getRoutes() {return _routes;}
 
 int*	data::getPorts() {return _ports;}
 
@@ -91,8 +92,11 @@ bool	isRooted(std::string const newRoute, std::vector<std::string>& _routes)
 {
 	for (std::vector<std::string>::iterator it = _routes.begin(); it != _routes.end(); it++)
 	{
-		if (*it == newRoute)
+		if (*it == newRoute || !std::strncmp(newRoute.c_str(), (*it).c_str(), newRoute.length()) || !std::strncmp(newRoute.c_str(), (*it).c_str(), (*it).length()))
+		{
+			std::cerr << "Duplicated route" << std::endl;
 			return true;
+		}
 	}
 	return false;
 }
@@ -173,10 +177,8 @@ std::map<std::string, std::map<std::string, std::string> > data::getData()
 
 void printData(std::map<std::string, std::map<std::string, std::string> > data)
 {
-	std::cout << "\nPRINT\n";
 	for (std::map<std::string, std::map<std::string, std::string> >::iterator route = data.begin(); route != data.end(); route++)
 	{
-	std::cout << "\nNEW ROUTE " << route->first << std::endl;
 		for (std::map<std::string, std::string>::iterator it = data[route->first].begin(); it != data[route->first].end(); *it++)
 			std::cout << it->first << " | " << it->second << std::endl;
 	}
@@ -196,11 +198,18 @@ data::data(std::string conf) //search for each line in the conf an equivalent in
 	}
 	catch (std::exception &e)
 	{
-		std::cout << "Exception caught : " << e.what() << std::endl;
+		std::cout << "Exception caught while parsing config file: " << e.what() << std::endl;
+		exit (1);
 	}
-	printData(_config);
-	exit(666);
-	makePorts();
+	try
+	{
+		makePorts();
+	}
+	catch (std::exception &e)
+	{
+		std::cout << "Exception caught while setting ports: " << e.what() << std::endl;
+		exit (2);
+	}
 }
 
 data::~data()

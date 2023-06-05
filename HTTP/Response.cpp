@@ -49,14 +49,31 @@ Response::Response(Request &request, Server &server, std::string tmp_file, int f
 	_response["connexion"] = "Connexion: close\r\n\r\n";
 }
 
+std::string	Response::findRoute(std::string const file)
+{
+	for (size_t i = 0; i != _server.getData().getRoutes().size(); i++)
+	{
+		if (!std::strncmp(_server.getData().getRoutes()[i].c_str(), file.c_str(), _server.getData().getRoutes()[i].length()))
+		{
+			std::cout << "TROUVE : " << _server.getData().getRoutes()[i] << std::endl;
+			return _server.getData().getRoutes()[i];
+		}
+		std::cout << _server.getData().getRoutes()[i] << std::endl;
+	}
+
+	std::cout << "TROUVE : " << "default" << std::endl;
+	return "default";
+}
+
 void	Response::fillGetBody(std::string file) {
 	// if (file.find("data/www/") == std::string::npos)
 	// 	file = "data/www/" + file;
+	findRoute(file);
 	if (file == "")
 	{
-		if (_server.getData().getData()["default"]["autoindex"] == "on")
+		if (_server.getData().getData()[findRoute(file)]["autoindex"] == "on")
 			_response["body"] = openHtmlFile("data/www/index.html");
-		else if (_server.getData().getData()["default"]["autoindex"] == "off" || _server.getData().getData()["autoindex"].empty())
+		else if (_server.getData().getData()[findRoute(file)]["autoindex"] == "off" || _server.getData().getData()["autoindex"].empty())
 			_response["body"] = openHtmlFile("data/www/manon.html");
 		else
 		{
@@ -141,8 +158,6 @@ int	isValid(std::string const extension, std::string cgiCase)
 
 	if (cgiCase.find(".") == 0)
 		cgiCase.erase(0, 1);
-	std::cout << cgiCase << std::endl;
-	std::cout << extension << std::endl;
 	if (extension == cgiCase)
 		return 0;
 	for (int i = 0; i < 5; i++)
@@ -160,17 +175,17 @@ void	Response::GetResponse(int fd) {
 		if (!_file.empty())
 		{
 			std::string extension = getExtension(_file);
-			type = isValid(extension, _server.getData().getData()["default"]["cgi_extension"]);
+			type = isValid(extension, _server.getData().getData()[findRoute(_file)]["cgi_extension"]);
 		}
 		else
-			_file = "data/www/index.html";
+			_file = "";
 		if (type == -42)
 			BadRequestError();
 		else if (type)
 		{
 			if (type == 1)
 			{
-				if (_file.find("data/www/") == std::string::npos)
+				if (_file.find("data/www/") == std::string::npos) //route to setup
 					_file = "data/www/" + _file;
 			}
 			_response["status"] = " 200 OK\r\n"; //Main case, updated when event in the building of response
@@ -185,10 +200,10 @@ void	Response::GetResponse(int fd) {
 
 void	Response::PostResponse(int fd) {
 	std::string	file = _request.getPath();
-	if (!isValid(getExtension(file), _server.getData().getData()["default"]["cgi_extension"]))
+	if (!isValid(getExtension(file), _server.getData().getData()[findRoute(file)]["cgi_extension"]))
 	{
 		handleCgi(file, fd); //maybe a bool
-		return; //a ne pas supprimer ??
+		return;
 	}
 	if (_request.isADataUpload == true) {
 			std::ifstream sourceFile(_tmpPictFile, std::ios::in | std::ios::binary);
@@ -231,7 +246,7 @@ void	Response::DeleteResponse(void) {
 	}
 }
 
-std::string	Response::openHtmlFile(std::string f) /* PROBLEME SI CEST UNE IMAGE A OUVRIR !!*/
+std::string	Response::openHtmlFile(std::string f)
 {
     std::ifstream file;
 
@@ -261,7 +276,7 @@ void	Response::createCgiEnv()
 		_env[1] = "QUERY_STRING=nom=";
 		_env[1] += _request.getHeaders()["formbody"];
 		_env[2] = "CONTENT_TYPE=text/html";
-		_env[3] ="CONTENT_LENGTH=500";
+		_env[3] = std::to_string(std::strlen(_env[1].c_str()));
 		_env[4] = "HTTP_USER_AGENT=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3";
 		_env[5] = "REMOTE_ADDR=127.0.0.1";
 }
@@ -297,10 +312,7 @@ void	Response::handleCgi(std::string file, int fd) {
 		char *cgiEnv[_env.size() + 1];
 		size_t i;
 		for (i = 0; i != _env.size(); i++)
-		{
-			std::cout << strdup(const_cast<const char *>(_env[i].c_str())) << std::endl;
 			cgiEnv[i] = strdup(const_cast<const char *>(_env[i].c_str()));
-		}
 		cgiEnv[i] = 0;
 		dup2(pipefd[1], STDOUT_FILENO);
 		if (execve(args[0], args, cgiEnv) == -1)

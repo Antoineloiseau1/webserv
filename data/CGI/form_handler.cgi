@@ -31,6 +31,3 @@ print("</ul>")
 print("</body>")
 print("</html>")
 
-
-
-sys.stderr.write("\nThis is a test message.\n\n")

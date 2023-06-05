@@ -46,6 +46,7 @@ class Response
 		void								DeleteResponse();
 		void								NotImplemented();
 		void								BadRequestError();
+		std::string	findRoute(std::string const file);
 
 		void								fillGetBody(std::string file);
 		void								fillGetLength();
