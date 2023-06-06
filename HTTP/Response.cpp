@@ -233,8 +233,7 @@ void	Response::PostResponse(int fd) {
 }
 
 void	Response::DeleteResponse(void) {
-	_file = _request.getPath();
-	if (std::remove(_file.c_str()) != 0) {
+	if (std::remove(_request.getFileToDelete().c_str()) != 0) {
 		std::cerr << "Failed to delete file: " << std::endl;
 		_response["status"] = " 404 Not Found\r\n";
 		_response["body"] = openHtmlFile("data/www/error/404.html");
