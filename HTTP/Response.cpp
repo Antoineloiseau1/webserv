@@ -346,21 +346,22 @@ void	Response::NotImplemented(void) {
 
 bool	Response::checkPermissions(const char *directory, std::string file)
 {
-	struct dirent	*currentDir;
+	struct dirent	*currentFile;
 	struct stat		sfile;
 	DIR				*fd;
 
 	fd = opendir(directory);
 	if (fd == NULL)
 	{
+		std::cout << "checkPermissions: Couldn't open " << directory << std::endl;
 		notFound404();
-		return false;
+		return true;
 	}
-	currentDir = readdir(fd);
-	while(currentDir)
+	currentFile = readdir(fd);
+	while(currentFile)
 	{
-		if (file == (std::string(directory) + "/" + std::string(currentDir->d_name)))
-		{
+		if (file == (std::string(directory) + "/" + std::string(currentFile->d_name)))
+		{	
 			if (stat(file.c_str(), &sfile) == -1)
 			{
 				notFound404();
@@ -379,13 +380,10 @@ bool	Response::checkPermissions(const char *directory, std::string file)
 				return true;
 			}
 		}
-		currentDir = readdir(fd);
+		currentFile = readdir(fd);
 	}
-	if(currentDir == NULL) //file not found
-	{
+	if(currentFile == NULL) //file not found
 		notFound404();
-		return false;
-	}
 	return true;
 }
 
