@@ -51,6 +51,7 @@ class Response
 		void								forbidden403(void);
 		void								ok200(void);
 		void								noContent204(void);
+		void								internalServerError505(void);
 
 		void								fillGetBody(std::string file);
 		void								fillGetLength();

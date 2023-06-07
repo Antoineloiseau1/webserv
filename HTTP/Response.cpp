@@ -277,17 +277,15 @@ void	Response::handleCgi(std::string file, int fd) {
 	char* const args[] = { const_cast<char*>(cmd1_cstr), const_cast<char*>(cmd2_cstr), NULL };
 
 	if (pipe(pipefd) == -1) {
-		std::cerr << "Error 500\n";// antoine oskour
-		return ;
+		return internalServerError505();
 	}
 	close(pipefd[0]);
 
 	pid_t pid = fork();
 	if (pid == -1) {
-		std::cerr << "Error 500\n"; // antoine aled
 		close(pipefd[0]);
 		close(pipefd[1]);
-		return ;
+		return internalServerError505();
 	}
 
 	if (pid == 0) {  //Processus enfant 
@@ -304,9 +302,7 @@ void	Response::handleCgi(std::string file, int fd) {
 		cgiEnv[i] = 0;
 		dup2(pipefd[1], STDOUT_FILENO);
 		if (execve(args[0], args, cgiEnv) == -1)
-		{
-			std::cerr << "error: 500(?)" << strerror(errno) << std::endl; //antoine error
-		}
+			internalServerError505();
 	}
 	close(pipefd[1]);
 	close(pipefd[0]);
@@ -411,6 +407,11 @@ void	Response::forbidden403() {
 void	Response::noContent204() {
 	_response["status"] = " 204 No Content\r\n";
 	_response["body"] = openHtmlFile("data/www/error/204.html");
+}
+
+void	Response::internalServerError505(void) {
+	_response["status"] = " 505 Internal Server Error\r\n";
+	_response["body"] = openHtmlFile("data/www/error/505.html");
 }
 
 std::map<std::string, std::string>	Response::getMap() { return _response; }
