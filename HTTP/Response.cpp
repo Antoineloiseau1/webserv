@@ -272,7 +272,7 @@ void	Response::createCgiEnv()
 {
 
 		_env[0] = "REQUEST_METHOD=GET";
-		_env[1] = "QUERY_STRING=nom=";
+		_env[1] = "QUERY_STRING=";
 		_env[1] += _request.getHeaders()["formbody"];
 		_env[2] = "CONTENT_TYPE=text/html";
 		_env[3] = std::to_string(std::strlen(_env[1].c_str()));
