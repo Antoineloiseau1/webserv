@@ -141,7 +141,7 @@ void	Server::start(void)
 		if(socket->getFd() > _fdMax)
 			_fdMax = socket->getFd();
 	}
-	_watchLoop();
+	_watchLoop(); //must take the list of servers as an arg and be called in the main
 }
 
 /* A METTRE DANS LES UTILS*/

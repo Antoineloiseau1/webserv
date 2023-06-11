@@ -20,6 +20,8 @@ int main(int argc, char *argv[], char *envp[]) {
 	data data(static_cast<std::string>(argv[1]));
 	if (data.getData().empty())
 		return 1;
+
+	//future loop for each server
 	int *ports = data.getPorts();
 	Server	server(FAMILY, SOCKTYPE, PROTOCOLE, ports, data.getPortsNbr(), envp, data);
 	

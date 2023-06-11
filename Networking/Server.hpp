@@ -6,7 +6,7 @@
 /*   By: anloisea <anloisea@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/04 09:54:40 by mmidon            #+#    #+#             */
-/*   Updated: 2023/05/31 14:01:04 by anloisea         ###   ########.fr       */
+/*   Updated: 2023/06/09 09:03:30 by mmidon           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,7 @@ class Response;
 class Server {
 	private:
 		data							_data;
-		char							_requestBuffer[BUFFER_SIZE];
+		char							_requestBuffer[BUFFER_SIZE]; //client max body size ? --> config file
 		std::vector<ListeningSocket*>	_socket;
 		int								_requestFd;
 		void							_accepter(int server_fd, ListeningSocket *socket);

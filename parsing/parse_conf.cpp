@@ -6,7 +6,7 @@
 /*   By: anloisea <anloisea@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/25 10:15:25 by mmidon            #+#    #+#             */
-/*   Updated: 2023/06/05 09:17:31 by mmidon           ###   ########.fr       */
+/*   Updated: 2023/06/11 09:19:17 by mmidon           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,13 +68,15 @@ int		data::getPortsNbr() { return _portsNbr; }
 void	data::setSettings() //put all the accepted settings (the keyword will also be the key for the value in the map)
 {
 	_possibleSettings.push_back("listen");
-	_possibleSettings.push_back("location");
 	_possibleSettings.push_back("server_name");
 	_possibleSettings.push_back("client_max_body_size");
 	_possibleSettings.push_back("autoindex");
 	_possibleSettings.push_back("cgi_extension");
 
+	_possibleSettings.push_back("location");
+	_possibleSettings.push_back("server");
 	//a lot of things to push_back
+	//later should separate server_settings and route_settings (no listen in route for example)
 }
 
 
@@ -101,42 +103,75 @@ bool	isRooted(std::string const newRoute, std::vector<std::string>& _routes)
 	return false;
 }
 
+void	data::newRouteSetup(std::string &content, std::fstream &file, std::string &line)
+{
+	isRoute++; //entering a route
+	getline(file, content);
+	content = trim(content);
+	if (content != "{" || line.empty())
+	{
+		_config.erase(_config.begin(), _config.end());
+		throw(WrongDataException());
+	}
+	fill(file, line); //recursive
+}
+
+int	data::checkRoutes(int &isRoute, std::string &content)
+{
+	if (content == "{") //parsing route syntax
+	{
+		if (isRoute == 1)
+		{
+			_config.erase(_config.begin(), _config.end());
+			std::cout << "3" << std::endl;
+			throw (WrongDataException());
+		}
+	}
+	else if (content == "}" && isRoute) //end of route
+	{
+		isRoute--;// exiting the route
+		return 1;
+	}
+	return 0;
+}
+
 void data::fill(std::fstream &file, std::string route) //at first call:  route="default"
 {
 	std::size_t	 pos = 0;
 	std::string content;
 	std::string setting;
+	std::vector<std::string>	server_routes;
 
-	if (isRooted(route, _routes))
+	if (isRooted(route, server_routes))
 	{
 		_config.erase(_config.begin(), _config.end());
 		throw (WrongDataException());
 	}
+	server_routes.push_back(route);
 	_routes.push_back(route);
-	getline(file, content);
-	content = trim(content);
-	if (content != "{" && isRoute)
-	{
-		_config.erase(_config.begin(), _config.end());
-		throw(WrongDataException());
-	}
 
-	while (getline(file, content) && isRoute >= 0) //so it doesnt accept random empty lines
+	while (getline(file, content) && isRoute >= 0) //now it accept random empty lines
 	{
+		if (content.empty())
+			continue ;
 		content = trim(content);
-		if (content == "{" && isRoute) //parsing route syntax
+
+		if (content == "server")
 		{
-			if (isRoute == 1)
+			if (!_config.size() && !_config["default"].size())
+				continue;
+			else
 			{
+
+				_servers.push_back(_config);
+				server_routes.clear();
 				_config.erase(_config.begin(), _config.end());
-				throw (WrongDataException());
+				continue;
 			}
 		}
-		else if (content == "}") //end of route
-		{
-			isRoute--;// exiting the route
-			return;
-		}
+
+		if (checkRoutes(isRoute, content))
+			return ;
 		setting = whichSetting(content); //find which setting is at the beginning of the line (ignore spaces and tabs)
 
 		if (setting.empty()) //error handling
@@ -151,8 +186,8 @@ void data::fill(std::fstream &file, std::string route) //at first call:  route="
 
 		if (setting == "location") //route handling
 		{
-			isRoute++; //entering a route
-			fill(file, line); //recursive
+			newRouteSetup(content, file, line);
+			continue;
 		}
 
 		if (line.empty()) //error handling
@@ -163,11 +198,15 @@ void data::fill(std::fstream &file, std::string route) //at first call:  route="
 		_config[route].insert(std::make_pair(setting, line)); //put it in the config variable
 	}
 
+	_servers.push_back(_config);
+	_config.erase(_config.begin(), _config.end());
 	if (isRoute != 0) //if the int isnt 0 then it's a route parsing error
 		{
 			_config.erase(_config.begin(), _config.end());
 			throw (WrongDataException());
 		}
+	printData();
+	exit (666);
 }
 
 std::map<std::string, std::map<std::string, std::string> > data::getData()
@@ -175,12 +214,17 @@ std::map<std::string, std::map<std::string, std::string> > data::getData()
 	return _config;
 }
 
-void printData(std::map<std::string, std::map<std::string, std::string> > data)
+void data::printData()
 {
-	for (std::map<std::string, std::map<std::string, std::string> >::iterator route = data.begin(); route != data.end(); route++)
+	for (size_t i = 0; i != _servers.size(); i++)
 	{
-		for (std::map<std::string, std::string>::iterator it = data[route->first].begin(); it != data[route->first].end(); *it++)
-			std::cout << it->first << " | " << it->second << std::endl;
+		std::cout << "SERVER : " << i << std::endl << std::endl;
+		for (std::map<std::string, std::map<std::string, std::string> >::iterator route = _servers[i].begin(); route != _servers[i].end(); route++)
+		{
+			std::cout << "\nROUTE : " << route->first << std::endl << std::endl;
+			for (std::map<std::string, std::string>::iterator it = _servers[i][route->first].begin(); it != _servers[i][route->first].end(); *it++)
+				std::cout << it->first << " | " << it->second << std::endl;
+		}
 	}
 }
 
@@ -198,6 +242,7 @@ data::data(std::string conf) //search for each line in the conf an equivalent in
 	}
 	catch (std::exception &e)
 	{
+		_servers.erase(_servers.begin(), _servers.end());
 		std::cout << "Exception caught while parsing config file: " << e.what() << std::endl;
 		exit (1);
 	}

@@ -1,10 +1,20 @@
+server
 		server_name			example.com
 		listen					8082 4242 8000 1234
 		client_max_body_size	1023
 		cgi_extension			.cgi
 		autoindex	on;
-		location data/www/
+		location data/www
 		{
 			cgi_extension			.php
 			autoindex off
 		}
+
+server
+	listen						7894
+
+server
+	location uwu
+	{
+		cgi_extension			.oskour
+	}
