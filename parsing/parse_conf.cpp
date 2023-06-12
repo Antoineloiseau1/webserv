@@ -6,7 +6,7 @@
 /*   By: anloisea <anloisea@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/25 10:15:25 by mmidon            #+#    #+#             */
-/*   Updated: 2023/06/11 09:19:17 by mmidon           ###   ########.fr       */
+/*   Updated: 2023/06/11 10:37:25 by mmidon           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,10 +31,10 @@ std::string trim(const std::string& str, const std::string& whitespace = " \t") 
 	return str.substr(strBegin, strRange);
 }
 
-void	data::makePorts()
+void	data::makePorts(size_t serv)
 {
 	std::vector<std::string>	portTab;
-	std::string					portStr = getData()["default"]["listen"];
+	std::string					portStr = getServers()[serv]["default"]["listen"];
 	std::string					tmp;
 	for (size_t	i = 0; portStr[i]; i++)
 	{
@@ -50,20 +50,22 @@ void	data::makePorts()
 		portTab.push_back(tmp);
 
 	if (!portTab.size())
-		throw (WrongDataException());
+		portTab.push_back("80");
 	size_t i = 0;
 	int* res = new int[portTab.size()];
 	for (std::vector<std::string>::iterator it = portTab.begin(); it != portTab.end(); it++)
 		res[i++] = atoi((*it).c_str());
 
-	_ports = res;
-	_portsNbr = portTab.size();
+	_ports.push_back(res);
+	_portsNbr.push_back(portTab.size());
 }
 std::vector<std::string>	data::getRoutes() {return _routes;}
 
-int*	data::getPorts() {return _ports;}
+int*	data::getPorts(int i) {return _ports[i];}
 
-int		data::getPortsNbr() { return _portsNbr; }
+int		data::getPortsNbr(int i) { return _portsNbr[i]; }
+
+std::vector<std::map<std::string, std::map<std::string, std::string> > >	data::getServers() { return _servers; }
 
 void	data::setSettings() //put all the accepted settings (the keyword will also be the key for the value in the map)
 {
@@ -205,8 +207,6 @@ void data::fill(std::fstream &file, std::string route) //at first call:  route="
 			_config.erase(_config.begin(), _config.end());
 			throw (WrongDataException());
 		}
-	printData();
-	exit (666);
 }
 
 std::map<std::string, std::map<std::string, std::string> > data::getData()
@@ -248,7 +248,8 @@ data::data(std::string conf) //search for each line in the conf an equivalent in
 	}
 	try
 	{
-		makePorts();
+		for (size_t i = 0; i != _servers.size(); i++)
+			makePorts(i);
 	}
 	catch (std::exception &e)
 	{

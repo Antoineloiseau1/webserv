@@ -6,7 +6,7 @@
 /*   By: mmidon <marvin@42.fr>                      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/27 10:31:47 by mmidon            #+#    #+#             */
-/*   Updated: 2023/06/09 09:37:22 by mmidon           ###   ########.fr       */
+/*   Updated: 2023/06/11 10:35:15 by mmidon           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,13 +26,13 @@ class data
 		std::vector<std::string>			_possibleSettings;
 		std::vector<std::string>			_routes;
 		void								fill(std::fstream &file, std::string route);
-		int*								_ports;
-		int									_portsNbr;
+		std::vector<int*>					_ports;
+		std::vector<int>					_portsNbr;
 	public:
 		data(std::string conf);
 		~data();
 
-		void								makePorts();
+		void								makePorts(size_t i);
 		void								setSettings();
 		std::string							whichSetting(std::string line);
 
@@ -53,9 +53,10 @@ class data
 
 		//get
 		
+		std::vector<std::map<std::string, std::map<std::string, std::string> > >	getServers();
 		std::map<std::string, std::map<std::string, std::string> > getData();
-		int*								getPorts();
-		int									getPortsNbr();
+		int*								getPorts(int i);
+		int									getPortsNbr(int i);
 		std::vector<std::string>			getRoutes();
 };
 

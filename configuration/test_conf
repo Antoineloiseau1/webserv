@@ -11,10 +11,4 @@ server
 		}
 
 server
-	listen						7894
-
-server
-	location uwu
-	{
-		cgi_extension			.oskour
-	}
+		server_name oskour.com
