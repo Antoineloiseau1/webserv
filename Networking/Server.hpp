@@ -6,7 +6,7 @@
 /*   By: anloisea <anloisea@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/04 09:54:40 by mmidon            #+#    #+#             */
-/*   Updated: 2023/06/12 10:18:16 by mmidon           ###   ########.fr       */
+/*   Updated: 2023/06/12 15:20:28 by anloisea         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,22 +40,24 @@ class Server {
 		struct sockaddr_storage			_addr;
 		socklen_t						_socklen;
 		char							**_envp;
-
+		void 							_watchLoop();
+		
+		fd_set							_readSet;
+		fd_set							_writeSet;
+		fd_set							_errorSet;
 
 	public:
 		void							_accepter(int server_fd, ListeningSocket *socket);
 		void							_refuse(int server_fd);
 		int								_handler(Client *client, int i);
 		void							_responder(Client *client, int i);
-	
+		
 		std::vector<std::string>		pictPaths;
 	
-		Server(int domain, int service, int protocole, int *ports, int nbSocket, char **envp, data &data);
+		Server(int domain, int service, int protocole, std::vector<int> ports, int nbSocket, char **envp, data &data);
 		~Server(void);
 
-		fd_set							_readSet;
-		fd_set							_writeSet;
-		fd_set							_errorSet;
+
 		ListeningSocket	*getSocket(int fd);
 		void			start(void);
 		int								_getFdMax(void);
@@ -76,7 +78,5 @@ class Server {
 		
 
 };
-
-void 							_watchLoop(std::vector<Server*> servers);
 
 #endif

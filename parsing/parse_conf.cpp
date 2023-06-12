@@ -6,7 +6,7 @@
 /*   By: anloisea <anloisea@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/25 10:15:25 by mmidon            #+#    #+#             */
-/*   Updated: 2023/06/11 10:37:25 by mmidon           ###   ########.fr       */
+/*   Updated: 2023/06/12 15:10:33 by anloisea         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,19 +51,18 @@ void	data::makePorts(size_t serv)
 
 	if (!portTab.size())
 		portTab.push_back("80");
-	size_t i = 0;
-	int* res = new int[portTab.size()];
-	for (std::vector<std::string>::iterator it = portTab.begin(); it != portTab.end(); it++)
-		res[i++] = atoi((*it).c_str());
+	if (portTab.size() > 1)
+		throw(WrongDataException());
+	int res = atoi(portTab[0].c_str());
 
 	_ports.push_back(res);
-	_portsNbr.push_back(portTab.size());
+	_portsNbr += 1;
 }
 std::vector<std::string>	data::getRoutes() {return _routes;}
 
-int*	data::getPorts(int i) {return _ports[i];}
+std::vector<int>	data::getPorts() {return _ports;}
 
-int		data::getPortsNbr(int i) { return _portsNbr[i]; }
+int		data::getPortsNbr() { return _portsNbr; }
 
 std::vector<std::map<std::string, std::map<std::string, std::string> > >	data::getServers() { return _servers; }
 
@@ -164,7 +163,6 @@ void data::fill(std::fstream &file, std::string route) //at first call:  route="
 				continue;
 			else
 			{
-
 				_servers.push_back(_config);
 				server_routes.clear();
 				_config.erase(_config.begin(), _config.end());
@@ -231,6 +229,7 @@ void data::printData()
 data::data(std::string conf) //search for each line in the conf an equivalent in the "possible settings"
 {
 	isRoute = 0;
+	_portsNbr = 0;
 	try
 	{
 		std::fstream file(conf); //can't fine if i need ofstream or ifstream so fstream

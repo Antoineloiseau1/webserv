@@ -22,15 +22,10 @@ int main(int argc, char *argv[], char *envp[]) {
 	if (data.getServers().empty())
 		return 1;
 
-	std::vector<Server *> allServers;
-	for (size_t i = 0; i !=  data.getServers().size(); i++)
-	{
-		int *ports = data.getPorts(i);
-		Server *	server = new Server(FAMILY, SOCKTYPE, PROTOCOLE, ports, data.getPortsNbr(i), envp, data); //leaaaaaaaaaaaaks
-		server->start();
-		allServers.push_back(server);
-	}
-	_watchLoop(allServers);
+	std::vector<int> ports = data.getPorts();
+
+	Server server(FAMILY, SOCKTYPE, PROTOCOLE, ports, data.getPortsNbr(), envp, data); //leaaaaaaaaaaaaks
+	server.start();
 
 	return 0;
 }

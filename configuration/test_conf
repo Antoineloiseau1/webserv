@@ -1,6 +1,6 @@
 server
 		server_name			example.com
-		listen					8082 4242 8000 1234
+		listen					8079
 		client_max_body_size	1023
 		cgi_extension			.cgi
 		autoindex	on;
@@ -11,4 +11,5 @@ server
 		}
 
 server
+		listen		4242
 		server_name oskour.com
