@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parsing.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mmidon <marvin@42.fr>                      +#+  +:+       +#+        */
+/*   By: anloisea <anloisea@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/27 10:31:47 by mmidon            #+#    #+#             */
-/*   Updated: 2023/05/23 09:24:04 by mmidon           ###   ########.fr       */
+/*   Updated: 2023/06/12 15:17:55 by anloisea         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,19 +20,26 @@
 class data
 {
 	private:
-		std::map<std::string, std::string>	_config;
+		std::vector<std::map<std::string, std::map<std::string, std::string> > >	_servers;
+		std::map<std::string, std::map<std::string, std::string> >	_config; // a virer
 		std::string							_name;
 		std::vector<std::string>			_possibleSettings;
-		void								fill(std::string conf);
-		int*								_ports;
-		int									_portsNbr;
+		std::vector<std::string>			_routes;
+		void								fill(std::fstream &file, std::string route);
+		std::vector<int>					_ports;
+		int					_portsNbr;
 	public:
 		data(std::string conf);
 		~data();
 
-		void								makePorts();
+		void								makePorts(size_t i);
 		void								setSettings();
 		std::string							whichSetting(std::string line);
+
+		int									isRoute;
+		void								newRouteSetup(std::string &content, std::fstream &file, std::string &line);
+		int	checkRoutes(int &isRoute, std::string &content);
+		void printData();
 
 		//random exceptions just in case
 		class	CantOpenFileException : public std::exception{
@@ -46,9 +53,11 @@ class data
 
 		//get
 		
-		std::map<std::string, std::string>	getData();
-		int*								getPorts();
+		std::vector<std::map<std::string, std::map<std::string, std::string> > >	getServers();
+		std::map<std::string, std::map<std::string, std::string> > getData();
+		std::vector<int>								getPorts();
 		int									getPortsNbr();
+		std::vector<std::string>			getRoutes();
 };
 
 //it can't compile with this

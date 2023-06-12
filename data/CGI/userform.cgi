@@ -31,6 +31,3 @@ print("</ul>")
 print("</body>")
 print("</html>")
 
-
-
-sys.stderr.write("\nForm handler executed.\n\n")

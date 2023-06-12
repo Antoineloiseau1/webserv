@@ -62,8 +62,9 @@ void	Server::exit(int sig)
 	std::cout << "\n" << "exiting...\n";
 	_alive = false;
 }
+std::vector<ListeningSocket*>	Server::getSocket(){return _socket;}
 
-void Server::_watchLoop() {
+void	Server::_watchLoop() {
 	int 	nbEvents;
 	int	i = 0;
 
@@ -76,49 +77,63 @@ void Server::_watchLoop() {
 	signal(SIGINT, exit);
 
 	while(_alive) 
-	{
-		if (i >= _data.getPortsNbr())
-			i = 0;
+	{	
 		copy_fd_set(&_readSet, &tmpRead);
 		copy_fd_set(&_writeSet, &tmpWrite);
 		copy_fd_set(&_errorSet, &tmpError);
-		nbEvents = select(_getFdMax() + 1, &tmpRead, &tmpWrite, &tmpError, NULL);
 
+		nbEvents = select(_getFdMax() + 1, &tmpRead, &tmpWrite, &tmpError, NULL); //server 0 events are not detected for now (and server 1 events works but handler segfault (?!) )
+		std::cout << "nbevents : " << nbEvents << std::endl;
+		if (!nbEvents)
+			continue;
+		std::cout << "after select\n";
+
+		if (i >= _data.getPortsNbr())
+			i = 0;
 		if (FD_ISSET(_socket[i]->getFd(), &tmpError)) {
-			std::cout << "ERROR SET SERVER\n";
-			exit(1);
+			std::cerr << "ERROR SET SERVER\n";
+			exit(EXIT_FAILURE);
 		}
 		if (nbEvents < 1) {
 			std::cerr << "Error: select(): " << strerror(errno) << std::endl;
 			exit(EXIT_FAILURE);
 		}
+		std::cout << "is read set ? " << FD_ISSET(_socket[i]->getFd(), &tmpRead) << std::endl; //problem is that only the last server is set 
 		if(FD_ISSET(_socket[i]->getFd(), &tmpRead) && _alive)
 		{
 			if (getOpenFd() > MAX_FD)
 				_refuse(_socket[i]->getFd());
 			else
-				_accepter(_socket[i]->getFd(), _socket[i]);
+			{
+				std::cout << "accepter\n\n";
+				_accepter(_socket[i]->getFd(),_socket[i]);
+			}
 		}
 
 		for(size_t k = 0; k != _socket[i]->clients.size() && nbEvents-- && _alive; k++) //hate u
 		{
+			std::cout << "FOR LOOP \n";
 			Client *client = _socket[i]->clients[k];
 			if (FD_ISSET(client->getFd(), &tmpError)) {
 				std::cout << "ERROR SET CLIENT\n";
 				exit(1);
 			}
 			if(FD_ISSET(client->getFd(), &tmpRead)) {
+				std::cout << "handler\n\n";
 				if (!_handler(client, i))
 					continue;
 			}
 			if(FD_ISSET(client->getFd(), &tmpWrite))
+			{
+				std::cout << "responder\n\n";
 				_responder(client, i);
+			}	
 		}
 		i++;
 	}
 }
 
-Server::Server(int domain, int service, int protocole, int *ports, int nbSocket, char **envp, data& data) : _data(data), _envp(envp) {
+Server::Server(int domain, int service, int protocole, std::vector<int> ports, int nbSocket, char **envp, data& data) : _data(data), _envp(envp) {
 	std::cout << "\033[30;42m";
 	std::cout << "### Server is now open ###\033[0m" << std::endl << std::endl;
 
@@ -136,6 +151,7 @@ void	Server::start(void)
 	for(std::vector<ListeningSocket*>::iterator it(_socket.begin()); it != _socket.end(); ++it)
 	{
 		ListeningSocket *socket = *it;
+		std::cout << "setting " << socket->getFd() << std::endl;
 		FD_SET(socket->getFd(), &_readSet);
 		FD_SET(socket->getFd(), &_errorSet);
 		if(socket->getFd() > _fdMax)
@@ -301,8 +317,9 @@ Server::~Server(void) {
 		else
 			std::cout << "File deleted successfully" << std::endl;
 	}
-	for (int i = 0; i != _data.getPortsNbr(); i++)
-		delete this->_socket[i]; }
+//	for (int i = 0; i != _data.getPortsNbr(); i++)
+//		delete this->_socket[i]; 
+}
 
 
 void	Server::changeDupName(std::string &file_name) {

@@ -23,7 +23,7 @@ print("<body>")
 print("<h1>Form Submission Success</h1>")
 print("<p>Thank you for submitting the form. Here is the information you provided:</p>")
 print("<ul>")
-print("<li><strong>Nom:</strong> " + nom[6:] + "</li>")
+print("<li><strong>Nom:</strong> " + nom + "</li>")
 print("<li><strong>Prenom:</strong> " + prenom + "</li>")
 print("<li><strong>Email:</strong> " + email + "</li>")
 print("<li><strong>Ville:</strong> " + ville + "</li>")
@@ -31,6 +31,3 @@ print("</ul>")
 print("</body>")
 print("</html>")
 
-
-
-sys.stderr.write("\nThis is a test message.\n\n")

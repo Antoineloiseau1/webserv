@@ -1,5 +1,15 @@
-		listen					8082 4242 8000 1234;
-		server_name			example.com;
-		client_max_body_size	1023;
+server
+		server_name			example.com
+		listen					8079
+		client_max_body_size	1023
 		cgi_extension			.cgi
 		autoindex	on;
+		location data/www
+		{
+			cgi_extension			.php
+			autoindex off
+		}
+
+server
+		listen		4242
+		server_name oskour.com

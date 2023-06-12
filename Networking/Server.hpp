@@ -6,7 +6,7 @@
 /*   By: anloisea <anloisea@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/04 09:54:40 by mmidon            #+#    #+#             */
-/*   Updated: 2023/05/31 14:01:04 by anloisea         ###   ########.fr       */
+/*   Updated: 2023/06/12 15:20:28 by anloisea         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,36 +33,38 @@ class Response;
 class Server {
 	private:
 		data							_data;
-		char							_requestBuffer[BUFFER_SIZE];
+		char							_requestBuffer[BUFFER_SIZE]; //client max body size ? --> config file
 		std::vector<ListeningSocket*>	_socket;
 		int								_requestFd;
-		void							_accepter(int server_fd, ListeningSocket *socket);
-		void							_refuse(int server_fd);
-		int								_handler(Client *client, int i);
-		void							_responder(Client *client, int i);
-		int								_getFdMax(void);
-		void 							_watchLoop();
-		fd_set							_readSet;
-		fd_set							_writeSet;
-		fd_set							_errorSet;
 		int								_fdMax;
 		struct sockaddr_storage			_addr;
 		socklen_t						_socklen;
 		char							**_envp;
-
+		void 							_watchLoop();
+		
+		fd_set							_readSet;
+		fd_set							_writeSet;
+		fd_set							_errorSet;
 
 	public:
-	
+		void							_accepter(int server_fd, ListeningSocket *socket);
+		void							_refuse(int server_fd);
+		int								_handler(Client *client, int i);
+		void							_responder(Client *client, int i);
+		
 		std::vector<std::string>		pictPaths;
 	
-		Server(int domain, int service, int protocole, int *ports, int nbSocket, char **envp, data &data);
+		Server(int domain, int service, int protocole, std::vector<int> ports, int nbSocket, char **envp, data &data);
 		~Server(void);
+
 
 		ListeningSocket	*getSocket(int fd);
 		void			start(void);
+		int								_getFdMax(void);
 		int				getRequestFd() const;
 		char			**getEnvp() const;
 		data			getData() const;
+		std::vector<ListeningSocket*>	getSocket();
 		int				getOpenFd();
 		static void		exit(int sig);
 		void			disconnectClient(Client *client, int i);

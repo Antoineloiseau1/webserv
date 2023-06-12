@@ -1,5 +1,6 @@
 #include "Networking/Server.hpp"
 #include "parsing/parsing.hpp"
+#include "Networking/Server.hpp"
 
 #define FAMILY AF_INET
 #define	SOCKTYPE SOCK_STREAM
@@ -13,16 +14,17 @@ void	manage_events() {
 
 int main(int argc, char *argv[], char *envp[]) {
 	if(argc != 2) {
-		std::cerr << "usage: ./webserv <config_file>" << std::endl;
+		std::cerr << "usage: ./webserv <config_file>" << std::endl; //should have a default config file so no error here
 		exit(EXIT_FAILURE);
 	}
 
 	data data(static_cast<std::string>(argv[1]));
-	if (data.getData().empty())
+	if (data.getServers().empty())
 		return 1;
-	int *ports = data.getPorts();
-	Server	server(FAMILY, SOCKTYPE, PROTOCOLE, ports, data.getPortsNbr(), envp, data);
-	
+
+	std::vector<int> ports = data.getPorts();
+
+	Server server(FAMILY, SOCKTYPE, PROTOCOLE, ports, data.getPortsNbr(), envp, data); //leaaaaaaaaaaaaks
 	server.start();
 
 	return 0;

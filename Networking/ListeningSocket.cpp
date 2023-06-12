@@ -59,7 +59,6 @@ Client	*ListeningSocket::getClient(int fd) {
 			return *it;
 		}
 	}
-	std::cout << "----------ATTENTIOn:getClient () return value chelou\n";
 	return  NULL;
 }
 

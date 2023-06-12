@@ -45,6 +45,7 @@ class Response
 		void								DeleteResponse();
 		void								NotImplemented();
 		void								BadRequestError();
+		std::string	findRoute(std::string const file);
 		bool								checkPermissions(const char *directory, std::string file);
 
 		void								notFound404(void);
