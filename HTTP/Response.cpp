@@ -55,14 +55,8 @@ std::string	Response::findRoute(std::string const file)
 	for (size_t i = 0; i != _server.getData().getRoutes().size(); i++)
 	{
 		if (!std::strncmp(_server.getData().getRoutes()[i].c_str(), file.c_str(), _server.getData().getRoutes()[i].length()))
-		{
-			std::cout << "TROUVE : " << _server.getData().getRoutes()[i] << std::endl;
 			return _server.getData().getRoutes()[i];
-		}
-		std::cout << _server.getData().getRoutes()[i] << std::endl;
 	}
-
-	std::cout << "TROUVE : " << "default" << std::endl;
 	return "default";
 }
 
@@ -94,6 +88,11 @@ void	Response::fillGetBody(std::string file) {
 							"<head>\n"
 							"<title>Picture Gallery</title>\n"
 							"</head>\n"
+							"<nav>\n"
+							"<ul>\n"
+							"<li><a href=\"manon.html\">Accueil</a></li>\n"
+							"</ul>\n"
+							"</nav>\n"
 							"<body>\n"
 							"<h1>Picture Gallery</h1>\n";
 		// Generate the HTML code for each picture
@@ -223,7 +222,6 @@ void	Response::PostResponse(int fd) {
 	{ ;
 		_response["status"] = " 201 Created\r\n";
 		_response["body"] = openHtmlFile("data/www/error/201.html");
-		std::cout << "CGI" << std::endl;
 		return; //a ne pas supprimer ??
 	}
 	fillGetLength();
@@ -233,7 +231,13 @@ void	Response::PostResponse(int fd) {
 void	Response::DeleteResponse(void) {
 
 	_file = _request.getFileToDelete();
-	if(checkPermissions("uploads", _file)) {
+	if(_file.empty())
+		_file = _request.getPath();
+	if(checkPermissions("uploads", _file) == 1)
+		notFound404();
+	else if(checkPermissions("uploads", _file) == 2)
+		forbidden403();
+	else {
 		std::remove(_file.c_str());
 		_server.deletePict(_file);
 		noContent204();
@@ -245,10 +249,16 @@ std::string	Response::openHtmlFile(std::string f)
 {
     std::ifstream file;
 
-	if(checkPermissions(f.substr(0, f.find_last_of('/')).c_str(), f) == false)
+	int permit = checkPermissions(f.substr(0, f.find_last_of('/')).c_str(), f);
+	if(permit == 2)
 	{
 		_response["status"] = " 403 Forbidden\r\n";
 		return openHtmlFile("data/www/error/403.html");
+	}
+	else if(permit == 1)
+	{
+		_response["status"] = " 404 Not Found\r\n";
+		return openHtmlFile("data/www/error/404.html");
 	}
 	if (f.find("uploads/") != std::string::npos || f.find("favicon.ico") != std::string::npos)
 		file.open(f, std::ios::binary);
@@ -356,7 +366,7 @@ void	Response::NotImplemented(void) {
 }
 /************************************************************************************************/
 
-bool	Response::checkPermissions(const char *directory, std::string file)
+int	Response::checkPermissions(const char *directory, std::string file)
 {
 	struct dirent	*currentFile;
 	struct stat		sfile;
@@ -366,8 +376,7 @@ bool	Response::checkPermissions(const char *directory, std::string file)
 	if (fd == NULL)
 	{
 		std::cout << "checkPermissions: Couldn't open " << directory << std::endl;
-		notFound404();
-		return true;
+		return 1;
 	}
 	currentFile = readdir(fd);
 	while(currentFile)
@@ -376,27 +385,26 @@ bool	Response::checkPermissions(const char *directory, std::string file)
 		{	
 			if (stat(file.c_str(), &sfile) == -1)
 			{
-				notFound404();
 				closedir(fd);
-				return false;
+				return 1;
 			}
 			if(!(sfile.st_mode & S_IRUSR))
 			{
-				forbidden403();
 				closedir(fd);
-				return false;
+				return 2;
 			}
 			else
 			{
 				closedir(fd);
-				return true;
+				return 0;
 			}
 		}
 		currentFile = readdir(fd);
 	}
-	if(currentFile == NULL) //file not found
-		notFound404();
-	return true;
+	if(currentFile == NULL) {
+		return 1; //file not found		
+	}
+	return 0;
 }
 
 void	Response::notFound404() {
@@ -417,6 +425,8 @@ void	Response::forbidden403() {
 void	Response::noContent204() {
 	_response["status"] = " 204 No Content\r\n";
 	_response["body"] = openHtmlFile("data/www/error/204.html");
+	_response["type"] = "Content-Type: text/html\r\n";
+	fillGetLength();
 }
 
 void	Response::internalServerError505(void) {

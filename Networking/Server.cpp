@@ -81,53 +81,40 @@ void	Server::_watchLoop() {
 		copy_fd_set(&_readSet, &tmpRead);
 		copy_fd_set(&_writeSet, &tmpWrite);
 		copy_fd_set(&_errorSet, &tmpError);
-
 		nbEvents = select(_getFdMax() + 1, &tmpRead, &tmpWrite, &tmpError, NULL); //server 0 events are not detected for now (and server 1 events works but handler segfault (?!) )
-		std::cout << "nbevents : " << nbEvents << std::endl;
 		if (!nbEvents)
 			continue;
-		std::cout << "after select\n";
-
 		if (i >= _data.getPortsNbr())
 			i = 0;
 		if (FD_ISSET(_socket[i]->getFd(), &tmpError)) {
-			std::cerr << "ERROR SET SERVER\n";
+			std::cerr << "FD_ISSET: " << strerror(errno) << std::endl;
 			exit(EXIT_FAILURE);
 		}
 		if (nbEvents < 1) {
 			std::cerr << "Error: select(): " << strerror(errno) << std::endl;
 			exit(EXIT_FAILURE);
 		}
-		std::cout << "is read set ? " << FD_ISSET(_socket[i]->getFd(), &tmpRead) << std::endl; //problem is that only the last server is set 
 		if(FD_ISSET(_socket[i]->getFd(), &tmpRead) && _alive)
 		{
 			if (getOpenFd() > MAX_FD)
 				_refuse(_socket[i]->getFd());
 			else
-			{
-				std::cout << "accepter\n\n";
 				_accepter(_socket[i]->getFd(),_socket[i]);
-			}
 		}
 
 		for(size_t k = 0; k != _socket[i]->clients.size() && nbEvents-- && _alive; k++) //hate u
 		{
-			std::cout << "FOR LOOP \n";
 			Client *client = _socket[i]->clients[k];
 			if (FD_ISSET(client->getFd(), &tmpError)) {
-				std::cout << "ERROR SET CLIENT\n";
+				std::cerr << "FD_ISSET: " << strerror(errno) << std::endl;
 				exit(1);
 			}
 			if(FD_ISSET(client->getFd(), &tmpRead)) {
-				std::cout << "handler\n\n";
 				if (!_handler(client, i))
 					continue;
 			}
 			if(FD_ISSET(client->getFd(), &tmpWrite))
-			{
-				std::cout << "responder\n\n";
 				_responder(client, i);
-			}	
 		}
 		i++;
 	}
@@ -151,7 +138,6 @@ void	Server::start(void)
 	for(std::vector<ListeningSocket*>::iterator it(_socket.begin()); it != _socket.end(); ++it)
 	{
 		ListeningSocket *socket = *it;
-		std::cout << "setting " << socket->getFd() << std::endl;
 		FD_SET(socket->getFd(), &_readSet);
 		FD_SET(socket->getFd(), &_errorSet);
 		if(socket->getFd() > _fdMax)
@@ -287,6 +273,7 @@ void	Server::_responder(Client *client, int i) {
 	std::cout << "\033[36m";
 	std::cout << "#### response from server:\033[1m\033[94m" << response.getMap()["status"].substr(0, response.getMap()["status"].length() - 2);
 	std::cout << " " << response.getFile() << "\033[0m" << std::endl;
+	std::cout << res << std::endl;
 	send(client->getFd(), res.c_str(), res.length(), 0);
 	disconnectClient(client, i);
 }
