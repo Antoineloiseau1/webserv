@@ -411,6 +411,7 @@ int	Response::checkPermissions(const char *directory, std::string file)
 		currentFile = readdir(fd);
 	}
 	if(currentFile == NULL) {
+		closedir(fd);
 		return 1; //file not found		
 	}
 	return 0;

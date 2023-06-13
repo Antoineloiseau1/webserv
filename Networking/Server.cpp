@@ -272,7 +272,6 @@ void	Server::_responder(Client *client, int i) {
 	std::cout << "\033[36m#### response from server ####\033[1m\033[94m\n\n"; 
 	std::cout << response.getMap()["version"] << response.getMap()["status"];
 	std::cout << response.getFile() << "\033[0m" << std::endl;
-	std::cout << res << std::endl;
 	std::cout << "\n\033[36m##############################\033[0m\n\n"; 
 	send(client->getFd(), res.c_str(), res.length(), 0);
 	disconnectClient(client, i);
@@ -304,6 +303,8 @@ Server::~Server(void) {
 		else
 			std::cout << "File deleted successfully" << std::endl;
 	}
+    for (const ListeningSocket* obj : _socket)
+        delete obj;
 //	for (int i = 0; i != _data.getPortsNbr(); i++)
 //		delete this->_socket[i]; 
 }
