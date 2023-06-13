@@ -203,7 +203,6 @@ int	Server::_handler(Client *client, int i) {
 
 	int	n = recv(client->getFd(), _requestBuffer, BUFFER_SIZE, 0);
 	if (n <= 0) {
-		std::cerr << "error: recv: " << strerror(errno) << std::endl;
 		disconnectClient(client, i);
 		return 0;
 	}
