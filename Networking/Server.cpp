@@ -270,9 +270,11 @@ void	Server::_responder(Client *client, int i) {
 	Response	response(*(client->getRequest()), *this, client->getTmpPictFile(), client->getFd());
 	std::string res = response.buildResponse();
 
-	std::cout << "\033[36m";
-	std::cout << "#### response from server:\033[1m\033[94m" << response.getMap()["status"].substr(0, response.getMap()["status"].length() - 2);
-	std::cout << " " << response.getFile() << "\033[0m" << std::endl;
+	std::cout << "\033[36m#### response from server ####\033[1m\033[94m\n\n"; 
+	std::cout << response.getMap()["version"] << response.getMap()["status"];
+	std::cout << response.getFile() << "\033[0m" << std::endl;
+	std::cout << res << std::endl;
+	std::cout << "\n\033[36m##############################\033[0m\n\n"; 
 	send(client->getFd(), res.c_str(), res.length(), 0);
 	disconnectClient(client, i);
 }
