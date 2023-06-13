@@ -233,9 +233,10 @@ void	Response::DeleteResponse(void) {
 	_file = _request.getFileToDelete();
 	if(_file.empty())
 		_file = _request.getPath();
-	if(checkPermissions("uploads", _file) == 1)
+	std::cout << "file: " << _file << std::endl << "directory: " << _file.substr(0, _file.find_last_of('/')) << std::endl;
+	if(checkPermissions(_file.substr(0, _file.find_last_of('/')).c_str(), _file) == 1)
 		notFound404();
-	else if(checkPermissions("uploads", _file) == 2)
+	else if(checkPermissions(_file.substr(0, _file.find_last_of('/')).c_str(), _file) == 2)
 		forbidden403();
 	else {
 		std::remove(_file.c_str());

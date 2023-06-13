@@ -273,7 +273,6 @@ void	Server::_responder(Client *client, int i) {
 	std::cout << "\033[36m";
 	std::cout << "#### response from server:\033[1m\033[94m" << response.getMap()["status"].substr(0, response.getMap()["status"].length() - 2);
 	std::cout << " " << response.getFile() << "\033[0m" << std::endl;
-	std::cout << res << std::endl;
 	send(client->getFd(), res.c_str(), res.length(), 0);
 	disconnectClient(client, i);
 }
