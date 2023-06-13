@@ -13,18 +13,22 @@ void	manage_events() {
 
 
 int main(int argc, char *argv[], char *envp[]) {
-	if(argc != 2) {
-		std::cerr << "usage: ./webserv <config_file>" << std::endl; //should have a default config file so no error here
-		exit(EXIT_FAILURE);
-	}
 
-	data data(static_cast<std::string>(argv[1]));
+	std::string config_file;
+
+	if(argc != 2) {
+		config_file = "configuration/test_conf"; //set to default later
+	}
+	else
+		config_file = argv[1];
+
+	data data(config_file);
 	if (data.getServers().empty())
 		return 1;
 
 	std::vector<int> ports = data.getPorts();
 
-	Server server(FAMILY, SOCKTYPE, PROTOCOLE, ports, data.getPortsNbr(), envp, data); //leaaaaaaaaaaaaks
+	Server server(FAMILY, SOCKTYPE, PROTOCOLE, ports, data.getPortsNbr(), envp, data);
 	server.start();
 
 	return 0;

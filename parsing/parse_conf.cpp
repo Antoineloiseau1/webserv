@@ -6,7 +6,7 @@
 /*   By: anloisea <anloisea@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/25 10:15:25 by mmidon            #+#    #+#             */
-/*   Updated: 2023/06/12 15:10:33 by anloisea         ###   ########.fr       */
+/*   Updated: 2023/06/13 08:36:10 by mmidon           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,21 +68,28 @@ std::vector<std::map<std::string, std::map<std::string, std::string> > >	data::g
 
 void	data::setSettings() //put all the accepted settings (the keyword will also be the key for the value in the map)
 {
-	_possibleSettings.push_back("listen");
+	_routeSettings.push_back("listen");
+	_routeSettings.push_back("autoindex");
+	_routeSettings.push_back("cgi_extension");
+
 	_possibleSettings.push_back("server_name");
 	_possibleSettings.push_back("client_max_body_size");
-	_possibleSettings.push_back("autoindex");
-	_possibleSettings.push_back("cgi_extension");
 
 	_possibleSettings.push_back("location");
 	_possibleSettings.push_back("server");
 	//a lot of things to push_back
-	//later should separate server_settings and route_settings (no listen in route for example)
 }
 
 
 std::string	data::whichSetting(std::string content)
 {
+	for (size_t i = 0; i != _routeSettings.size(); i++)
+	{
+		if (!std::strncmp(content.c_str(), _routeSettings[i].c_str(), std::strlen(_routeSettings[i].c_str())) && (std::isspace(content[std::strlen(_routeSettings[i].c_str())]) || !content[std::strlen(_routeSettings[i].c_str())]))
+			return _routeSettings[i];
+	}
+	if (isRoute)
+		return "";
 	for (size_t i = 0; i != _possibleSettings.size(); i++)
 	{
 		if (!std::strncmp(content.c_str(), _possibleSettings[i].c_str(), std::strlen(_possibleSettings[i].c_str())) && (std::isspace(content[std::strlen(_possibleSettings[i].c_str())]) || !content[std::strlen(_possibleSettings[i].c_str())]))
@@ -95,7 +102,7 @@ bool	isRooted(std::string const newRoute, std::vector<std::string>& _routes)
 {
 	for (std::vector<std::string>::iterator it = _routes.begin(); it != _routes.end(); it++)
 	{
-		if (*it == newRoute || !std::strncmp(newRoute.c_str(), (*it).c_str(), newRoute.length()) || !std::strncmp(newRoute.c_str(), (*it).c_str(), (*it).length()))
+		if (*it == newRoute || !std::strncmp(newRoute.c_str(), (*it).c_str(), newRoute.length())|| !std::strncmp(newRoute.c_str(), (*it).c_str(), (*it).length()))
 		{
 			std::cerr << "Duplicated route" << std::endl;
 			return true;
@@ -226,7 +233,7 @@ void data::printData()
 	}
 }
 
-data::data(std::string conf) //search for each line in the conf an equivalent in the "possible settings"
+data::data(std::string conf)
 {
 	isRoute = 0;
 	_portsNbr = 0;

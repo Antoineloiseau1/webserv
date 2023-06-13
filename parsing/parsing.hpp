@@ -6,7 +6,7 @@
 /*   By: anloisea <anloisea@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/27 10:31:47 by mmidon            #+#    #+#             */
-/*   Updated: 2023/06/12 15:17:55 by anloisea         ###   ########.fr       */
+/*   Updated: 2023/06/13 08:32:05 by mmidon           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,7 @@ class data
 		std::map<std::string, std::map<std::string, std::string> >	_config; // a virer
 		std::string							_name;
 		std::vector<std::string>			_possibleSettings;
+		std::vector<std::string>			_routeSettings;
 		std::vector<std::string>			_routes;
 		void								fill(std::fstream &file, std::string route);
 		std::vector<int>					_ports;
