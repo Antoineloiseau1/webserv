@@ -46,6 +46,7 @@ class Response
 		void								NotImplemented();
 		void								BadRequestError();
 		std::string							findRoute(std::string const file);
+		int									findServer();
 		int									checkPermissions(const char *directory, std::string file);
 
 		void								notFound404(void);

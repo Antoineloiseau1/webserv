@@ -66,9 +66,9 @@ void	Response::fillGetBody(std::string file) {
 	findRoute(file);
 	if (file == "")
 	{
-		if (_server.getData().getData()[findRoute(file)]["autoindex"] == "on")
+		if (_server.getData().getServers()[findServer()][findRoute(file)]["autoindex"] == "on")
 			_response["body"] = openHtmlFile("data/www/index.html");
-		else if (_server.getData().getData()[findRoute(file)]["autoindex"] == "off" || _server.getData().getData()["autoindex"].empty())
+		else if (_server.getData().getServers()[findServer()][findRoute(file)]["autoindex"] == "off" || _server.getData().getServers()[findServer()][findRoute(file)]["autoindex"].empty())
 			_response["body"] = openHtmlFile("data/www/manon.html");
 		else
 		{
@@ -142,7 +142,7 @@ std::string	getExtension(std::string &file)
 	}
 	catch (std::exception &e)
 	{
-		std::cout << "Exception caugth : " << e.what() << std::endl;
+		std::cerr << "Exception caugth : " << e.what() << std::endl;
 		return "";
 	}
 	std::string extension = file.substr(i + 1);
@@ -165,6 +165,18 @@ int	isValid(std::string const extension, std::string cgiCase)
 	return -42;
 }
 
+int		Response::findServer()
+{
+	std::string line;
+	for (size_t i = 0; i != _server.getData().getServers().size(); i++)
+	{
+		line = _request.getHeaders()["Host"];
+		if (_server.getData().getServers()[i]["default"]["listen"] == line.substr(line.find_last_of(":") + 1))
+			return i;
+	}
+	return 0;
+}
+
 void	Response::GetResponse(int fd) {
 	
 		_file = _request.getPath();
@@ -172,7 +184,7 @@ void	Response::GetResponse(int fd) {
 		if (!_file.empty())
 		{
 			std::string extension = getExtension(_file);
-			type = isValid(extension, _server.getData().getData()[findRoute(_file)]["cgi_extension"]);
+			type = isValid(extension, _server.getData().getServers()[findServer()][findRoute(_file)]["cgi_extension"]);
 		}
 		else
 			_file = "";
@@ -197,7 +209,7 @@ void	Response::GetResponse(int fd) {
 
 void	Response::PostResponse(int fd) {
 	std::string	file = _request.getPath();
-	if (!isValid(getExtension(file), _server.getData().getData()[findRoute(file)]["cgi_extension"]))
+	if (!isValid(getExtension(file), _server.getData().getServers()[findServer()][findRoute(file)]["cgi_extension"]))
 	{
 		handleCgi(file, fd); //maybe a bool
 		return;

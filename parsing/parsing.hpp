@@ -6,7 +6,7 @@
 /*   By: anloisea <anloisea@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/27 10:31:47 by mmidon            #+#    #+#             */
-/*   Updated: 2023/06/13 08:32:05 by mmidon           ###   ########.fr       */
+/*   Updated: 2023/06/14 09:03:10 by mmidon           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,6 @@ class data
 {
 	private:
 		std::vector<std::map<std::string, std::map<std::string, std::string> > >	_servers;
-		std::map<std::string, std::map<std::string, std::string> >	_config; // a virer
 		std::string							_name;
 		std::vector<std::string>			_possibleSettings;
 		std::vector<std::string>			_routeSettings;
@@ -38,8 +37,8 @@ class data
 		std::string							whichSetting(std::string line);
 
 		int									isRoute;
-		void								newRouteSetup(std::string &content, std::fstream &file, std::string &line);
-		int	checkRoutes(int &isRoute, std::string &content);
+		void								newRouteSetup(std::string &content, std::fstream &file, std::string &line, std::map<std::string,std::map<std::string,std::string> > _config);
+		int		checkRoutes(int &isRoute, std::string &content, std::map<std::string,std::map<std::string,std::string> > _config);
 		void printData();
 
 		//random exceptions just in case
@@ -55,7 +54,6 @@ class data
 		//get
 		
 		std::vector<std::map<std::string, std::map<std::string, std::string> > >	getServers();
-		std::map<std::string, std::map<std::string, std::string> > getData();
 		std::vector<int>								getPorts();
 		int									getPortsNbr();
 		std::vector<std::string>			getRoutes();

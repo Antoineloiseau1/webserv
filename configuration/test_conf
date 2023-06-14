@@ -3,7 +3,7 @@ server
 		listen					8079
 		client_max_body_size	1023
 		cgi_extension			.cgi
-		autoindex	on;
+		autoindex	off;
 		location data/www
 		{
 			cgi_extension			.php

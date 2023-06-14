@@ -6,7 +6,7 @@
 /*   By: anloisea <anloisea@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/25 10:15:25 by mmidon            #+#    #+#             */
-/*   Updated: 2023/06/13 08:36:10 by mmidon           ###   ########.fr       */
+/*   Updated: 2023/06/14 09:03:03 by mmidon           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -111,7 +111,7 @@ bool	isRooted(std::string const newRoute, std::vector<std::string>& _routes)
 	return false;
 }
 
-void	data::newRouteSetup(std::string &content, std::fstream &file, std::string &line)
+void	data::newRouteSetup(std::string &content, std::fstream &file, std::string &line, std::map<std::string,std::map<std::string,std::string> > _config)
 {
 	isRoute++; //entering a route
 	getline(file, content);
@@ -124,7 +124,7 @@ void	data::newRouteSetup(std::string &content, std::fstream &file, std::string &
 	fill(file, line); //recursive
 }
 
-int	data::checkRoutes(int &isRoute, std::string &content)
+int	data::checkRoutes(int &isRoute, std::string &content, std::map<std::string,std::map<std::string,std::string> > _config)
 {
 	if (content == "{") //parsing route syntax
 	{
@@ -148,7 +148,8 @@ void data::fill(std::fstream &file, std::string route) //at first call:  route="
 	std::size_t	 pos = 0;
 	std::string content;
 	std::string setting;
-	std::vector<std::string>	server_routes;
+	static std::vector<std::string>	server_routes;
+	static std::map<std::string, std::map<std::string, std::string> >	_config;
 
 	if (isRooted(route, server_routes))
 	{
@@ -177,7 +178,7 @@ void data::fill(std::fstream &file, std::string route) //at first call:  route="
 			}
 		}
 
-		if (checkRoutes(isRoute, content))
+		if (checkRoutes(isRoute, content, _config))
 			return ;
 		setting = whichSetting(content); //find which setting is at the beginning of the line (ignore spaces and tabs)
 
@@ -193,7 +194,7 @@ void data::fill(std::fstream &file, std::string route) //at first call:  route="
 
 		if (setting == "location") //route handling
 		{
-			newRouteSetup(content, file, line);
+			newRouteSetup(content, file, line, _config);
 			continue;
 		}
 
@@ -212,11 +213,6 @@ void data::fill(std::fstream &file, std::string route) //at first call:  route="
 			_config.erase(_config.begin(), _config.end());
 			throw (WrongDataException());
 		}
-}
-
-std::map<std::string, std::map<std::string, std::string> > data::getData()
-{
-	return _config;
 }
 
 void data::printData()
