@@ -127,7 +127,7 @@ void	Response::fillGetBody(std::string file) {
 			_response["body"] = openHtmlFile("data/www/manon.html");
 		else
 		{
-			std::cout << "Error in config file\n"; //maybe better error handling later
+			std::cerr << "Error in config file\n"; //maybe better error handling later
 			exit(1);
 		}
 	}
@@ -276,7 +276,7 @@ void	Response::PostResponse(int fd) {
 
 			if (sourceFile.is_open() && destFile.is_open()) {
 				destFile << sourceFile.rdbuf();
-				std::cout << "File copied successfully." << std::endl;
+				std::cerr << "File copied successfully." << std::endl;
 			}
 			else
 				std::cerr << "Failed to open the file." << std::endl;
@@ -300,7 +300,6 @@ void	Response::DeleteResponse(void) {
 	_file = _request.getFileToDelete();
 	if(_file.empty())
 		_file = _request.getPath();
-	std::cout << "file: " << _file << std::endl << "directory: " << _file.substr(0, _file.find_last_of('/')) << std::endl;
 	if(checkPermissions(_file.substr(0, _file.find_last_of('/')).c_str(), _file) == 1)
 		notFound404();
 	else if(checkPermissions(_file.substr(0, _file.find_last_of('/')).c_str(), _file) == 2)
@@ -309,7 +308,7 @@ void	Response::DeleteResponse(void) {
 		std::remove(_file.c_str());
 		_server.deletePict(_file);
 		noContent204();
-		std::cout << "File deleted successfully" << std::endl;
+		std::cerr << "File deleted successfully" << std::endl;
 	}
 }
 
@@ -337,7 +336,7 @@ std::string	Response::openHtmlFile(std::string f)
 		if (stat(f.c_str(), &fileInfo) == 0)
 			_contentSize = static_cast<size_t>(fileInfo.st_size);
 		else
-			std::cout << "Failed to determine the file size." << std::endl;
+			std::cerr << "Failed to determine the file size." << std::endl;
 		std::string content((std::istreambuf_iterator<char>(file)), (std::istreambuf_iterator<char>()));//  	 read the contents of the file into a string variable
 		return content;
 	}
@@ -443,7 +442,7 @@ int	Response::checkPermissions(const char *directory, std::string file)
 	fd = opendir(directory);
 	if (fd == NULL)
 	{
-		std::cout << "checkPermissions: Couldn't open " << directory << std::endl;
+		std::cerr << "checkPermissions: Couldn't open " << directory << std::endl;
 		return 1;
 	}
 	currentFile = readdir(fd);
