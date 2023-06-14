@@ -6,7 +6,7 @@
 /*   By: anloisea <anloisea@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/25 10:15:25 by mmidon            #+#    #+#             */
-/*   Updated: 2023/06/14 09:03:03 by mmidon           ###   ########.fr       */
+/*   Updated: 2023/06/14 10:00:30 by mmidon           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,9 +68,13 @@ std::vector<std::map<std::string, std::map<std::string, std::string> > >	data::g
 
 void	data::setSettings() //put all the accepted settings (the keyword will also be the key for the value in the map)
 {
+
+	_onlyRouteSettings.push_back("limit_except");
+
 	_routeSettings.push_back("listen");
 	_routeSettings.push_back("autoindex");
 	_routeSettings.push_back("cgi_extension");
+	_routeSettings.push_back("listen");
 
 	_possibleSettings.push_back("server_name");
 	_possibleSettings.push_back("client_max_body_size");
@@ -81,16 +85,21 @@ void	data::setSettings() //put all the accepted settings (the keyword will also 
 }
 
 
-std::string	data::whichSetting(std::string content)
+std::string	data::whichSetting(std::string content) //change variable names later
 {
-	for (size_t i = 0; i != _routeSettings.size(); i++)
+	for (size_t i = 0; i != _routeSettings.size(); i++) //for both
 	{
 		if (!std::strncmp(content.c_str(), _routeSettings[i].c_str(), std::strlen(_routeSettings[i].c_str())) && (std::isspace(content[std::strlen(_routeSettings[i].c_str())]) || !content[std::strlen(_routeSettings[i].c_str())]))
 			return _routeSettings[i];
 	}
-	if (isRoute)
-		return "";
-	for (size_t i = 0; i != _possibleSettings.size(); i++)
+
+	for (size_t i = 0; i != _onlyRouteSettings.size() && isRoute; i++) //only for route
+	{
+		if (!std::strncmp(content.c_str(), _onlyRouteSettings[i].c_str(), std::strlen(_onlyRouteSettings[i].c_str())) && (std::isspace(content[std::strlen(_onlyRouteSettings[i].c_str())]) || !content[std::strlen(_onlyRouteSettings[i].c_str())]))
+			return _onlyRouteSettings[i];
+	}
+
+	for (size_t i = 0; i != _possibleSettings.size() && !isRoute; i++) //not in route
 	{
 		if (!std::strncmp(content.c_str(), _possibleSettings[i].c_str(), std::strlen(_possibleSettings[i].c_str())) && (std::isspace(content[std::strlen(_possibleSettings[i].c_str())]) || !content[std::strlen(_possibleSettings[i].c_str())]))
 			return _possibleSettings[i];
@@ -131,7 +140,6 @@ int	data::checkRoutes(int &isRoute, std::string &content, std::map<std::string,s
 		if (isRoute == 1)
 		{
 			_config.erase(_config.begin(), _config.end());
-			std::cout << "3" << std::endl;
 			throw (WrongDataException());
 		}
 	}
@@ -219,12 +227,12 @@ void data::printData()
 {
 	for (size_t i = 0; i != _servers.size(); i++)
 	{
-		std::cout << "SERVER : " << i << std::endl << std::endl;
+		std::cerr << "SERVER : " << i << std::endl << std::endl;
 		for (std::map<std::string, std::map<std::string, std::string> >::iterator route = _servers[i].begin(); route != _servers[i].end(); route++)
 		{
-			std::cout << "\nROUTE : " << route->first << std::endl << std::endl;
+			std::cerr << "\nROUTE : " << route->first << std::endl << std::endl;
 			for (std::map<std::string, std::string>::iterator it = _servers[i][route->first].begin(); it != _servers[i][route->first].end(); *it++)
-				std::cout << it->first << " | " << it->second << std::endl;
+				std::cerr << it->first << " | " << it->second << std::endl;
 		}
 	}
 }
@@ -245,7 +253,7 @@ data::data(std::string conf)
 	catch (std::exception &e)
 	{
 		_servers.erase(_servers.begin(), _servers.end());
-		std::cout << "Exception caught while parsing config file: " << e.what() << std::endl;
+		std::cerr << "Exception caught while parsing config file: " << e.what() << std::endl;
 		exit (1);
 	}
 	try
@@ -255,7 +263,7 @@ data::data(std::string conf)
 	}
 	catch (std::exception &e)
 	{
-		std::cout << "Exception caught while setting ports: " << e.what() << std::endl;
+		std::cerr << "Exception caught while setting ports: " << e.what() << std::endl;
 		exit (2);
 	}
 }

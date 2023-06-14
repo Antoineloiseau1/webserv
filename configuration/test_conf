@@ -6,6 +6,7 @@ server
 		autoindex	off;
 		location data/www
 		{
+			limit_except	GET
 			cgi_extension			.php
 			autoindex off
 		}
