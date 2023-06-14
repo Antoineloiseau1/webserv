@@ -4,9 +4,9 @@ server
 		client_max_body_size	1023
 		cgi_extension			.cgi
 		autoindex	off;
-		location data/www
+		location data/www/
 		{
-			limit_except	GET
+			limit_except	GET  
 			cgi_extension			.php
 			autoindex off
 		}

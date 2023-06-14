@@ -8,16 +8,72 @@
 #include <sys/stat.h>
 #include <dirent.h>
 
+bool	isValid(std::vector<std::string> toBeValidated, std::vector<std::string> example)
+{
+	for (size_t i = 0; i != toBeValidated.size(); i++)
+	{
+		for (size_t j = 0; i != example.size(); j++)
+		{
+			if (toBeValidated[i] == example[j])
+				break;
+			if (j == example.size() - 1)
+				return false;
+		}
+	}
+	return true;
+}
+
+std::vector<std::string>	Response::findMethods()
+{
+	_file = _request.getPath();
+
+	std::vector<std::string>	methodTab;
+	std::vector<std::string>	knownMethods;
+	std::string					tmp;
+	std::string					methodsList = _server.getData().getServers()[findServer()][findRoute(_file)]["limit_except"];
+
+	knownMethods.push_back("GET");
+	knownMethods.push_back("POST");
+	knownMethods.push_back("DELETE");
+
+	knownMethods.push_back("HEAD");   //don't know what it is bit it was here
+	knownMethods.push_back("OPTIONS");
+	knownMethods.push_back("PUT");
+	knownMethods.push_back("TRACE");
+	knownMethods.push_back("CONNECT");
+
+	if (methodsList.empty())
+		return knownMethods;
+
+	for (size_t	i = 0; methodsList[i]; i++)
+	{
+		if (isspace(methodsList[i]) && !tmp.empty())
+		{
+			methodTab.push_back(tmp);
+			tmp.clear();
+		}
+		else if (!isspace(methodsList[i]))
+			tmp += methodsList[i];
+	}
+	if (!tmp.empty())
+		methodTab.push_back(tmp);
+
+	if (!isValid(methodTab, knownMethods))
+		throw(UnknownDataException());
+	return methodTab;
+}
+
 Response::Response(Request &request, Server &server, std::string tmp_file, int fd) : _server(server),
 	_request(request), _tmpPictFile(tmp_file)
 {
-	std::string	type[] = { "GET", "POST", "DELETE", "HEAD", "OPTIONS", "PUT", "TRACE", "CONNECT" };
+	std::vector<std::string>	requestTypes = findMethods();
+
 	enum		mtype { GET, POST, DELETE, OTHER };
 	int			a = 0;
 
-	for (int i = 0; i < 8; i++)		// Possibilité de faire plus propre ?
+	for (size_t i = 0; i != requestTypes.size(); i++)
 	{
-		if (request.getTypeStr() == type[i])
+		if (request.getTypeStr() == requestTypes[i])
 		{
 			a = i;
 			if (i > 2)
@@ -63,7 +119,6 @@ std::string	Response::findRoute(std::string const file)
 void	Response::fillGetBody(std::string file) {
 	// if (file.find("data/www/") == std::string::npos)
 	// 	file = "data/www/" + file;
-	findRoute(file);
 	if (file == "")
 	{
 		if (_server.getData().getServers()[findServer()][findRoute(file)]["autoindex"] == "on")
