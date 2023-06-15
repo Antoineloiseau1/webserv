@@ -304,10 +304,8 @@ Server::~Server(void) {
 		else
 			std::cout << "File deleted successfully" << std::endl;
 	}
-    for (const ListeningSocket* obj : _socket)
-        delete obj;
-//	for (int i = 0; i != _data.getPortsNbr(); i++)
-//		delete this->_socket[i]; 
+	for (int i = 0; i != _data.getPortsNbr(); i++)
+		delete this->_socket[i]; 
 }
 
 

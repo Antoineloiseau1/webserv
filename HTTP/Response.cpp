@@ -68,7 +68,7 @@ Response::Response(Request &request, Server &server, std::string tmp_file, int f
 {
 	std::vector<std::string>	requestTypes = findMethods();
 
-	enum		mtype { GET, POST, DELETE, OTHER };
+	enum		mtype { GET, POST, DELETE, OTHER, ERROR413 };
 	int			a = 0;
 
 	for (size_t i = 0; i != requestTypes.size(); i++)
@@ -86,8 +86,9 @@ Response::Response(Request &request, Server &server, std::string tmp_file, int f
 		a = i;
 	}
 	
-	if (!_server.getData().getServers()[findServer()][findRoute(_request.getPath())]["client_max_body_size"].empty() && atoi(_request.getHeaders()["Content-Length"].c_str()) > atoi(_server.getData().getServers()[findServer()][findRoute(_request.getPath())]["client_max_body_size"].c_str()))
-		a = 42;
+	if (!_server.getData().getServers()[findServer()][findRoute(_request.getPath())]["client_max_body_size"].empty()
+		&& atoi(_request.getHeaders()["Content-Length"].c_str()) > atoi(_server.getData().getServers()[findServer()][findRoute(_request.getPath())]["client_max_body_size"].c_str()))
+		a = ERROR413;
 	switch (a)
 	{
 		case GET:
@@ -102,7 +103,7 @@ Response::Response(Request &request, Server &server, std::string tmp_file, int f
 		case OTHER:
 			NotImplemented();
 			break;
-		case 42:
+		case ERROR413:
 			RequestEntityTooLargeError();
 			break;
 		default:
@@ -440,6 +441,9 @@ void	Response::RequestEntityTooLargeError(void) {
 	_response["length"] += std::to_string(std::strlen(_response["body"].c_str()));
 	_response["length"] += "\r\n";
 	_response["connexion"] = "Connexion: close\r\n\r\n";
+
+	if (std::remove(_tmpPictFile.c_str()))
+		std::cout << "error: Failed to delete file.\n";
 }
 
 /********************************** NotImplemented **********************************************/
