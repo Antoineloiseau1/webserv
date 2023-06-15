@@ -1,1 +1,11 @@
-.vscode
+*.o
+*.a
+*.swp
+*.vscode
+test
+oui
+non
+zoui
+webserv
+
+

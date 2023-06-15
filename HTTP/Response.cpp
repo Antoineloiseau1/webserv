@@ -8,16 +8,72 @@
 #include <sys/stat.h>
 #include <dirent.h>
 
+bool	isValid(std::vector<std::string> toBeValidated, std::vector<std::string> example)
+{
+	for (size_t i = 0; i != toBeValidated.size(); i++)
+	{
+		for (size_t j = 0; i != example.size(); j++)
+		{
+			if (toBeValidated[i] == example[j])
+				break;
+			if (j == example.size() - 1)
+				return false;
+		}
+	}
+	return true;
+}
+
+std::vector<std::string>	Response::findMethods()
+{
+	_file = _request.getPath();
+
+	std::vector<std::string>	methodTab;
+	std::vector<std::string>	knownMethods;
+	std::string					tmp;
+	std::string					methodsList = _server.getData().getServers()[findServer()][findRoute(_file)]["limit_except"];
+
+	knownMethods.push_back("GET");
+	knownMethods.push_back("POST");
+	knownMethods.push_back("DELETE");
+
+	knownMethods.push_back("HEAD");   //don't know what it is but it was here
+	knownMethods.push_back("OPTIONS");
+	knownMethods.push_back("PUT");
+	knownMethods.push_back("TRACE");
+	knownMethods.push_back("CONNECT");
+
+	if (methodsList.empty())
+		return knownMethods;
+
+	for (size_t	i = 0; methodsList[i]; i++)
+	{
+		if (isspace(methodsList[i]) && !tmp.empty())
+		{
+			methodTab.push_back(tmp);
+			tmp.clear();
+		}
+		else if (!isspace(methodsList[i]))
+			tmp += methodsList[i];
+	}
+	if (!tmp.empty())
+		methodTab.push_back(tmp);
+
+	if (!isValid(methodTab, knownMethods))
+		throw(UnknownDataException());
+	return methodTab;
+}
+
 Response::Response(Request &request, Server &server, std::string tmp_file, int fd) : _server(server),
 	_request(request), _tmpPictFile(tmp_file)
 {
-	std::string	type[] = { "GET", "POST", "DELETE", "HEAD", "OPTIONS", "PUT", "TRACE", "CONNECT" };
+	std::vector<std::string>	requestTypes = findMethods();
+
 	enum		mtype { GET, POST, DELETE, OTHER };
 	int			a = 0;
 
-	for (int i = 0; i < 8; i++)		// Possibilité de faire plus propre ?
+	for (size_t i = 0; i != requestTypes.size(); i++)
 	{
-		if (request.getTypeStr() == type[i])
+		if (request.getTypeStr() == requestTypes[i])
 		{
 			a = i;
 			if (i > 2)
@@ -29,6 +85,9 @@ Response::Response(Request &request, Server &server, std::string tmp_file, int f
 		}
 		a = i;
 	}
+	
+	if (!_server.getData().getServers()[findServer()][findRoute(_request.getPath())]["client_max_body_size"].empty() && atoi(_request.getHeaders()["Content-Length"].c_str()) > atoi(_server.getData().getServers()[findServer()][findRoute(_request.getPath())]["client_max_body_size"].c_str()))
+		a = 42;
 	switch (a)
 	{
 		case GET:
@@ -43,6 +102,9 @@ Response::Response(Request &request, Server &server, std::string tmp_file, int f
 		case OTHER:
 			NotImplemented();
 			break;
+		case 42:
+			RequestEntityTooLargeError();
+			break;
 		default:
 			BadRequestError();
 	}
@@ -52,10 +114,12 @@ Response::Response(Request &request, Server &server, std::string tmp_file, int f
 
 std::string	Response::findRoute(std::string const file)
 {
-	for (size_t i = 0; i != _server.getData().getRoutes().size(); i++)
+	int s = findServer();
+
+	for (std::map<std::string, std::map<std::string, std::string> >::iterator route = _server.getData().getServers()[s].begin(); route != _server.getData().getServers()[s].end(); route++)
 	{
-		if (!std::strncmp(_server.getData().getRoutes()[i].c_str(), file.c_str(), _server.getData().getRoutes()[i].length()))
-			return _server.getData().getRoutes()[i];
+		if ( route->first == file.c_str())
+			return route->first;
 	}
 	return "default";
 }
@@ -63,7 +127,6 @@ std::string	Response::findRoute(std::string const file)
 void	Response::fillGetBody(std::string file) {
 	// if (file.find("data/www/") == std::string::npos)
 	// 	file = "data/www/" + file;
-	findRoute(file);
 	if (file == "")
 	{
 		if (_server.getData().getServers()[findServer()][findRoute(file)]["autoindex"] == "on")
@@ -72,7 +135,7 @@ void	Response::fillGetBody(std::string file) {
 			_response["body"] = openHtmlFile("data/www/manon.html");
 		else
 		{
-			std::cout << "Error in config file\n"; //maybe better error handling later
+			std::cerr << "Error in config file\n"; //maybe better error handling later
 			exit(1);
 		}
 	}
@@ -173,7 +236,7 @@ int		Response::findServer()
 	for (size_t i = 0; i != _server.getData().getServers().size(); i++)
 	{
 		line = _request.getHeaders()["Host"];
-		if (_server.getData().getServers()[i]["default"]["listen"] == line.substr(line.find_last_of(":") + 1))
+		if (!strncmp(_server.getData().getServers()[i]["default"]["listen"].c_str() , line.substr(line.find_last_of(":") + 1).c_str() , 4))
 			return i;
 	}
 	return 0;
@@ -223,7 +286,7 @@ void	Response::PostResponse(int fd) {
 
 			if (sourceFile.is_open() && destFile.is_open()) {
 				destFile << sourceFile.rdbuf();
-				std::cout << "File copied successfully." << std::endl;
+				std::cerr << "File copied successfully." << std::endl;
 			}
 			else
 				std::cerr << "Failed to open the file." << std::endl;
@@ -238,7 +301,7 @@ void	Response::PostResponse(int fd) {
 	{ ;
 		_response["status"] = " 201 Created\r\n";
 		_response["body"] = openHtmlFile("data/www/error/201.html");
-		return; //a ne pas supprimer ??
+		return;
 	}
 	fillGetLength();
 	_response["type"] = "Content-Type: text/html\r\n";// tjrs que du html pour le moment
@@ -249,7 +312,6 @@ void	Response::DeleteResponse(void) {
 	_file = _request.getFileToDelete();
 	if(_file.empty())
 		_file = _request.getPath();
-	std::cout << "file: " << _file << std::endl << "directory: " << _file.substr(0, _file.find_last_of('/')) << std::endl;
 	if(checkPermissions(_file.substr(0, _file.find_last_of('/')).c_str(), _file) == 1)
 		notFound404();
 	else if(checkPermissions(_file.substr(0, _file.find_last_of('/')).c_str(), _file) == 2)
@@ -257,7 +319,7 @@ void	Response::DeleteResponse(void) {
 	else {
 		_server.deletePict(_file);
 		ok200();
-		std::cout << "File deleted successfully" << std::endl;
+		std::cerr << "File deleted successfully" << std::endl;
 	}
 }
 
@@ -285,7 +347,7 @@ std::string	Response::openHtmlFile(std::string f)
 		if (stat(f.c_str(), &fileInfo) == 0)
 			_contentSize = static_cast<size_t>(fileInfo.st_size);
 		else
-			std::cout << "Failed to determine the file size." << std::endl;
+			std::cerr << "Failed to determine the file size." << std::endl;
 		std::string content((std::istreambuf_iterator<char>(file)), (std::istreambuf_iterator<char>()));//  	 read the contents of the file into a string variable
 		return content;
 	}
@@ -366,6 +428,19 @@ void	Response::BadRequestError(void) {
 }
 /************************************************************************************************/
 
+void	Response::RequestEntityTooLargeError(void) {
+
+	std::ifstream error("data/www/error/413.html");
+    std::string content((std::istreambuf_iterator<char>(error)), (std::istreambuf_iterator<char>()));
+
+	_response["status"] = " 413 Request Entity Too Large\r\n";
+	_response["body"] = content;
+	_response["type"] = "Content-Type: text/html\r\n";
+	_response["length"] = "Content-Length: ";
+	_response["length"] += std::to_string(std::strlen(_response["body"].c_str()));
+	_response["length"] += "\r\n";
+	_response["connexion"] = "Connexion: close\r\n\r\n";
+}
 
 /********************************** NotImplemented **********************************************/
 void	Response::NotImplemented(void) {
@@ -391,7 +466,7 @@ int	Response::checkPermissions(const char *directory, std::string file)
 	fd = opendir(directory);
 	if (fd == NULL)
 	{
-		std::cout << "checkPermissions: Couldn't open " << directory << std::endl;
+		std::cerr << "checkPermissions: Couldn't open " << directory << std::endl;
 		return 1;
 	}
 	currentFile = readdir(fd);

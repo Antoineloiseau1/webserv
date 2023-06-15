@@ -22,7 +22,7 @@ void copy_fd_set(fd_set* src, fd_set* dest) {
         }
     }
 }
-data			Server::getData() const {return _data; }
+data&			Server::getData() {return _data; }
 
 int	Server::getRequestFd() const { return _requestFd; }
 
@@ -274,6 +274,7 @@ void	Server::_responder(Client *client, int i) {
 	std::cout << response.getFile() << "\033[0m" << std::endl;
 	std::cout << "\n\033[36m##############################\033[0m\n\n"; 
 	send(client->getFd(), res.c_str(), res.length(), 0);
+	std::cout <<"RESPONSE\n" << res << std::endl;
 	disconnectClient(client, i);
 }
 

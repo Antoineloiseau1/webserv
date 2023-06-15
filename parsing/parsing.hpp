@@ -6,7 +6,7 @@
 /*   By: anloisea <anloisea@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/27 10:31:47 by mmidon            #+#    #+#             */
-/*   Updated: 2023/06/14 09:03:10 by mmidon           ###   ########.fr       */
+/*   Updated: 2023/06/15 16:17:56 by mmidon           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,8 +22,11 @@ class data
 	private:
 		std::vector<std::map<std::string, std::map<std::string, std::string> > >	_servers;
 		std::string							_name;
+
 		std::vector<std::string>			_possibleSettings;
 		std::vector<std::string>			_routeSettings;
+		std::vector<std::string>			_onlyRouteSettings;
+
 		std::vector<std::string>			_routes;
 		void								fill(std::fstream &file, std::string route);
 		std::vector<int>					_ports;
@@ -53,10 +56,10 @@ class data
 
 		//get
 		
-		std::vector<std::map<std::string, std::map<std::string, std::string> > >	getServers();
+		std::vector<std::map<std::string, std::map<std::string, std::string> > >&	getServers();
 		std::vector<int>								getPorts();
 		int									getPortsNbr();
-		std::vector<std::string>			getRoutes();
+		std::vector<std::string>&			getRoutes();
 };
 
 //it can't compile with this

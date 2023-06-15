@@ -45,8 +45,12 @@ class Response
 		void								DeleteResponse();
 		void								NotImplemented();
 		void								BadRequestError();
+		void								RequestEntityTooLargeError(void);
+
+		std::vector<std::string>			findMethods();
 		std::string							findRoute(std::string const file);
 		int									findServer();
+
 		int									checkPermissions(const char *directory, std::string file);
 
 		void								notFound404(void);
@@ -58,6 +62,12 @@ class Response
 		void								fillGetBody(std::string file);
 		void								fillGetLength();
 		void								fillGetType(std::string file);
+
+
+		class	UnknownDataException : public std::exception{
+		public:
+			const char	*what() const throw(){ return "unknown data";};
+		};
 };
 
 #endif

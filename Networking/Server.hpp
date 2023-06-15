@@ -6,7 +6,7 @@
 /*   By: anloisea <anloisea@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/04 09:54:40 by mmidon            #+#    #+#             */
-/*   Updated: 2023/06/12 15:20:28 by anloisea         ###   ########.fr       */
+/*   Updated: 2023/06/15 16:27:53 by mmidon           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,7 +63,7 @@ class Server {
 		int								_getFdMax(void);
 		int				getRequestFd() const;
 		char			**getEnvp() const;
-		data			getData() const;
+		data&			getData();
 		std::vector<ListeningSocket*>	getSocket();
 		int				getOpenFd();
 		static void		exit(int sig);
