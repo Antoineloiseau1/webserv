@@ -256,12 +256,7 @@ void	Response::DeleteResponse(void) {
 		forbidden403();
 	else {
 		_server.deletePict(_file);
-		std::remove(_file.c_str());
-		_response["version"] = "HTTP/1.1";
-		_response["status"] = " 204 No Content\r\n";
-		fillGetBody("data/www/error/204.html");
-		fillGetLength();
-		fillGetType("data/www/error/204.html");
+		ok200();
 		std::cout << "File deleted successfully" << std::endl;
 	}
 }
