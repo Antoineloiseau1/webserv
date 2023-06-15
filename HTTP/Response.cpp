@@ -36,7 +36,7 @@ std::vector<std::string>	Response::findMethods()
 	knownMethods.push_back("POST");
 	knownMethods.push_back("DELETE");
 
-	knownMethods.push_back("HEAD");   //don't know what it is bit it was here
+	knownMethods.push_back("HEAD");   //don't know what it is but it was here
 	knownMethods.push_back("OPTIONS");
 	knownMethods.push_back("PUT");
 	knownMethods.push_back("TRACE");
