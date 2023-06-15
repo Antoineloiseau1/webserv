@@ -203,7 +203,6 @@ int	Server::_handler(Client *client, int i) {
 
 	int	n = recv(client->getFd(), _requestBuffer, BUFFER_SIZE, 0);
 	if (n <= 0) {
-		std::cerr << "error: recv: " << strerror(errno) << std::endl;
 		disconnectClient(client, i);
 		return 0;
 	}
@@ -270,9 +269,10 @@ void	Server::_responder(Client *client, int i) {
 	Response	response(*(client->getRequest()), *this, client->getTmpPictFile(), client->getFd());
 	std::string res = response.buildResponse();
 
-	std::cout << "\033[36m";
-	std::cout << "#### response from server:\033[1m\033[94m" << response.getMap()["status"].substr(0, response.getMap()["status"].length() - 2);
-	std::cout << " " << response.getFile() << "\033[0m" << std::endl;
+	std::cout << "\033[36m#### response from server ####\033[1m\033[94m\n\n"; 
+	std::cout << response.getMap()["version"] << response.getMap()["status"];
+	std::cout << response.getFile() << "\033[0m" << std::endl;
+	std::cout << "\n\033[36m##############################\033[0m\n\n"; 
 	send(client->getFd(), res.c_str(), res.length(), 0);
 	disconnectClient(client, i);
 }
@@ -303,6 +303,8 @@ Server::~Server(void) {
 		else
 			std::cout << "File deleted successfully" << std::endl;
 	}
+    for (const ListeningSocket* obj : _socket)
+        delete obj;
 //	for (int i = 0; i != _data.getPortsNbr(); i++)
 //		delete this->_socket[i]; 
 }

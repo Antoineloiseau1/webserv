@@ -1,19 +1,31 @@
-/* Set the font family and background color for the entire page */
-body {
-	font-family: Arial, sans-serif;
-	background-color: #f2f2f2;
+/* Reset default browser styles */
+html, body, ul {
+	margin: 0;
+	padding: 0;
   }
   
-  /* Style the header */
+  /* Global styles */
+  body {
+	font-family: Arial, sans-serif;
+	line-height: 1.5;
+	background-color: #f1f1f1;
+  }
+  
+  .container {
+	max-width: 960px;
+	margin: 0 auto;
+	padding: 20px;
+  }
+  
+  /* Header styles */
   header {
 	background-color: #333;
 	color: #fff;
 	padding: 20px;
   }
   
-  /* Style the navigation bar */
-  nav {
-	display: flex;
+  header h1 {
+	margin: 0;
   }
   
   nav ul {
@@ -22,21 +34,41 @@ body {
 	padding: 0;
   }
   
-  nav li {
-	margin-right: 20px;
+  nav ul li {
+	display: inline-block;
+	margin-right: 10px;
   }
   
-  nav a {
+  nav ul li a {
 	color: #fff;
 	text-decoration: none;
   }
   
-  /* Style the main content area */
+  /* Main styles */
   main {
+	background-color: #fff;
 	padding: 20px;
+	margin-top: 20px;
   }
   
-  /* Style the footer */
+  section {
+	margin-bottom: 20px;
+  }
+  
+  section h2 {
+	margin-bottom: 10px;
+  }
+  
+  section p {
+	margin-bottom: 20px;
+  }
+  
+  section img {
+	max-width: 100%;
+	height: auto;
+  }
+  
+  /* Footer styles */
   footer {
 	background-color: #333;
 	color: #fff;

@@ -132,6 +132,8 @@ void	Response::fillGetType(std::string file) {
 	}
 	if (file.find("favicon.ico") != std::string::npos)
 		_response["type"] = "Content-Type: image/x-icon\r\n";
+	if (file.find(".css") != std::string::npos)
+		_response["type"] = "Content-type: text/css\r\n";
 }
 
 std::string	getExtension(std::string &file)
@@ -228,8 +230,10 @@ void	Response::PostResponse(int fd) {
     		sourceFile.close();
     		destFile.close();
 	}
-	if (_request.isDelete)
+	if (_request.isDelete) {
 		DeleteResponse();
+		return ;
+	}
 	else if (file != "favicon.ico" && file != " " && !file.empty() && file != "" && file != "data/www/style.css")
 	{ ;
 		_response["status"] = " 201 Created\r\n";
@@ -251,9 +255,13 @@ void	Response::DeleteResponse(void) {
 	else if(checkPermissions(_file.substr(0, _file.find_last_of('/')).c_str(), _file) == 2)
 		forbidden403();
 	else {
-		std::remove(_file.c_str());
 		_server.deletePict(_file);
-		noContent204();
+		std::remove(_file.c_str());
+		_response["version"] = "HTTP/1.1";
+		_response["status"] = " 204 No Content\r\n";
+		fillGetBody("data/www/error/204.html");
+		fillGetLength();
+		fillGetType("data/www/error/204.html");
 		std::cout << "File deleted successfully" << std::endl;
 	}
 }
@@ -415,6 +423,7 @@ int	Response::checkPermissions(const char *directory, std::string file)
 		currentFile = readdir(fd);
 	}
 	if(currentFile == NULL) {
+		closedir(fd);
 		return 1; //file not found		
 	}
 	return 0;
