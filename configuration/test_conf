@@ -1,16 +1,17 @@
 server
 		server_name			example.com
 		listen					8079
-		client_max_body_size	1023
 		cgi_extension			.cgi
 		autoindex	off;
+		client_max_body_size	100
 		location data/www/
 		{
-			limit_except	GET  
+			limit_except	GET
 			cgi_extension			.php
-			autoindex off
+			autoindex on
 		}
 
 server
-		listen		4242
+		listen		4242   
 		server_name oskour.com
+		client_max_body_size	10000

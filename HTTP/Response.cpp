@@ -85,6 +85,9 @@ Response::Response(Request &request, Server &server, std::string tmp_file, int f
 		}
 		a = i;
 	}
+	
+	if (!_server.getData().getServers()[findServer()][findRoute(_request.getPath())]["client_max_body_size"].empty() && atoi(_request.getHeaders()["Content-Length"].c_str()) > atoi(_server.getData().getServers()[findServer()][findRoute(_request.getPath())]["client_max_body_size"].c_str()))
+		a = 42;
 	switch (a)
 	{
 		case GET:
@@ -99,6 +102,9 @@ Response::Response(Request &request, Server &server, std::string tmp_file, int f
 		case OTHER:
 			NotImplemented();
 			break;
+		case 42:
+			RequestEntityTooLargeError();
+			break;
 		default:
 			BadRequestError();
 	}
@@ -108,10 +114,12 @@ Response::Response(Request &request, Server &server, std::string tmp_file, int f
 
 std::string	Response::findRoute(std::string const file)
 {
-	for (size_t i = 0; i != _server.getData().getRoutes().size(); i++)
+	int s = findServer();
+
+	for (std::map<std::string, std::map<std::string, std::string> >::iterator route = _server.getData().getServers()[s].begin(); route != _server.getData().getServers()[s].end(); route++)
 	{
-		if (!std::strncmp(_server.getData().getRoutes()[i].c_str(), file.c_str(), _server.getData().getRoutes()[i].length()))
-			return _server.getData().getRoutes()[i];
+		if ( route->first == file.c_str())
+			return route->first;
 	}
 	return "default";
 }
@@ -226,7 +234,7 @@ int		Response::findServer()
 	for (size_t i = 0; i != _server.getData().getServers().size(); i++)
 	{
 		line = _request.getHeaders()["Host"];
-		if (_server.getData().getServers()[i]["default"]["listen"] == line.substr(line.find_last_of(":") + 1))
+		if (!strncmp(_server.getData().getServers()[i]["default"]["listen"].c_str() , line.substr(line.find_last_of(":") + 1).c_str() , 4))
 			return i;
 	}
 	return 0;
@@ -289,7 +297,7 @@ void	Response::PostResponse(int fd) {
 	{ ;
 		_response["status"] = " 201 Created\r\n";
 		_response["body"] = openHtmlFile("data/www/error/201.html");
-		return; //a ne pas supprimer ??
+		return;
 	}
 	fillGetLength();
 	_response["type"] = "Content-Type: text/html\r\n";// tjrs que du html pour le moment
@@ -417,6 +425,19 @@ void	Response::BadRequestError(void) {
 }
 /************************************************************************************************/
 
+void	Response::RequestEntityTooLargeError(void) {
+
+	std::ifstream error("data/www/error/413.html");
+    std::string content((std::istreambuf_iterator<char>(error)), (std::istreambuf_iterator<char>()));
+
+	_response["status"] = " 413 Request Entity Too Large\r\n";
+	_response["body"] = content;
+	_response["type"] = "Content-Type: text/html\r\n";
+	_response["length"] = "Content-Length: ";
+	_response["length"] += std::to_string(std::strlen(_response["body"].c_str()));
+	_response["length"] += "\r\n";
+	_response["connexion"] = "Connexion: close\r\n\r\n";
+}
 
 /********************************** NotImplemented **********************************************/
 void	Response::NotImplemented(void) {

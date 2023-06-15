@@ -6,7 +6,7 @@
 /*   By: anloisea <anloisea@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/25 10:15:25 by mmidon            #+#    #+#             */
-/*   Updated: 2023/06/14 10:00:30 by mmidon           ###   ########.fr       */
+/*   Updated: 2023/06/15 16:26:25 by mmidon           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 #include <cstring> //RAJOUTE POUR COMPILER SUR LINUX, VERIF SI STRNCMP OK
 
 #include "parsing.hpp"
+
 
 std::string trim(const std::string& str, const std::string& whitespace = " \t") //ft_trim but better
 {
@@ -58,13 +59,13 @@ void	data::makePorts(size_t serv)
 	_ports.push_back(res);
 	_portsNbr += 1;
 }
-std::vector<std::string>	data::getRoutes() {return _routes;}
+std::vector<std::string>&	data::getRoutes() {return _routes;}
 
 std::vector<int>	data::getPorts() {return _ports;}
 
 int		data::getPortsNbr() { return _portsNbr; }
 
-std::vector<std::map<std::string, std::map<std::string, std::string> > >	data::getServers() { return _servers; }
+std::vector<std::map<std::string, std::map<std::string, std::string> > >&	data::getServers() { return _servers; }
 
 void	data::setSettings() //put all the accepted settings (the keyword will also be the key for the value in the map)
 {
@@ -217,10 +218,11 @@ void data::fill(std::fstream &file, std::string route) //at first call:  route="
 	_servers.push_back(_config);
 	_config.erase(_config.begin(), _config.end());
 	if (isRoute != 0) //if the int isnt 0 then it's a route parsing error
-		{
-			_config.erase(_config.begin(), _config.end());
-			throw (WrongDataException());
-		}
+	{
+		_config.erase(_config.begin(), _config.end());
+		throw (WrongDataException());
+	}
+	printData();
 }
 
 void data::printData()
@@ -270,5 +272,6 @@ data::data(std::string conf)
 
 data::~data()
 {
+	std::cout << "DATA DESTRUCTION\n";
 	return;
 }

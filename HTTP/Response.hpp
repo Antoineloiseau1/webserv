@@ -45,6 +45,7 @@ class Response
 		void								DeleteResponse();
 		void								NotImplemented();
 		void								BadRequestError();
+		void								RequestEntityTooLargeError(void);
 
 		std::vector<std::string>			findMethods();
 		std::string							findRoute(std::string const file);
