@@ -47,24 +47,6 @@ void	Request::parsingPreBody(std::string	pre_body) {
 	}
 }
 
-/* A METTRE DANS UTILS*/
-std::string urlDecode(const std::string& encoded) {
-    std::string decoded;
-   size_t i = 0;
-
-    while (i < encoded.length()) {
-        if (encoded[i] == '%') {
-            int hexValue;
-            sscanf(encoded.substr(i + 1, 2).c_str(), "%x", &hexValue);
-            decoded += static_cast<char>(hexValue);
-            i += 3;
-        } else {
-            decoded += encoded[i];
-            ++i;
-        }
-    }
-    return decoded;
-}
 
 Request::~Request(void) {}
 
@@ -122,9 +104,12 @@ void	Request::parseFormBody(std::string body) {
 			_formBody = dechunkBody(body);
 		if (isDelete) {
 			int loc = _formBody.find('=') + 1;
+			std::cout << "FILE TO DELETE = " << _fileToDelete << std::endl;
 			_fileToDelete = urlDecode(_formBody.substr(loc, _formBody.size() - loc));
+			std::cout << "FILE TO DELETE AAPRES = " << _fileToDelete << std::endl;
 		}
 		else {
+			std::cout << "++++++LAAAaaA " << std::endl;
 			std::stringstream ss(_formBody);
 			std::string token;
     		while (std::getline(ss, token, '&')) {
@@ -132,7 +117,8 @@ void	Request::parseFormBody(std::string body) {
         		_formInfo[token.substr(0, loc)] = urlDecode(token.substr(loc + 1, token.size() - loc));
 			}
 		}
-	}	
+	}
+	std::cout << "JUSTE IC --- " << std::endl;
 }
 
 void	Request::setFileToDelete(std::string file) { _fileToDelete = file; }

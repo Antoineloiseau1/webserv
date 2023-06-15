@@ -6,6 +6,8 @@
 #include <iostream>
 #include <sstream>
 
+#include "../utils.hpp"
+
 class Request {
 	private:
 		std::string							_requestLine;

@@ -245,7 +245,7 @@ int		Response::findServer()
 
 void	Response::GetResponse(int fd) {
 	
-		_file = _request.getPath();
+		_file = urlDecode(_request.getPath());
 		int type = -1;
 		if (!_file.empty())
 		{
@@ -312,7 +312,7 @@ void	Response::DeleteResponse(void) {
 
 	_file = _request.getFileToDelete();
 	if(_file.empty())
-		_file = _request.getPath();
+		_file = urlDecode(_request.getPath());
 	if(checkPermissions(_file.substr(0, _file.find_last_of('/')).c_str(), _file) == 1)
 		notFound404();
 	else if(checkPermissions(_file.substr(0, _file.find_last_of('/')).c_str(), _file) == 2)

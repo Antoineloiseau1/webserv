@@ -14,4 +14,3 @@ server
 server
 		listen		4242   
 		server_name oskour.com
-		client_max_body_size	10000
