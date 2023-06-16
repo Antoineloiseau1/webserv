@@ -51,6 +51,7 @@ class Response
 		std::string							findRoute(std::string const file);
 		int									findServer();
 
+		void								rootFile();
 		int									checkPermissions(const char *directory, std::string file);
 
 		void								notFound404(void);

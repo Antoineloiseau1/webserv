@@ -4,13 +4,14 @@ server
 		cgi_extension			.cgi
 		autoindex	off;
 		client_max_body_size	100
-		location data/www/
+		location manon
 		{
+			root	data/www
 			limit_except	GET
 			cgi_extension			.php
 			autoindex on
 		}
 
 server
-		listen		4242   
+		listen		4242
 		server_name oskour.com

@@ -6,7 +6,7 @@
 /*   By: anloisea <anloisea@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/25 10:15:25 by mmidon            #+#    #+#             */
-/*   Updated: 2023/06/15 16:26:25 by mmidon           ###   ########.fr       */
+/*   Updated: 2023/06/16 08:29:10 by mmidon           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,6 +71,7 @@ void	data::setSettings() //put all the accepted settings (the keyword will also 
 {
 
 	_onlyRouteSettings.push_back("limit_except");
+	_onlyRouteSettings.push_back("root");
 
 	_routeSettings.push_back("listen");
 	_routeSettings.push_back("autoindex");

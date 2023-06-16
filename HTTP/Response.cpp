@@ -63,6 +63,17 @@ std::vector<std::string>	Response::findMethods()
 	return methodTab;
 }
 
+void	Response::rootFile()
+{
+	std::string	curRoute = findRoute(_request.getPath());
+	std::string rootedTo = _server.getData().getServers()[findServer()][curRoute]["root"];
+	if (rootedTo.empty())
+		return ;
+
+	int pos = _file.find(curRoute);
+	_file.replace(pos, curRoute.length(), rootedTo);
+}
+
 Response::Response(Request &request, Server &server, std::string tmp_file, int fd) : _server(server),
 	_request(request), _tmpPictFile(tmp_file)
 {
@@ -85,10 +96,13 @@ Response::Response(Request &request, Server &server, std::string tmp_file, int f
 		}
 		a = i;
 	}
-	
+
+	_file = urlDecode(_request.getPath());
+	rootFile();
 	if (!_server.getData().getServers()[findServer()][findRoute(_request.getPath())]["client_max_body_size"].empty()
 		&& atoi(_request.getHeaders()["Content-Length"].c_str()) > atoi(_server.getData().getServers()[findServer()][findRoute(_request.getPath())]["client_max_body_size"].c_str()))
 		a = ERROR413;
+	
 	switch (a)
 	{
 		case GET:
@@ -119,15 +133,13 @@ std::string	Response::findRoute(std::string const file)
 
 	for (std::map<std::string, std::map<std::string, std::string> >::iterator route = _server.getData().getServers()[s].begin(); route != _server.getData().getServers()[s].end(); route++)
 	{
-		if ( route->first == file.c_str())
+		if (!strncmp(route->first.c_str(), file.c_str(), route->first.length()))
 			return route->first;
 	}
 	return "default";
 }
 
 void	Response::fillGetBody(std::string file) {
-	// if (file.find("data/www/") == std::string::npos)
-	// 	file = "data/www/" + file;
 	if (file == "")
 	{
 		if (_server.getData().getServers()[findServer()][findRoute(file)]["autoindex"] == "on")
@@ -245,7 +257,6 @@ int		Response::findServer()
 
 void	Response::GetResponse(int fd) {
 	
-		_file = urlDecode(_request.getPath());
 		int type = -1;
 		if (!_file.empty())
 		{
@@ -258,11 +269,6 @@ void	Response::GetResponse(int fd) {
 			BadRequestError();
 		else if (type)
 		{
-			if (type == 1)
-			{
-				if (_file.find("data/www/") == std::string::npos) //route to setup
-					_file = "data/www/" + _file;
-			}
 			_response["status"] = " 200 OK\r\n"; //Main case, updated when event in the building of response
 			fillGetBody(_file);
 			fillGetLength();
@@ -443,7 +449,7 @@ void	Response::RequestEntityTooLargeError(void) {
 	_response["connexion"] = "Connexion: close\r\n\r\n";
 
 	if (std::remove(_tmpPictFile.c_str()))
-		std::cout << "error: Failed to delete file.\n";
+		std::cerr << "error: Failed to delete file.\n";
 }
 
 /********************************** NotImplemented **********************************************/
