@@ -6,7 +6,7 @@
 /*   By: anloisea <anloisea@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/25 10:15:25 by mmidon            #+#    #+#             */
-/*   Updated: 2023/06/16 08:29:10 by mmidon           ###   ########.fr       */
+/*   Updated: 2023/06/16 11:47:24 by mmidon           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,11 +73,11 @@ void	data::setSettings() //put all the accepted settings (the keyword will also 
 	_onlyRouteSettings.push_back("limit_except");
 	_onlyRouteSettings.push_back("root");
 
-	_routeSettings.push_back("listen");
 	_routeSettings.push_back("autoindex");
 	_routeSettings.push_back("cgi_extension");
 	_routeSettings.push_back("listen");
 
+	_possibleSettings.push_back("listen");
 	_possibleSettings.push_back("server_name");
 	_possibleSettings.push_back("client_max_body_size");
 
@@ -239,6 +239,22 @@ void data::printData()
 		}
 	}
 }
+void		data::areServersDifferent()
+{
+	for (size_t i = 0; i != _servers.size(); i++)
+	{
+		std::string config1 = _servers[i]["default"]["server_name"] + ":" + _servers[i]["default"]["listen"];
+		for (size_t j = 0; j != _servers.size(); j++)
+		{
+			if (i == j)
+				continue;
+			std::string config2  = _servers[j]["default"]["server_name"] + ":" + _servers[j]["default"]["listen"];
+			if (config1 == config2)
+				throw(DuplicateServerException());
+		}
+
+	}
+}
 
 data::data(std::string conf)
 {
@@ -263,6 +279,7 @@ data::data(std::string conf)
 	{
 		for (size_t i = 0; i != _servers.size(); i++)
 			makePorts(i);
+		areServersDifferent();
 	}
 	catch (std::exception &e)
 	{

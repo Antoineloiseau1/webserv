@@ -1,9 +1,9 @@
 server
-		server_name			example.com
-		listen					8079
+		server_name     example.com			
+		listen					4242
 		cgi_extension			.cgi
-		autoindex	off;
 		client_max_body_size	100
+		autoindex	ff;
 		location manon
 		{
 			root	data/www
