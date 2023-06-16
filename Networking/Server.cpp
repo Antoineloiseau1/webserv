@@ -202,8 +202,6 @@ void	Server::setToWrite(Client *client) {
 int	Server::_handler(Client *client, int i) {
 
 	int	n = recv(client->getFd(), _requestBuffer, BUFFER_SIZE, 0);
-	std::cout << "n " << n << std::endl;
-	std::cout << "buffer " << _requestBuffer << "$"<<std::endl;
 	if (n <= 0) {
 		disconnectClient(client, i);
 		return 0;
@@ -215,6 +213,12 @@ int	Server::_handler(Client *client, int i) {
 			client->createRequest(_requestBuffer);
 			std::cout << client->getRequest()->getHeaders()["Host"] << std::endl;
 			client->setStatus(Client::HEADER_PARSED);
+		}
+		if (!client->getRequest())
+		{
+			std::cout << "Request empty\n\n\n\n";
+			disconnectClient(client ,i);
+			return 0;
 		}
 		if (client->getStatus() > Client::INIT) {
 			switch (client->getType()) {

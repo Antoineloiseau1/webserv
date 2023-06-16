@@ -17,5 +17,7 @@ server
 		}
 
 server
+
+		listen		4242
 		server_name     oskour.com			
 		autoindex on

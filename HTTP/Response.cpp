@@ -81,15 +81,13 @@ void	Response::setConfig()
 	_curRoute = findRoute(_file);
 
 	std::string redirection = _server.getData().getServers()[_curServer][_curRoute]["return"];
-	std::cout << redirection << std::endl;
 	if (!redirection.empty()) //change Host: localhost:post to Host: redirection:port
 	{
 		int pos = _request.getHeaders()["Host"].find(":");
-		_request.getHeaders()["Host"].replace(pos, _request.getHeaders()["Host"].length() - pos, redirection);
+		_request.getHeaders()["Host"].replace(0, pos, redirection);
+		_curServer = findServer();
+		_curRoute = findRoute(_file);
 	}
-
-	std::cout <<"res " <<_request.getHeaders()["Host"] << std::endl;
-	exit(666);
 }
 
 Response::Response(Request &request, Server &server, std::string tmp_file, int fd) : _server(server),
