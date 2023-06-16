@@ -6,7 +6,7 @@
 /*   By: anloisea <anloisea@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/25 10:15:25 by mmidon            #+#    #+#             */
-/*   Updated: 2023/06/16 11:47:24 by mmidon           ###   ########.fr       */
+/*   Updated: 2023/06/16 12:25:14 by mmidon           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,7 +75,7 @@ void	data::setSettings() //put all the accepted settings (the keyword will also 
 
 	_routeSettings.push_back("autoindex");
 	_routeSettings.push_back("cgi_extension");
-	_routeSettings.push_back("listen");
+	_routeSettings.push_back("return");
 
 	_possibleSettings.push_back("listen");
 	_possibleSettings.push_back("server_name");
@@ -223,7 +223,6 @@ void data::fill(std::fstream &file, std::string route) //at first call:  route="
 		_config.erase(_config.begin(), _config.end());
 		throw (WrongDataException());
 	}
-	printData();
 }
 
 void data::printData()

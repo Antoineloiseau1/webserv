@@ -60,7 +60,7 @@ std::string	Request::getBody() { return _body; }
 
 std::string	Request::getPreBody() { return _preBody; }
 
-std::map<std::string, std::string>	Request::getHeaders() { return _headers; }
+std::map<std::string, std::string>&	Request::getHeaders() { return _headers; }
 
 int	Request::getHeaderLen() { return _headerLine.size(); }
 
@@ -118,7 +118,6 @@ void	Request::parseFormBody(std::string body) {
 			}
 		}
 	}
-	std::cout << "JUSTE IC --- " << std::endl;
 }
 
 void	Request::setFileToDelete(std::string file) { _fileToDelete = file; }

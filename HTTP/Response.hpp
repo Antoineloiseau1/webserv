@@ -27,6 +27,12 @@ class Response
 		std::string 						_tmpPictFile;
 		size_t								_contentSize;
 
+		int									_curServer;
+		std::string							_curRoute;
+
+		std::string							findRoute(std::string const file);
+		int									findServer();
+
 
 	public:
 
@@ -48,10 +54,9 @@ class Response
 		void								RequestEntityTooLargeError(void);
 
 		std::vector<std::string>			findMethods();
-		std::string							findRoute(std::string const file);
-		int									findServer();
 
 		void								rootFile();
+		void								setConfig();
 		int									checkPermissions(const char *directory, std::string file);
 
 		void								notFound404(void);

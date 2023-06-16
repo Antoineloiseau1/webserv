@@ -6,7 +6,7 @@
 /*   By: anloisea <anloisea@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/27 10:31:47 by mmidon            #+#    #+#             */
-/*   Updated: 2023/06/16 11:45:57 by mmidon           ###   ########.fr       */
+/*   Updated: 2023/06/16 11:49:47 by mmidon           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,8 +66,3 @@ class data
 		int									getPortsNbr();
 		std::vector<std::string>&			getRoutes();
 };
-
-//it can't compile with this
-
-//#include "../HTTP/Response.hpp"
-//Response	*requestParse(std::string request, Server &server);

@@ -2,8 +2,8 @@ server
 		server_name     example.com			
 		listen					4242
 		cgi_extension			.cgi
-		client_max_body_size	100
-		autoindex	ff;
+		client_max_body_size	1023
+		autoindex	off;
 		location manon
 		{
 			root	data/www
@@ -11,7 +11,11 @@ server
 			cgi_extension			.php
 			autoindex on
 		}
+		location nik
+		{
+			return oskour.com
+		}
 
 server
-		listen		4242	 	
 		server_name     oskour.com			
+		autoindex on

@@ -66,7 +66,7 @@ std::vector<std::string>	Response::findMethods()
 void	Response::rootFile()
 {
 	std::string	curRoute = findRoute(_request.getPath());
-	std::string rootedTo = _server.getData().getServers()[findServer()][curRoute]["root"];
+	std::string rootedTo = _server.getData().getServers()[_curServer][curRoute]["root"];
 	if (rootedTo.empty())
 		return ;
 
@@ -74,9 +74,28 @@ void	Response::rootFile()
 	_file.replace(pos, curRoute.length(), rootedTo);
 }
 
+void	Response::setConfig()
+{
+	_file = urlDecode(_request.getPath());
+	_curServer = findServer();
+	_curRoute = findRoute(_file);
+
+	std::string redirection = _server.getData().getServers()[_curServer][_curRoute]["return"];
+	std::cout << redirection << std::endl;
+	if (!redirection.empty()) //change Host: localhost:post to Host: redirection:port
+	{
+		int pos = _request.getHeaders()["Host"].find(":");
+		_request.getHeaders()["Host"].replace(pos, _request.getHeaders()["Host"].length() - pos, redirection);
+	}
+
+	std::cout <<"res " <<_request.getHeaders()["Host"] << std::endl;
+	exit(666);
+}
+
 Response::Response(Request &request, Server &server, std::string tmp_file, int fd) : _server(server),
 	_request(request), _tmpPictFile(tmp_file)
 {
+	setConfig();
 	std::vector<std::string>	requestTypes = findMethods();
 
 	enum		mtype { GET, POST, DELETE, OTHER, ERROR413 };
@@ -97,10 +116,10 @@ Response::Response(Request &request, Server &server, std::string tmp_file, int f
 		a = i;
 	}
 
-	_file = urlDecode(_request.getPath());
 	rootFile();
-	if (!_server.getData().getServers()[findServer()][findRoute(_request.getPath())]["client_max_body_size"].empty()
-		&& atoi(_request.getHeaders()["Content-Length"].c_str()) > atoi(_server.getData().getServers()[findServer()][findRoute(_request.getPath())]["client_max_body_size"].c_str()))
+
+	if (!_server.getData().getServers()[_curServer][_curRoute]["client_max_body_size"].empty()
+		&& atoi(_request.getHeaders()["Content-Length"].c_str()) > atoi(_server.getData().getServers()[_curServer][_curRoute]["client_max_body_size"].c_str()))
 		a = ERROR413;
 	
 	switch (a)
@@ -129,7 +148,7 @@ Response::Response(Request &request, Server &server, std::string tmp_file, int f
 
 std::string	Response::findRoute(std::string const file)
 {
-	int s = findServer();
+	int s = _curServer;
 
 	for (std::map<std::string, std::map<std::string, std::string> >::iterator route = _server.getData().getServers()[s].begin(); route != _server.getData().getServers()[s].end(); route++)
 	{
@@ -142,9 +161,9 @@ std::string	Response::findRoute(std::string const file)
 void	Response::fillGetBody(std::string file) {
 	if (file == "")
 	{
-		if (_server.getData().getServers()[findServer()][findRoute(file)]["autoindex"] == "on")
+		if (_server.getData().getServers()[_curServer][_curRoute]["autoindex"] == "on")
 			_response["body"] = openHtmlFile("data/www/index.html");
-		else if (_server.getData().getServers()[findServer()][findRoute(file)]["autoindex"] == "off" || _server.getData().getServers()[findServer()][findRoute(file)]["autoindex"].empty())
+		else if (_server.getData().getServers()[_curServer][_curRoute]["autoindex"] == "off" || _server.getData().getServers()[_curServer][_curRoute]["autoindex"].empty())
 			_response["body"] = openHtmlFile("data/www/manon.html");
 		else
 		{
@@ -262,7 +281,7 @@ void	Response::GetResponse(int fd) {
 		if (!_file.empty())
 		{
 			std::string extension = getExtension(_file);
-			type = isValid(extension, _server.getData().getServers()[findServer()][findRoute(_file)]["cgi_extension"]);
+			type = isValid(extension, _server.getData().getServers()[_curServer][_curRoute]["cgi_extension"]);
 		}
 		else
 			_file = "";
@@ -282,7 +301,7 @@ void	Response::GetResponse(int fd) {
 
 void	Response::PostResponse(int fd) {
 	std::string	file = _request.getPath();
-	if (!isValid(getExtension(file), _server.getData().getServers()[findServer()][findRoute(file)]["cgi_extension"]))
+	if (!isValid(getExtension(file), _server.getData().getServers()[_curServer][_curRoute]["cgi_extension"]))
 	{
 		handleCgi(file, fd); //maybe a bool
 		return;
