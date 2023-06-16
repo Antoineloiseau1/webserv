@@ -331,13 +331,13 @@ std::string	Response::openHtmlFile(std::string f)
 	int permit = checkPermissions(f.substr(0, f.find_last_of('/')).c_str(), f);
 	if(permit == 2)
 	{
-		std::cout << "\n222\n";
 		_response["status"] = " 403 Forbidden\r\n";
+		if (_server.getData().getServers()[findServer()][findRoute(_request.getPath())].count("403") > 0)
+			return openHtmlFile(_server.getData().getServers()[findServer()][findRoute(_request.getPath())]["error_page"]);
 		return openHtmlFile("data/www/error/403.html");
 	}
 	else if(permit == 1)
 	{
-		std::cout << "\n111\n";
 		_response["status"] = " 404 Not Found\r\n";
 		if (_server.getData().getServers()[findServer()][findRoute(_request.getPath())].count("404") > 0) {
 			if (_firstTry) {
@@ -361,7 +361,6 @@ std::string	Response::openHtmlFile(std::string f)
 		return content;
 	}
 	else {
-		std::cout << "\n3333\n";
 		_response["status"] = " 404 Not Found\r\n";
 		if (_server.getData().getServers()[findServer()][findRoute(_request.getPath())].count("404") > 0)
 			return openHtmlFile(_server.getData().getServers()[findServer()][findRoute(_request.getPath())]["error_page"]);
@@ -427,7 +426,12 @@ std::string	Response::buildResponse(void) {
 /********************************* BadRequestError **********************************************/
 void	Response::BadRequestError(void) {
 
-	std::ifstream error("data/www/error/400.html");
+	std::string file = "data/www/error/400.html";
+	
+	if (_server.getData().getServers()[findServer()][findRoute(_request.getPath())].count("400") > 0)
+		file = _server.getData().getServers()[findServer()][findRoute(_request.getPath())]["error_page"];
+
+	std::ifstream error(file);
     std::string content((std::istreambuf_iterator<char>(error)), (std::istreambuf_iterator<char>()));
 
 	_response["status"] = " 400 Bad Request\r\n";
@@ -436,13 +440,17 @@ void	Response::BadRequestError(void) {
 	_response["length"] = "Content-Length: ";
 	_response["length"] += std::to_string(std::strlen(_response["body"].c_str()));
 	_response["length"] += "\r\n";
-	_response["connexion"] = "Connexion: close\r\n\r\n";
 }
 /************************************************************************************************/
 
 void	Response::RequestEntityTooLargeError(void) {
 
-	std::ifstream error("data/www/error/413.html");
+	std::string file = "data/www/error/413.html";
+	
+	if (_server.getData().getServers()[findServer()][findRoute(_request.getPath())].count("413") > 0)
+		file = _server.getData().getServers()[findServer()][findRoute(_request.getPath())]["error_page"];
+
+	std::ifstream error(file);
     std::string content((std::istreambuf_iterator<char>(error)), (std::istreambuf_iterator<char>()));
 
 	_response["status"] = " 413 Request Entity Too Large\r\n";
@@ -451,7 +459,6 @@ void	Response::RequestEntityTooLargeError(void) {
 	_response["length"] = "Content-Length: ";
 	_response["length"] += std::to_string(std::strlen(_response["body"].c_str()));
 	_response["length"] += "\r\n";
-	_response["connexion"] = "Connexion: close\r\n\r\n";
 
 	if (std::remove(_tmpPictFile.c_str()))
 		std::cout << "error: Failed to delete file.\n";
@@ -459,8 +466,12 @@ void	Response::RequestEntityTooLargeError(void) {
 
 /********************************** NotImplemented **********************************************/
 void	Response::NotImplemented(void) {
-
-	std::ifstream error("data/www/error/501.html");
+	std::string file = "data/www/error/501.html";
+	
+	if (_server.getData().getServers()[findServer()][findRoute(_request.getPath())].count("501") > 0)
+		file = _server.getData().getServers()[findServer()][findRoute(_request.getPath())]["error_page"];
+		
+	std::ifstream error(file);
     std::string content((std::istreambuf_iterator<char>(error)), (std::istreambuf_iterator<char>()));
 
 	_response["status"] = " 501 Not Implemented\r\n";
@@ -529,20 +540,32 @@ void	Response::ok200() {
 }
 
 void	Response::forbidden403() {
+	std::string file = "data/www/error/403.html";
+	
 	_response["status"] = " 403 Forbidden\r\n";
-	_response["body"] = openHtmlFile("data/www/error/403.html");
+	if (_server.getData().getServers()[findServer()][findRoute(_request.getPath())].count("403") > 0)
+		file = _server.getData().getServers()[findServer()][findRoute(_request.getPath())]["error_page"];
+	_response["body"] = openHtmlFile(file);
 }
 
 void	Response::noContent204() {
+	std::string file = "data/www/error/204.html";
+	
 	_response["status"] = " 204 No Content\r\n";
-	_response["body"] = openHtmlFile("data/www/error/204.html");
+	if (_server.getData().getServers()[findServer()][findRoute(_request.getPath())].count("204") > 0)
+		file = _server.getData().getServers()[findServer()][findRoute(_request.getPath())]["error_page"];
+	_response["body"] = openHtmlFile(file);
 	_response["type"] = "Content-Type: text/html\r\n";
 	fillGetLength();
 }
 
 void	Response::internalServerError505(void) {
+	std::string file = "data/www/error/505.html";
+	
 	_response["status"] = " 505 Internal Server Error\r\n";
-	_response["body"] = openHtmlFile("data/www/error/505.html");
+	if (_server.getData().getServers()[findServer()][findRoute(_request.getPath())].count("505") > 0)
+		file = _server.getData().getServers()[findServer()][findRoute(_request.getPath())]["error_page"];
+	_response["body"] = openHtmlFile(file);
 }
 
 std::map<std::string, std::string>	Response::getMap() { return _response; }

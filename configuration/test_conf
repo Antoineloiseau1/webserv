@@ -4,7 +4,7 @@ server
 		cgi_extension			.cgi
 		autoindex	off;
 		client_max_body_size	100
-		error_page   404 413 501 505 /error_test.html;
+		error_page   404 413 501 505 data/www/error/error_test.html;
 		location data/www/
 		{
 			limit_except	GET
