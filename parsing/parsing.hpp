@@ -16,9 +16,11 @@
 #include <vector>
 #include <iostream>
 #include <exception>
+#include <sstream>
 
 class data
 {
+	//vector[int:server][string:route][string:nomparam][string:valueparam]
 	private:
 		std::vector<std::map<std::string, std::map<std::string, std::string> > >	_servers;
 		std::string							_name;
@@ -30,7 +32,10 @@ class data
 		std::vector<std::string>			_routes;
 		void								fill(std::fstream &file, std::string route);
 		std::vector<int>					_ports;
-		int					_portsNbr;
+		int									_portsNbr;
+		std::string							_customErrPage;
+		std::vector<std::string>			_customErrors;
+
 	public:
 		data(std::string conf);
 		~data();
@@ -41,8 +46,10 @@ class data
 
 		int									isRoute;
 		void								newRouteSetup(std::string &content, std::fstream &file, std::string &line, std::map<std::string,std::map<std::string,std::string> > _config);
-		int		checkRoutes(int &isRoute, std::string &content, std::map<std::string,std::map<std::string,std::string> > _config);
-		void printData();
+		int									checkRoutes(int &isRoute, std::string &content, std::map<std::string,std::map<std::string,std::string> > _config);
+		void 								printData();
+		void								parseCustomErr();
+		void								addCustomErrorInMap(std::string errParam);
 
 		//random exceptions just in case
 		class	CantOpenFileException : public std::exception{

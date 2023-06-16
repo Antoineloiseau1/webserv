@@ -75,7 +75,8 @@ void	data::setSettings() //put all the accepted settings (the keyword will also 
 	_routeSettings.push_back("listen");
 	_routeSettings.push_back("autoindex");
 	_routeSettings.push_back("cgi_extension");
-	_routeSettings.push_back("listen");
+	// _routeSettings.push_back("listen");
+	_routeSettings.push_back("error_page");
 
 	_possibleSettings.push_back("server_name");
 	_possibleSettings.push_back("client_max_body_size");
@@ -212,9 +213,12 @@ void data::fill(std::fstream &file, std::string route) //at first call:  route="
 			_config.erase(_config.begin(), _config.end());
 			throw (WrongDataException());
 		}
-		_config[route].insert(std::make_pair(setting, line)); //put it in the config variable
+		if (_config[route].count(setting)) //checks if it already exists, if yes, replace.
+			_config[route][setting] = line;
+		else
+			_config[route].insert(std::make_pair(setting, line)); //put it in the config variable
 	}
-
+	
 	_servers.push_back(_config);
 	_config.erase(_config.begin(), _config.end());
 	if (isRoute != 0) //if the int isnt 0 then it's a route parsing error
@@ -222,7 +226,45 @@ void data::fill(std::fstream &file, std::string route) //at first call:  route="
 		_config.erase(_config.begin(), _config.end());
 		throw (WrongDataException());
 	}
-	printData();
+}
+
+//A METTRE DANS UTILS
+int	isAllDigit(std::string s) {
+	for (unsigned int i = 0; i < s.size(); i++) {
+		if (!isdigit(s[i]))
+			return 0;
+	}
+	return 1;
+}
+void	data::addCustomErrorInMap(std::string errParam) {
+	_customErrors.clear();
+	_customErrPage = errParam.substr(errParam.find_first_of('/'), errParam.size() - errParam.find_first_of('/'));
+	errParam.erase(errParam.find_first_of('/'));
+
+	std::string token;
+	std::istringstream iss(errParam);
+
+	while (iss >> token) {
+		if (!isAllDigit(token))
+			throw (WrongDataException());
+		_customErrors.push_back(token);
+	}
+}
+
+void	data::parseCustomErr() {
+	for (size_t i = 0; i != _servers.size(); i++)
+	{
+		for (std::map<std::string, std::map<std::string, std::string> >::iterator route = _servers[i].begin(); route != _servers[i].end(); route++)
+		{
+			if (route->second.count("error_page") > 0) {
+				addCustomErrorInMap(route->second["error_page"]);
+				route->second["error_page"] = _customErrPage;
+				for (std::vector<std::string>::iterator it = _customErrors.begin(); it != _customErrors.end(); it++) {
+					route->second.insert(std::make_pair(*it, "custom_error"));
+				}
+			}
+		}
+	}
 }
 
 void data::printData()
@@ -251,6 +293,8 @@ data::data(std::string conf)
 
 		setSettings();
 		data::fill(file, "default");
+		parseCustomErr();
+		printData();
 	}
 	catch (std::exception &e)
 	{
