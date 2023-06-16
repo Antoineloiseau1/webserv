@@ -249,7 +249,8 @@ int		Response::findServer()
 	for (size_t i = 0; i != _server.getData().getServers().size(); i++)
 	{
 		line = _request.getHeaders()["Host"];
-		if (!strncmp(_server.getData().getServers()[i]["default"]["listen"].c_str() , line.substr(line.find_last_of(":") + 1).c_str() , 4))
+		std::string serverSetup = _server.getData().getServers()[i]["default"]["server_name"] + ":" + _server.getData().getServers()[i]["default"]["listen"];
+		if (!strncmp(line.c_str(), serverSetup.c_str(), serverSetup.length()))
 			return i;
 	}
 	return 0;
