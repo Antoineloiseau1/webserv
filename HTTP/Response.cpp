@@ -64,7 +64,7 @@ std::vector<std::string>	Response::findMethods()
 }
 
 Response::Response(Request &request, Server &server, std::string tmp_file, int fd) : _server(server),
-	_request(request), _tmpPictFile(tmp_file)
+	_request(request), _tmpPictFile(tmp_file), _firstTry(true)
 {
 	std::vector<std::string>	requestTypes = findMethods();
 
@@ -331,12 +331,20 @@ std::string	Response::openHtmlFile(std::string f)
 	int permit = checkPermissions(f.substr(0, f.find_last_of('/')).c_str(), f);
 	if(permit == 2)
 	{
+		std::cout << "\n222\n";
 		_response["status"] = " 403 Forbidden\r\n";
 		return openHtmlFile("data/www/error/403.html");
 	}
 	else if(permit == 1)
 	{
+		std::cout << "\n111\n";
 		_response["status"] = " 404 Not Found\r\n";
+		if (_server.getData().getServers()[findServer()][findRoute(_request.getPath())].count("404") > 0) {
+			if (_firstTry) {
+				_firstTry = false;
+				return openHtmlFile(_server.getData().getServers()[findServer()][findRoute(_request.getPath())]["error_page"]);
+			}
+		}
 		return openHtmlFile("data/www/error/404.html");
 	}
 	if (f.find("uploads/") != std::string::npos || f.find("favicon.ico") != std::string::npos)
@@ -353,8 +361,11 @@ std::string	Response::openHtmlFile(std::string f)
 		return content;
 	}
 	else {
+		std::cout << "\n3333\n";
 		_response["status"] = " 404 Not Found\r\n";
-		return (openHtmlFile("data/www/error/404.html"));
+		if (_server.getData().getServers()[findServer()][findRoute(_request.getPath())].count("404") > 0)
+			return openHtmlFile(_server.getData().getServers()[findServer()][findRoute(_request.getPath())]["error_page"]);
+		return openHtmlFile("data/www/error/404.html");
 	}
 }
 
@@ -504,8 +515,12 @@ int	Response::checkPermissions(const char *directory, std::string file)
 }
 
 void	Response::notFound404() {
+	std::string file = "data/www/error/404.html";
+	
 	_response["status"] = " 404 Not Found\r\n";
-	_response["body"] = openHtmlFile("data/www/error/404.html");
+	if (_server.getData().getServers()[findServer()][findRoute(_request.getPath())].count("404") > 0)
+		file = _server.getData().getServers()[findServer()][findRoute(_request.getPath())]["error_page"];
+	_response["body"] = openHtmlFile(file);
 }
 
 void	Response::ok200() {
