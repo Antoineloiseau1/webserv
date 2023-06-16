@@ -27,6 +27,8 @@ class Response
 		std::string 						_tmpPictFile;
 		size_t								_contentSize;
 		bool								_firstTry;
+		int									_curServer;
+		std::string							_curRoute;
 
 
 	public:
@@ -63,6 +65,9 @@ class Response
 		void								fillGetBody(std::string file);
 		void								fillGetLength();
 		void								fillGetType(std::string file);
+
+		void	rootFile();
+		void	setConfig();
 
 
 		class	UnknownDataException : public std::exception{

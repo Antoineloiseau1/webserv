@@ -213,6 +213,12 @@ int	Server::_handler(Client *client, int i) {
 			client->createRequest(_requestBuffer);
 			client->setStatus(Client::HEADER_PARSED);
 		}
+		if (!client->getRequest())
+		{
+			std::cout << "Request empty\n\n\n\n";
+			disconnectClient(client ,i);
+			return 0;
+		}
 		if (client->getStatus() > Client::INIT) {
 			switch (client->getType()) {
 				case Client::GET_DELETE:

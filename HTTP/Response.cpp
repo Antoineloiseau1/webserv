@@ -63,6 +63,33 @@ std::vector<std::string>	Response::findMethods()
 	return methodTab;
 }
 
+void	Response::rootFile()
+{
+	std::string	curRoute = findRoute(_request.getPath());
+	std::string rootedTo = _server.getData().getServers()[_curServer][curRoute]["root"];
+	if (rootedTo.empty())
+		return ;
+
+	int pos = _file.find(curRoute);
+	_file.replace(pos, curRoute.length(), rootedTo);
+}
+
+void	Response::setConfig()
+{
+	_file = urlDecode(_request.getPath());
+	_curServer = findServer();
+	_curRoute = findRoute(_file);
+
+	std::string redirection = _server.getData().getServers()[_curServer][_curRoute]["return"];
+	if (!redirection.empty()) //change Host: localhost:post to Host: redirection:port
+	{
+		int pos = _request.getHeaders()["Host"].find(":");
+		_request.getHeaders()["Host"].replace(0, pos, redirection);
+		_curServer = findServer();
+		_curRoute = findRoute(_file);
+	}
+}
+
 Response::Response(Request &request, Server &server, std::string tmp_file, int fd) : _server(server),
 	_request(request), _tmpPictFile(tmp_file), _firstTry(true)
 {
