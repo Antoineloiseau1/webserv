@@ -104,12 +104,9 @@ void	Request::parseFormBody(std::string body) {
 			_formBody = dechunkBody(body);
 		if (isDelete) {
 			int loc = _formBody.find('=') + 1;
-			std::cout << "FILE TO DELETE = " << _fileToDelete << std::endl;
 			_fileToDelete = urlDecode(_formBody.substr(loc, _formBody.size() - loc));
-			std::cout << "FILE TO DELETE AAPRES = " << _fileToDelete << std::endl;
 		}
 		else {
-			std::cout << "++++++LAAAaaA " << std::endl;
 			std::stringstream ss(_formBody);
 			std::string token;
     		while (std::getline(ss, token, '&')) {
@@ -118,7 +115,6 @@ void	Request::parseFormBody(std::string body) {
 			}
 		}
 	}
-	std::cout << "JUSTE IC --- " << std::endl;
 }
 
 void	Request::setFileToDelete(std::string file) { _fileToDelete = file; }

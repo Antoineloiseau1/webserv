@@ -258,6 +258,17 @@ int	isValid(std::string const extension, std::string cgiCase)
 	return -42;
 }
 
+//A METTRE DANS UTILS
+bool	isADirectory(std::string const path)
+{
+	DIR* dir = opendir(path.c_str());
+    if (dir) {
+        closedir(dir);
+        return true;
+    }
+    return false;
+}
+
 int		Response::findServer()
 {
 	std::string line;
@@ -278,11 +289,16 @@ void	Response::GetResponse(int fd) {
 		{
 			std::string extension = getExtension(_file);
 			type = isValid(extension, _server.getData().getServers()[findServer()][findRoute(_file)]["cgi_extension"]);
+			if (isADirectory(_file)) {
+				type = 2;
+				_file = "";
+			}
 		}
 		else
 			_file = "";
-		if (type == -42)
+		if (type == -42) {
 			BadRequestError();
+		}
 		else if (type)
 		{
 			if (type == 1)

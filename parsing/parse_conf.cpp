@@ -77,12 +77,14 @@ void	data::setSettings() //put all the accepted settings (the keyword will also 
 	_routeSettings.push_back("cgi_extension");
 	// _routeSettings.push_back("listen");
 	_routeSettings.push_back("error_page");
+	_routeSettings.push_back("index");
 
 	_possibleSettings.push_back("server_name");
 	_possibleSettings.push_back("client_max_body_size");
 
 	_possibleSettings.push_back("location");
 	_possibleSettings.push_back("server");
+	
 	//a lot of things to push_back
 }
 
