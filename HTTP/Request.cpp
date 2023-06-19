@@ -92,10 +92,7 @@ std::string	Request::dechunkBody(std::string body) {
     }
     return dechunkedBody;
 }
-/*
-image=%2Fuploads%2Fimagetest.jpg -> path extracted
-nom=Demma&prenom=Manon&email=manon.demma%40gmail.com&ville=Nice -> in a map
-*/
+
 void	Request::parseFormBody(std::string body) {
 	_formBody = body;
 	if (!_formBody.empty()) {

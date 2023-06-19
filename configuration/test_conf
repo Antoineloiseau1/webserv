@@ -1,18 +1,18 @@
 server
 		server_name			example.com
-		listen					8080
+		listen					4242
 		cgi_extension			.cgi
 		autoindex	off;
-		index					manon.html
-		error_page	404		 501		data/www/error/error_test.html
-		client_max_body_size	100
+		index					milan.html
+		error_page		 501		data/www/error/error_test.html
+		client_max_body_size	10000000
 		location data/www/
 		{
 			limit_except		GET POST
 			cgi_extension			.php
 			autoindex off
 		}
-		location manon
+		location milan
 		{
 			root data/www/
 		}

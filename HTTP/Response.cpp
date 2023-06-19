@@ -161,7 +161,7 @@ void	Response::fillGetBody(std::string file) {
 		if (_server.getData().getServers()[_curServer][_curRoute]["autoindex"] == "on")
 			_response["body"] = openHtmlFile("data/www/index.html");
 		else if (_server.getData().getServers()[_curServer][_curRoute]["autoindex"] == "off" || _server.getData().getServers()[_curServer][_curRoute]["autoindex"].empty())
-			_response["body"] = openHtmlFile("data/www/manon.html");
+			_response["body"] = openHtmlFile("data/www/milan.html");
 		else
 		{
 			std::cerr << "Error in config file\n"; //maybe better error handling later
@@ -183,7 +183,7 @@ void	Response::fillGetBody(std::string file) {
 							"</head>\n"
 							"<nav>\n"
 							"<ul>\n"
-							"<li><a href=\"manon.html\">Accueil</a></li>\n"
+							"<li><a href=\"milan.html\">Accueil</a></li>\n"
 							"</ul>\n"
 							"</nav>\n"
 							"<body>\n"

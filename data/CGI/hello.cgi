@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+while True:
+    pass
+
 print("<html>")
 print("<head>")
 print("<title>Hello</title>")
