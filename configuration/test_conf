@@ -1,6 +1,6 @@
 server
 		server_name			example.com
-		listen					8079
+		listen					4242
 		cgi_extension			.cgi
 		autoindex	off;
 		client_max_body_size	100
@@ -17,4 +17,3 @@ server
 		listen		4242
 		server_name     oskour.com			
 		autoindex on
-		error_page   404 413 501 505 data/www/error/error_test.html;

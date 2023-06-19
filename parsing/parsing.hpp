@@ -6,7 +6,7 @@
 /*   By: anloisea <anloisea@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/27 10:31:47 by mmidon            #+#    #+#             */
-/*   Updated: 2023/06/19 08:58:06 by mmidon           ###   ########.fr       */
+/*   Updated: 2023/06/19 09:26:48 by mmidon           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,6 +41,7 @@ class data
 		~data();
 
 		void								makePorts(size_t i);
+		void								areServersDifferent();
 		void								setSettings();
 		std::string							whichSetting(std::string line);
 
@@ -59,6 +60,10 @@ class data
 		class	WrongDataException : public std::exception{
 		public:
 			const char	*what() const throw(){ return "wrong data";};
+		};
+		class	DuplicateServerException : public std::exception{
+		public:
+			const char	*what() const throw(){ return "duplicate server, try changing server_name or listen port";};
 		};
 
 		//get

@@ -17,8 +17,7 @@ ListeningSocket::ListeningSocket(int domain, int service, int protocole, int por
 void	ListeningSocket::establishConnection(void) {
 	/* Identifying(Naming) Socket */
 	if (bind(this->_fd, reinterpret_cast<struct sockaddr*>(&this->_address), sizeof(this->_address)) == -1) {
-		std::cerr << "bind: " << strerror(errno) << std::endl;
-		exit(EXIT_FAILURE);
+		return;
 	}
 
 	/* Getting Ready For Requests */
