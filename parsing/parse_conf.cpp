@@ -183,7 +183,7 @@ void data::fill(std::fstream &file, std::string route) //at first call:  route="
 		{
 			if (!_config.size() && !_config["default"].size())
 				continue;
-			else
+			else if (_config["default"].size())
 			{
 				_servers.push_back(_config);
 				server_routes.clear();
@@ -301,6 +301,19 @@ void		data::areServersDifferent()
 	}
 }
 
+int	data::isEmpty(std::string conf) {
+	std::fstream file(conf);
+
+	if (file.peek() == EOF)
+		return 1;
+	char c;
+    while (file.get(c)) {
+        if (!std::isspace(static_cast<unsigned char>(c)))
+            return 0;
+	}
+	return 1;
+}
+
 data::data(std::string conf)
 {
 	isRoute = 0;
@@ -310,7 +323,11 @@ data::data(std::string conf)
 		std::fstream file(conf); //can't fine if i need ofstream or ifstream so fstream
 		if (!file.is_open())
 			throw CantOpenFileException();
-
+			
+		if (isEmpty(conf)) {
+			std::cout << "isEmpty () = " << isEmpty(conf) << std::endl;
+			throw EmptyFileException();
+		}
 		setSettings();
 		data::fill(file, "default");
 		parseCustomErr();
