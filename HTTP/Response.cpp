@@ -172,10 +172,11 @@ void	Response::fillGetBody(std::string file) {
 			exit(1);
 		}
 	}
-	else if(file == "style.css" || file.empty())
+	else if(file.substr(file.find_last_of("/") + 1) == "style.css" || file.empty())
 	{
-		_response["status"] = " 204 No Content\r\n";
-		_response["body"] = "";
+		_response["status"] = " 200 OK\r\n";
+		_response["body"] = openHtmlFile("data/www/style.css");
+		_response["content-type"] = "text/css";
 	}
 	else if (file == "data/www/gallery.html")
 	{

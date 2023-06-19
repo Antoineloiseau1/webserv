@@ -1,8 +1,4 @@
 server
-	server_name			exmple.com
-	listen					4242
-
-server
 		server_name			example.com
 		listen					4242
 		cgi_extension			.cgi
@@ -11,13 +7,13 @@ server
 		index					manon.html
 		location data/www/
 		{
-			limit_except	GET
+			limit_except		GET
 			cgi_extension			.php
 			autoindex on
 		}
 		location manon
 		{
-			root data/www
+			root data/www/
 		}
 
 server
