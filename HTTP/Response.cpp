@@ -116,7 +116,11 @@ Response::Response(Request &request, Server &server, std::string tmp_file, int f
 
 	rootFile();
 	
-	if (!_server.getData().getServers()[_curServer][_curRoute].empty()
+	std::cout <<"aled " << _file << std::endl;
+	std::cout << "\n\n\n\n\n\n";
+	std::cout << _request.getHeaders()["Content-Length"] << std::endl;
+   std::cout << _server.getData().getServers()[_curServer][_curRoute]["client_max_body_size"] << std::endl;
+	if (!_server.getData().getServers()[_curServer][_curRoute]["client_max_body_size"].empty()
 		&& atoi(_request.getHeaders()["Content-Length"].c_str()) > atoi(_server.getData().getServers()[_curServer][_curRoute]["client_max_body_size"].c_str()))
 		a = ERROR413;
 	switch (a)
@@ -284,7 +288,6 @@ int		Response::findServer()
 
 void	Response::GetResponse(int fd) {
 	
-		_file = urlDecode(_request.getPath());
 		int type = -1;
 		if (!_file.empty())
 		{
@@ -351,7 +354,7 @@ void	Response::DeleteResponse(void) {
 
 	_file = _request.getFileToDelete();
 	if(_file.empty())
-		_file = urlDecode(_request.getPath());
+		_file = urlDecode(_file);
 	if(checkPermissions(_file.substr(0, _file.find_last_of('/')).c_str(), _file) == 1)
 		notFound404();
 	else if(checkPermissions(_file.substr(0, _file.find_last_of('/')).c_str(), _file) == 2)
@@ -528,6 +531,7 @@ int	Response::checkPermissions(const char *directory, std::string file)
 	struct stat		sfile;
 	DIR				*fd;
 
+	std::cout << "dir " << directory << " file " << file << std::endl;
 	fd = opendir(directory);
 	if (fd == NULL)
 	{
