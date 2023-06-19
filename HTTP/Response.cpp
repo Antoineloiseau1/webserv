@@ -60,6 +60,9 @@ std::vector<std::string>	Response::findMethods()
 
 	if (!isValid(methodTab, knownMethods))
 		throw(UnknownDataException());
+	for (std::vector<std::string>::iterator it = methodTab.begin(); it != methodTab.end(); it++) {
+		std::cout << "\nMETHOD TAB = " << *it << std::endl;
+	}
 	return methodTab;
 }
 
@@ -96,33 +99,34 @@ Response::Response(Request &request, Server &server, std::string tmp_file, int f
 	setConfig();
 	std::vector<std::string>	requestTypes = findMethods();
 
-	enum		mtype { GET, POST, DELETE, OTHER, ERROR413 };
+	enum		mtype { OTHER, GET, POST, DELETE, ERROR413 };
 	int			a = 0;
 
 	for (size_t i = 0; i != requestTypes.size(); i++)
 	{
 		if (request.getTypeStr() == requestTypes[i])
 		{
-			a = i;
-			if (i > 2)
+			a = i + 1;
+			if (i > 4)
 			{
-				a = 3;
+				a = 0;
 				break;
 			}
 			break;
 		}
-		a = i;
+		// a = i;
 	}
 
 	rootFile();
 	
-	std::cout <<"aled " << _file << std::endl;
+	// std::cout <<"aled " << _file << std::endl;
 	std::cout << "\n\n\n\n\n\n";
 	std::cout << _request.getHeaders()["Content-Length"] << std::endl;
    std::cout << _server.getData().getServers()[_curServer][_curRoute]["client_max_body_size"] << std::endl;
 	if (!_server.getData().getServers()[_curServer][_curRoute]["client_max_body_size"].empty()
 		&& atoi(_request.getHeaders()["Content-Length"].c_str()) > atoi(_server.getData().getServers()[_curServer][_curRoute]["client_max_body_size"].c_str()))
 		a = ERROR413;
+	std::cout << "\n\n JE SUIS ICI 000 !!!!!! a = "<< a << "\n\n";
 	switch (a)
 	{
 		case GET:
@@ -317,12 +321,15 @@ void	Response::GetResponse(int fd) {
 
 void	Response::PostResponse(int fd) {
 	std::string	file = _request.getPath();
+	std::cout << "\n\n JE SUIS LA !!!!!!\n\n";
 	if (!isValid(getExtension(file), _server.getData().getServers()[_curServer][_curRoute]["cgi_extension"]))
 	{
+		std::cout << "\n1111111111\n";
 		handleCgi(file, fd); //maybe a bool
 		return;
 	}
 	if (_request.isADataUpload == true) {
+		std::cout << "\n222222222222\n";
 			std::ifstream sourceFile(_tmpPictFile, std::ios::in | std::ios::binary);
 			std::string filePath = "uploads/" + _request.getFileName(); 
 			std::ofstream destFile(filePath, std::ios::out | std::ios::binary);
@@ -337,24 +344,27 @@ void	Response::PostResponse(int fd) {
     		destFile.close();
 	}
 	if (_request.isDelete) {
+		std::cout << "\n33333333\n";
 		DeleteResponse();
 		return ;
 	}
 	else if (file != "favicon.ico" && file != " " && !file.empty() && file != "" && file != "data/www/style.css")
-	{ ;
+	{ 
+		std::cout << "\n44444444\n";
 		_response["status"] = " 201 Created\r\n";
 		_response["body"] = openHtmlFile("data/www/error/201.html");
-		return;
+		// return;
 	}
 	fillGetLength();
 	_response["type"] = "Content-Type: text/html\r\n";// tjrs que du html pour le moment
+	std::cout << "\n5555555\n";
 }
 
 void	Response::DeleteResponse(void) {
 
 	_file = _request.getFileToDelete();
-	if(_file.empty())
-		_file = urlDecode(_file);
+	// if(_file.empty())
+	// 	_file = urlDecode(_file);
 	if(checkPermissions(_file.substr(0, _file.find_last_of('/')).c_str(), _file) == 1)
 		notFound404();
 	else if(checkPermissions(_file.substr(0, _file.find_last_of('/')).c_str(), _file) == 2)

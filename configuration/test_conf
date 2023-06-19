@@ -1,19 +1,13 @@
 server
-	server_name			exmple.com
-	listen					4242
-
-server
 		server_name			example.com
 		listen					4242
 		cgi_extension			.cgi
 		autoindex	off;
-		client_max_body_size	10000000
 		index					manon.html
 		location data/www/
 		{
-			limit_except	GET
 			cgi_extension			.php
-			autoindex on
+			autoindex off
 		}
 		location manon
 		{
@@ -22,6 +16,6 @@ server
 
 server
 		cgi_extension			.cgi
-		listen		4242
+		listen		4241
 		server_name     oskour.com			
 		autoindex on
