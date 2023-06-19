@@ -30,7 +30,7 @@ std::vector<std::string>	Response::findMethods()
 	std::vector<std::string>	methodTab;
 	std::vector<std::string>	knownMethods;
 	std::string					tmp;
-	std::string					methodsList = _server.getData().getServers()[findServer()][findRoute(_file)]["limit_except"];
+	std::string					methodsList = _server.getData().getServers()[_curServer][_curRoute]["limit_except"];
 
 	knownMethods.push_back("GET");
 	knownMethods.push_back("POST");
@@ -93,6 +93,7 @@ void	Response::setConfig()
 Response::Response(Request &request, Server &server, std::string tmp_file, int fd) : _server(server),
 	_request(request), _tmpPictFile(tmp_file), _firstTry(true)
 {
+	setConfig();
 	std::vector<std::string>	requestTypes = findMethods();
 
 	enum		mtype { GET, POST, DELETE, OTHER, ERROR413 };
@@ -112,9 +113,11 @@ Response::Response(Request &request, Server &server, std::string tmp_file, int f
 		}
 		a = i;
 	}
+
+	rootFile();
 	
-	if (!_server.getData().getServers()[findServer()][findRoute(_request.getPath())]["client_max_body_size"].empty()
-		&& atoi(_request.getHeaders()["Content-Length"].c_str()) > atoi(_server.getData().getServers()[findServer()][findRoute(_request.getPath())]["client_max_body_size"].c_str()))
+	if (!_server.getData().getServers()[_curServer][_curRoute].empty()
+		&& atoi(_request.getHeaders()["Content-Length"].c_str()) > atoi(_server.getData().getServers()[_curServer][_curRoute]["client_max_body_size"].c_str()))
 		a = ERROR413;
 	switch (a)
 	{
@@ -142,24 +145,22 @@ Response::Response(Request &request, Server &server, std::string tmp_file, int f
 
 std::string	Response::findRoute(std::string const file)
 {
-	int s = findServer();
+	int s = _curServer;
 
-	for (std::map<std::string, std::map<std::string, std::string> >::iterator route = _server.getData().getServers()[s].begin(); route != _server.getData().getServers()[s].end(); route++)
+		for (std::map<std::string, std::map<std::string, std::string> >::iterator route = _server.getData().getServers()[s].begin(); route != _server.getData().getServers()[s].end(); route++)
 	{
-		if ( route->first == file.c_str())
+		if (!strncmp(route->first.c_str(), file.c_str(), route->first.length()))
 			return route->first;
 	}
 	return "default";
 }
 
 void	Response::fillGetBody(std::string file) {
-	// if (file.find("data/www/") == std::string::npos)
-	// 	file = "data/www/" + file;
 	if (file == "")
 	{
-		if (_server.getData().getServers()[findServer()][findRoute(file)]["autoindex"] == "on")
+		if (_server.getData().getServers()[_curServer][_curRoute]["autoindex"] == "on")
 			_response["body"] = openHtmlFile("data/www/index.html");
-		else if (_server.getData().getServers()[findServer()][findRoute(file)]["autoindex"] == "off" || _server.getData().getServers()[findServer()][findRoute(file)]["autoindex"].empty())
+		else if (_server.getData().getServers()[_curServer][_curRoute]["autoindex"] == "off" || _server.getData().getServers()[_curServer][_curRoute]["autoindex"].empty())
 			_response["body"] = openHtmlFile("data/www/manon.html");
 		else
 		{
@@ -274,8 +275,8 @@ int		Response::findServer()
 	std::string line;
 	for (size_t i = 0; i != _server.getData().getServers().size(); i++)
 	{
-		line = _request.getHeaders()["Host"];
-		if (!strncmp(_server.getData().getServers()[i]["default"]["listen"].c_str() , line.substr(line.find_last_of(":") + 1).c_str() , 4))
+		std::string serverSetup = _server.getData().getServers()[i]["default"]["server_name"] + ":" + _server.getData().getServers()[i]["default"]["listen"];
+		if (!strncmp(line.c_str(), serverSetup.c_str(), serverSetup.length()))
 			return i;
 	}
 	return 0;
@@ -288,8 +289,7 @@ void	Response::GetResponse(int fd) {
 		if (!_file.empty())
 		{
 			std::string extension = getExtension(_file);
-			type = isValid(extension, _server.getData().getServers()[findServer()][findRoute(_file)]["cgi_extension"]);
-			std::cout << "type " << type << std::endl;
+			type = isValid(extension, _server.getData().getServers()[_curServer][_curRoute]["cgi_extension"]);
 			if (isADirectory(_file)) {
 				type = 2;
 				_file = "";
@@ -314,7 +314,7 @@ void	Response::GetResponse(int fd) {
 
 void	Response::PostResponse(int fd) {
 	std::string	file = _request.getPath();
-	if (!isValid(getExtension(file), _server.getData().getServers()[findServer()][findRoute(file)]["cgi_extension"]))
+	if (!isValid(getExtension(file), _server.getData().getServers()[_curServer][_curRoute]["cgi_extension"]))
 	{
 		handleCgi(file, fd); //maybe a bool
 		return;
@@ -371,17 +371,17 @@ std::string	Response::openHtmlFile(std::string f)
 	if(permit == 2)
 	{
 		_response["status"] = " 403 Forbidden\r\n";
-		if (_server.getData().getServers()[findServer()][findRoute(_request.getPath())].count("403") > 0)
-			return openHtmlFile(_server.getData().getServers()[findServer()][findRoute(_request.getPath())]["error_page"]);
+		if (_server.getData().getServers()[_curServer][_curRoute].count("403") > 0)
+			return openHtmlFile(_server.getData().getServers()[_curServer][_curRoute]["error_page"]);
 		return openHtmlFile("data/www/error/403.html");
 	}
 	else if(permit == 1)
 	{
 		_response["status"] = " 404 Not Found\r\n";
-		if (_server.getData().getServers()[findServer()][findRoute(_request.getPath())].count("404") > 0) {
+		if (_server.getData().getServers()[_curServer][_curRoute].count("404") > 0) {
 			if (_firstTry) {
 				_firstTry = false;
-				return openHtmlFile(_server.getData().getServers()[findServer()][findRoute(_request.getPath())]["error_page"]);
+				return openHtmlFile(_server.getData().getServers()[_curServer][_curRoute]["error_page"]);
 			}
 		}
 		return openHtmlFile("data/www/error/404.html");
@@ -401,8 +401,8 @@ std::string	Response::openHtmlFile(std::string f)
 	}
 	else {
 		_response["status"] = " 404 Not Found\r\n";
-		if (_server.getData().getServers()[findServer()][findRoute(_request.getPath())].count("404") > 0)
-			return openHtmlFile(_server.getData().getServers()[findServer()][findRoute(_request.getPath())]["error_page"]);
+		if (_server.getData().getServers()[_curServer][_curRoute].count("404") > 0)
+			return openHtmlFile(_server.getData().getServers()[_curServer][_curRoute]["error_page"]);
 		return openHtmlFile("data/www/error/404.html");
 	}
 }
@@ -467,8 +467,8 @@ void	Response::BadRequestError(void) {
 
 	std::string file = "data/www/error/400.html";
 	
-	if (_server.getData().getServers()[findServer()][findRoute(_request.getPath())].count("400") > 0)
-		file = _server.getData().getServers()[findServer()][findRoute(_request.getPath())]["error_page"];
+	if (_server.getData().getServers()[_curServer][_curRoute].count("400") > 0)
+		file = _server.getData().getServers()[_curServer][_curRoute]["error_page"];
 
 	std::ifstream error(file);
     std::string content((std::istreambuf_iterator<char>(error)), (std::istreambuf_iterator<char>()));
@@ -486,8 +486,8 @@ void	Response::RequestEntityTooLargeError(void) {
 
 	std::string file = "data/www/error/413.html";
 	
-	if (_server.getData().getServers()[findServer()][findRoute(_request.getPath())].count("413") > 0)
-		file = _server.getData().getServers()[findServer()][findRoute(_request.getPath())]["error_page"];
+	if (_server.getData().getServers()[_curServer][_curRoute].count("413") > 0)
+		file = _server.getData().getServers()[_curServer][_curRoute]["error_page"];
 
 	std::ifstream error(file);
     std::string content((std::istreambuf_iterator<char>(error)), (std::istreambuf_iterator<char>()));
@@ -500,15 +500,15 @@ void	Response::RequestEntityTooLargeError(void) {
 	_response["length"] += "\r\n";
 
 	if (std::remove(_tmpPictFile.c_str()))
-		std::cout << "error: Failed to delete file.\n";
+		std::cerr << "error: Failed to delete file.\n";
 }
 
 /********************************** NotImplemented **********************************************/
 void	Response::NotImplemented(void) {
 	std::string file = "data/www/error/501.html";
 	
-	if (_server.getData().getServers()[findServer()][findRoute(_request.getPath())].count("501") > 0)
-		file = _server.getData().getServers()[findServer()][findRoute(_request.getPath())]["error_page"];
+	if (_server.getData().getServers()[_curServer][_curRoute].count("501") > 0)
+		file = _server.getData().getServers()[_curServer][_curRoute]["error_page"];
 		
 	std::ifstream error(file);
     std::string content((std::istreambuf_iterator<char>(error)), (std::istreambuf_iterator<char>()));
@@ -568,8 +568,8 @@ void	Response::notFound404() {
 	std::string file = "data/www/error/404.html";
 	
 	_response["status"] = " 404 Not Found\r\n";
-	if (_server.getData().getServers()[findServer()][findRoute(_request.getPath())].count("404") > 0)
-		file = _server.getData().getServers()[findServer()][findRoute(_request.getPath())]["error_page"];
+	if (_server.getData().getServers()[_curServer][_curRoute].count("404") > 0)
+		file = _server.getData().getServers()[_curServer][_curRoute]["error_page"];
 	_response["body"] = openHtmlFile(file);
 }
 
@@ -582,8 +582,8 @@ void	Response::forbidden403() {
 	std::string file = "data/www/error/403.html";
 	
 	_response["status"] = " 403 Forbidden\r\n";
-	if (_server.getData().getServers()[findServer()][findRoute(_request.getPath())].count("403") > 0)
-		file = _server.getData().getServers()[findServer()][findRoute(_request.getPath())]["error_page"];
+	if (_server.getData().getServers()[_curServer][_curRoute].count("403") > 0)
+		file = _server.getData().getServers()[_curServer][_curRoute]["error_page"];
 	_response["body"] = openHtmlFile(file);
 }
 
@@ -591,8 +591,8 @@ void	Response::noContent204() {
 	std::string file = "data/www/error/204.html";
 	
 	_response["status"] = " 204 No Content\r\n";
-	if (_server.getData().getServers()[findServer()][findRoute(_request.getPath())].count("204") > 0)
-		file = _server.getData().getServers()[findServer()][findRoute(_request.getPath())]["error_page"];
+	if (_server.getData().getServers()[_curServer][_curRoute].count("204") > 0)
+		file = _server.getData().getServers()[_curServer][_curRoute]["error_page"];
 	_response["body"] = openHtmlFile(file);
 	_response["type"] = "Content-Type: text/html\r\n";
 	fillGetLength();
@@ -602,8 +602,8 @@ void	Response::internalServerError505(void) {
 	std::string file = "data/www/error/505.html";
 	
 	_response["status"] = " 505 Internal Server Error\r\n";
-	if (_server.getData().getServers()[findServer()][findRoute(_request.getPath())].count("505") > 0)
-		file = _server.getData().getServers()[findServer()][findRoute(_request.getPath())]["error_page"];
+	if (_server.getData().getServers()[_curServer][_curRoute].count("505") > 0)
+		file = _server.getData().getServers()[_curServer][_curRoute]["error_page"];
 	_response["body"] = openHtmlFile(file);
 }
 

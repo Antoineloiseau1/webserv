@@ -32,7 +32,7 @@ class Request {
 		std::string							getTypeStr();
 		std::string							getPath();
 		std::string							getVersion();
-		std::map<std::string, std::string>	getHeaders();
+		std::map<std::string, std::string>&	getHeaders();
 		std::string							getBody();
 		std::string							getPreBody();
 		std::string							getFileName();
