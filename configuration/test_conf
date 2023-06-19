@@ -13,7 +13,7 @@ server
 		}
 
 server
-
+		cgi_extension			.cgi
 		listen		4242
 		server_name     oskour.com			
 		autoindex on

@@ -289,6 +289,7 @@ void	Response::GetResponse(int fd) {
 		{
 			std::string extension = getExtension(_file);
 			type = isValid(extension, _server.getData().getServers()[findServer()][findRoute(_file)]["cgi_extension"]);
+			std::cout << "type " << type << std::endl;
 			if (isADirectory(_file)) {
 				type = 2;
 				_file = "";
@@ -301,11 +302,6 @@ void	Response::GetResponse(int fd) {
 		}
 		else if (type)
 		{
-			if (type == 1)
-			{
-				if (_file.find("data/www/") == std::string::npos) //route to setup
-					_file = "data/www/" + _file;
-			}
 			_response["status"] = " 200 OK\r\n"; //Main case, updated when event in the building of response
 			fillGetBody(_file);
 			fillGetLength();
