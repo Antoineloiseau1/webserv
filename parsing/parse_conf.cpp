@@ -6,7 +6,7 @@
 /*   By: anloisea <anloisea@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/25 10:15:25 by mmidon            #+#    #+#             */
-/*   Updated: 2023/06/15 16:26:25 by mmidon           ###   ########.fr       */
+/*   Updated: 2023/06/19 08:59:04 by mmidon           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -124,7 +124,7 @@ bool	isRooted(std::string const newRoute, std::vector<std::string>& _routes)
 	return false;
 }
 
-void	data::newRouteSetup(std::string &content, std::fstream &file, std::string &line, std::map<std::string,std::map<std::string,std::string> > _config)
+void	data::newRouteSetup(std::string &content, std::fstream &file, std::string &line, std::map<std::string,std::map<std::string,std::string> >& _config)
 {
 	isRoute++; //entering a route
 	getline(file, content);
@@ -134,6 +134,7 @@ void	data::newRouteSetup(std::string &content, std::fstream &file, std::string &
 		_config.erase(_config.begin(), _config.end());
 		throw(WrongDataException());
 	}
+	_config[line] = _config["default"]; //route overload default instead of ignoring it
 	fill(file, line); //recursive
 }
 
@@ -318,6 +319,6 @@ data::data(std::string conf)
 
 data::~data()
 {
-	std::cout << "DATA DESTRUCTION\n";
+	std::cerr << "DATA DESTRUCTION\n";
 	return;
 }
