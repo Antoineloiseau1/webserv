@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-while True:
-    pass
+# while True:
+#     pass
 
 print("<html>")
 print("<head>")

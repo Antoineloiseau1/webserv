@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include "../utils.hpp"
+#include <signal.h>
 
 bool	isValid(std::vector<std::string> toBeValidated, std::vector<std::string> example)
 {
@@ -95,6 +96,9 @@ Response::Response(Request &request, Server &server, std::string tmp_file, int f
 	_request(request), _tmpPictFile(tmp_file), _firstTry(true)
 {
 	setConfig();
+	_response["version"] = _request.getVersion();
+	_response["connexion"] = "Connexion: close\r\n\r\n";
+
 	std::vector<std::string>	requestTypes = findMethods();
 
 	enum		mtype { OTHER, GET, POST, DELETE, ERROR413 };
@@ -139,8 +143,6 @@ Response::Response(Request &request, Server &server, std::string tmp_file, int f
 		default:
 			BadRequestError();
 	}
-	_response["version"] = _request.getVersion();
-	_response["connexion"] = "Connexion: close\r\n\r\n";
 }
 
 std::string	Response::findRoute(std::string const file)
@@ -295,8 +297,13 @@ void	Response::GetResponse(int fd) {
 			fillGetLength();
 			fillGetType(_file);
 		}
-		else
+		else {
+			std::cout << "RESPONSE = "<< _response.size() << std::endl;
+			_response.clear();
+			std::cout << "RESPONSE = "<< _response.size() << std::endl;
 			handleCgi(_file, fd);
+		}
+			
 }
 
 
@@ -440,8 +447,31 @@ void	Response::handleCgi(std::string file, int fd) {
 			cgiEnv[i] = strdup(const_cast<const char *>(_env[i].c_str()));
 		cgiEnv[i] = 0;
 		dup2(pipefd[1], STDOUT_FILENO);
-		if (execve(args[0], args, cgiEnv) == -1)
+		if (execve(args[0], args, cgiEnv) == -1) {
+			std::cerr << "EREUR EXECVE\n";
 			internalServerError505();
+		}
+	}
+	else {
+		// int status;
+		// pid_t res;
+		// std::cerr << "AVANT WAIT PID\n";
+		// res = waitpid(pid, &status, WNOHANG);
+		// long	i = 0;
+		// while (res == 0 && i++ <= 500000000) {}
+		// res = waitpid(pid, &status, WNOHANG);
+		// if (res == 0) {
+		// 	// Child process is still running, terminate it
+		// 	std::cerr << "JE KILL LE PROCESS\n";
+		// 	kill(pid, SIGKILL);
+		// 	waitpid(pid, &status, 0);
+		// 	gatewayTimeout504();
+		// } else if (res == -1) {
+		// 	// Error occurred while waiting for the child process
+		// 	std::cerr << "ERREUR DANS LE WAIT\n";
+		// 	internalServerError505();
+		// 	std::cout << "Error occurred while waiting for the child process." << std::endl;
+		// }
 	}
 	close(pipefd[1]);
 	close(pipefd[0]);
@@ -592,6 +622,15 @@ void	Response::internalServerError505(void) {
 	
 	_response["status"] = " 505 Internal Server Error\r\n";
 	if (_server.getData().getServers()[_curServer][_curRoute].count("505") > 0)
+		file = _server.getData().getServers()[_curServer][_curRoute]["error_page"];
+	_response["body"] = openHtmlFile(file);
+}
+
+void	Response::gatewayTimeout504(void) {
+	std::string file = "data/www/error/504.html";
+	
+	_response["status"] = " 504 Gateway Timeout\r\n";
+	if (_server.getData().getServers()[_curServer][_curRoute].count("504") > 0)
 		file = _server.getData().getServers()[_curServer][_curRoute]["error_page"];
 	_response["body"] = openHtmlFile(file);
 }
