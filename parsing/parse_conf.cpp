@@ -6,7 +6,7 @@
 /*   By: anloisea <anloisea@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/25 10:15:25 by mmidon            #+#    #+#             */
-/*   Updated: 2023/06/19 09:57:14 by mmidon           ###   ########.fr       */
+/*   Updated: 2023/06/19 14:18:34 by anloisea         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,8 @@
 #include <vector>
 #include <map>
 #include <cstdlib>
-#include <cstring> //RAJOUTE POUR COMPILER SUR LINUX, VERIF SI STRNCMP OK
+#include <cstring>
+#include "../utils.hpp"
 
 #include "parsing.hpp"
 
@@ -232,14 +233,6 @@ void data::fill(std::fstream &file, std::string route) //at first call:  route="
 	}
 }
 
-//A METTRE DANS UTILS
-int	isAllDigit(std::string s) {
-	for (unsigned int i = 0; i < s.size(); i++) {
-		if (!isdigit(s[i]))
-			return 0;
-	}
-	return 1;
-}
 void	data::addCustomErrorInMap(std::string errParam) {
 	_customErrors.clear();
 	_customErrPage = errParam.substr(errParam.find_last_of(" \t\v\r\f") + 1, errParam.size() - errParam.find_last_of(" \t\v\r\f") - 1);
@@ -325,7 +318,6 @@ data::data(std::string conf)
 			throw CantOpenFileException();
 			
 		if (isEmpty(conf)) {
-			std::cout << "isEmpty () = " << isEmpty(conf) << std::endl;
 			throw EmptyFileException();
 		}
 		setSettings();
@@ -352,8 +344,4 @@ data::data(std::string conf)
 	}
 }
 
-data::~data()
-{
-	std::cerr << "DATA DESTRUCTION\n";
-	return;
-}
+data::~data() {}

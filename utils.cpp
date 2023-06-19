@@ -1,6 +1,6 @@
 #include "utils.hpp"
+#include <dirent.h>
 
-/* A METTRE DANS UTILS*/
 std::string urlDecode(const std::string& encoded) {
     std::string decoded;
    size_t i = 0;
@@ -17,4 +17,22 @@ std::string urlDecode(const std::string& encoded) {
         }
     }
     return decoded;
+}
+
+bool	isADirectory(std::string const path)
+{
+	DIR* dir = opendir(path.c_str());
+    if (dir) {
+        closedir(dir);
+        return true;
+    }
+    return false;
+}
+
+int	isAllDigit(std::string s) {
+	for (unsigned int i = 0; i < s.size(); i++) {
+		if (!isdigit(s[i]))
+			return 0;
+	}
+	return 1;
 }

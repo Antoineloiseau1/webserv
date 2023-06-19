@@ -7,6 +7,7 @@
 #include <array>
 #include <sys/stat.h>
 #include <dirent.h>
+#include "../utils.hpp"
 
 bool	isValid(std::vector<std::string> toBeValidated, std::vector<std::string> example)
 {
@@ -60,9 +61,6 @@ std::vector<std::string>	Response::findMethods()
 
 	if (!isValid(methodTab, knownMethods))
 		throw(UnknownDataException());
-	for (std::vector<std::string>::iterator it = methodTab.begin(); it != methodTab.end(); it++) {
-		std::cout << "\nMETHOD TAB = " << *it << std::endl;
-	}
 	return methodTab;
 }
 
@@ -114,19 +112,13 @@ Response::Response(Request &request, Server &server, std::string tmp_file, int f
 			}
 			break;
 		}
-		// a = i;
 	}
 
 	rootFile();
-	
-	// std::cout <<"aled " << _file << std::endl;
-	std::cout << "\n\n\n\n\n\n";
-	std::cout << _request.getHeaders()["Content-Length"] << std::endl;
-   std::cout << _server.getData().getServers()[_curServer][_curRoute]["client_max_body_size"] << std::endl;
+
 	if (!_server.getData().getServers()[_curServer][_curRoute]["client_max_body_size"].empty()
 		&& atoi(_request.getHeaders()["Content-Length"].c_str()) > atoi(_server.getData().getServers()[_curServer][_curRoute]["client_max_body_size"].c_str()))
 		a = ERROR413;
-	std::cout << "\n\n JE SUIS ICI 000 !!!!!! a = "<< a << "\n\n";
 	switch (a)
 	{
 		case GET:
@@ -268,17 +260,6 @@ int	isValid(std::string const extension, std::string cgiCase)
 	return -42;
 }
 
-//A METTRE DANS UTILS
-bool	isADirectory(std::string const path)
-{
-	DIR* dir = opendir(path.c_str());
-    if (dir) {
-        closedir(dir);
-        return true;
-    }
-    return false;
-}
-
 int		Response::findServer()
 {
 	std::string line;
@@ -322,15 +303,12 @@ void	Response::GetResponse(int fd) {
 
 void	Response::PostResponse(int fd) {
 	std::string	file = _request.getPath();
-	std::cout << "\n\n JE SUIS LA !!!!!!\n\n";
 	if (!isValid(getExtension(file), _server.getData().getServers()[_curServer][_curRoute]["cgi_extension"]))
 	{
-		std::cout << "\n1111111111\n";
-		handleCgi(file, fd); //maybe a bool
+		handleCgi(file, fd);
 		return;
 	}
 	if (_request.isADataUpload == true) {
-		std::cout << "\n222222222222\n";
 			std::ifstream sourceFile(_tmpPictFile, std::ios::in | std::ios::binary);
 			std::string filePath = "uploads/" + _request.getFileName(); 
 			std::ofstream destFile(filePath, std::ios::out | std::ios::binary);
@@ -345,20 +323,17 @@ void	Response::PostResponse(int fd) {
     		destFile.close();
 	}
 	if (_request.isDelete) {
-		std::cout << "\n33333333\n";
 		DeleteResponse();
 		return ;
 	}
 	else if (file != "favicon.ico" && file != " " && !file.empty() && file != "" && file != "data/www/style.css")
 	{ 
-		std::cout << "\n44444444\n";
 		_response["status"] = " 201 Created\r\n";
 		_response["body"] = openHtmlFile("data/www/error/201.html");
 		// return;
 	}
 	fillGetLength();
-	_response["type"] = "Content-Type: text/html\r\n";// tjrs que du html pour le moment
-	std::cout << "\n5555555\n";
+	_response["type"] = "Content-Type: text/html\r\n";
 }
 
 void	Response::DeleteResponse(void) {
@@ -366,7 +341,6 @@ void	Response::DeleteResponse(void) {
 	std::string file = _request.getFileToDelete();
 	if(file.empty())
 		file = urlDecode(_file);
-	std::cout << "NOM DE FICHIER DELET E= " << file << std::endl;
 	if(checkPermissions(file.substr(0, file.find_last_of('/')).c_str(), file) == 1)
 		notFound404();
 	else if(checkPermissions(file.substr(0, file.find_last_of('/')).c_str(), file) == 2)
@@ -545,7 +519,6 @@ int	Response::checkPermissions(const char *directory, std::string file)
 	struct stat		sfile;
 	DIR				*fd;
 
-	std::cout << "dir " << directory << " file " << file << std::endl;
 	fd = opendir(directory);
 	if (fd == NULL)
 	{

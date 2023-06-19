@@ -58,8 +58,6 @@ int	Server::_getFdMax(void) {
 void	Server::exit(int sig)
 {
 	(void)sig;
-
-	std::cout << "\n" << "exiting...\n";
 	_alive = false;
 }
 std::vector<ListeningSocket*>	Server::getSocket(){return _socket;}
@@ -87,13 +85,11 @@ void	Server::_watchLoop() {
 		if (i >= _data.getPortsNbr())
 			i = 0;
 		if (FD_ISSET(_socket[i]->getFd(), &tmpError)) {
-			std::cerr << "FD_ISSET: " << strerror(errno) << std::endl;
+			std::cerr << "\nFD_ISSET: " << strerror(errno) << std::endl;
 			exit(EXIT_FAILURE);
 		}
-		if (nbEvents < 1) {
-			std::cerr << "Error: select(): " << strerror(errno) << std::endl;
+		if (nbEvents < 1)
 			exit(EXIT_FAILURE);
-		}
 		if(FD_ISSET(_socket[i]->getFd(), &tmpRead) && _alive)
 		{
 			if (getOpenFd() > MAX_FD)
@@ -106,7 +102,7 @@ void	Server::_watchLoop() {
 		{
 			Client *client = _socket[i]->clients[k];
 			if (FD_ISSET(client->getFd(), &tmpError)) {
-				std::cerr << "FD_ISSET: " << strerror(errno) << std::endl;
+				std::cerr << "\nFD_ISSET: " << strerror(errno) << std::endl;
 				exit(1);
 			}
 			if(FD_ISSET(client->getFd(), &tmpRead)) {
@@ -215,7 +211,6 @@ int	Server::_handler(Client *client, int i) {
 		}
 		if (!client->getRequest())
 		{
-			std::cout << "Request empty\n\n\n\n";
 			disconnectClient(client ,i);
 			return 0;
 		}
@@ -280,7 +275,6 @@ void	Server::_responder(Client *client, int i) {
 	std::cout << response.getFile() << "\033[0m" << std::endl;
 	std::cout << "\n\033[36m##############################\033[0m\n\n"; 
 	send(client->getFd(), res.c_str(), res.length(), 0);
-	// std::cout <<"RESPONSE\n" << res << std::endl;
 	disconnectClient(client, i);
 }
 
@@ -302,7 +296,7 @@ ListeningSocket	*Server::getSocket(int fd) {
 }
 
 Server::~Server(void) {
-	std::cout << "\n\n \033[36;41m######## Closing Server ######### \n";
+	std::cout << "\033[36;41m######## Closing Server ######### \n";
 	std::cout << "\033[0m";
 	for (std::vector<std::string>::iterator it = pictPaths.begin(); it != pictPaths.end(); it++) {
 		if (std::remove((*it).c_str()) != 0)

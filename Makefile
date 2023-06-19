@@ -8,7 +8,7 @@ OBJS		= ${SRCS:.cpp=.o}
 
 HEADER		= ./includes/
 
-CFLAGS		= -Wall -Wextra -Werror
+CFLAGS		= -Wall -Wextra -Werror -std=c++98
 
 DEBUG		=	-g -fsanitize=address
 

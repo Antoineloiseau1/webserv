@@ -6,7 +6,6 @@
 
 Client::Client(int fd, int serverFd, std::string tmp_file) : _fd(fd), _serverFd(serverFd), _status(0), _request(nullptr),
 	_tmpPictFile(tmp_file), _file(tmp_file, std::ofstream::binary | std::ofstream::out | std::ofstream::trunc), readyForData(false), bytes(0) {
-		// std::cout << "PRINT TMP FILE = "<< tmp_file << std::endl;
 	_status = INIT;
 	std::cout << std::endl << "\033[1;32m****** New connexion on server from client fd: "<< _fd << " *******\n\033[0m";
 }
@@ -36,7 +35,7 @@ void	Client::createRequest(char *reqLine) {
 		_type = GET_DELETE;
 	if (_type != POST_DATA) {
 		if (std::remove(_tmpPictFile.c_str()))
-			std::cout << "error: Failed to delete file.\n";
+			std::cerr << "error: Failed to delete file.\n";
 	}
 }
 
