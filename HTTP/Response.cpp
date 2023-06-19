@@ -208,7 +208,6 @@ void	Response::fillGetBody(std::string file) {
 
 void	Response::fillGetLength() {
 	_response["length"] = "Content-Length: ";
-	// _response["length"] += std::to_string(std::strlen(_response["body"].c_str()));
 	_response["length"] += std::to_string(_contentSize);
 	_response["length"] += "\r\n";
 }
@@ -330,7 +329,6 @@ void	Response::PostResponse(int fd) {
 	{ 
 		_response["status"] = " 201 Created\r\n";
 		_response["body"] = openHtmlFile("data/www/error/201.html");
-		// return;
 	}
 	fillGetLength();
 	_response["type"] = "Content-Type: text/html\r\n";

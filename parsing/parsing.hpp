@@ -6,7 +6,7 @@
 /*   By: anloisea <anloisea@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/27 10:31:47 by mmidon            #+#    #+#             */
-/*   Updated: 2023/06/19 09:26:48 by mmidon           ###   ########.fr       */
+/*   Updated: 2023/06/19 14:41:34 by anloisea         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,6 +50,7 @@ class data
 		int									checkRoutes(int &isRoute, std::string &content, std::map<std::string,std::map<std::string,std::string> > _config);
 		void 								printData();
 		void								parseCustomErr();
+		void								checkMaxBodySize(void);
 		void								addCustomErrorInMap(std::string errParam);
 		int									isEmpty(std::string conf);
 

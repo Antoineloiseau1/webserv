@@ -2,7 +2,7 @@
 NAME		= webserv 
 
 SRCS		= main.cpp utils.cpp ./Networking/Socket.cpp ./Networking/ListeningSocket.cpp Networking/Server.cpp Networking/Client.cpp\
-			  parsing/parse_conf.cpp parsing/parse_request.cpp ./HTTP/Request.cpp ./HTTP/Response.cpp
+			  parsing/parse_conf.cpp ./HTTP/Request.cpp ./HTTP/Response.cpp
 
 OBJS		= ${SRCS:.cpp=.o}
 

@@ -6,7 +6,7 @@
 /*   By: anloisea <anloisea@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/25 10:15:25 by mmidon            #+#    #+#             */
-/*   Updated: 2023/06/19 14:18:34 by anloisea         ###   ########.fr       */
+/*   Updated: 2023/06/19 15:01:52 by anloisea         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,8 +17,10 @@
 #include <cstdlib>
 #include <cstring>
 #include "../utils.hpp"
-
 #include "parsing.hpp"
+
+#define MAX_PORT 65535
+#define MAX_CLIENT_BODY_SIZE 100000000
 
 
 std::string trim(const std::string& str, const std::string& whitespace = " \t") //ft_trim but better
@@ -55,7 +57,11 @@ void	data::makePorts(size_t serv)
 		portTab.push_back("80");
 	if (portTab.size() > 1)
 		throw(WrongDataException());
+	if(portTab[0].size() > 5 || !isAllDigit(portTab[0]))
+		throw(WrongDataException());
 	int res = atoi(portTab[0].c_str());
+	if(res > MAX_PORT)
+		throw(WrongDataException());
 
 	_ports.push_back(res);
 	_portsNbr += 1;
@@ -264,6 +270,21 @@ void	data::parseCustomErr() {
 	}
 }
 
+void	data::checkMaxBodySize(void) {
+	std::string	s;
+	for (size_t i = 0; i != _servers.size(); i++)
+	{
+		for (std::map<std::string, std::map<std::string, std::string> >::iterator route = _servers[i].begin(); route != _servers[i].end(); route++)
+		{
+			s = route->second["client_max_body_size"];
+			if(!isAllDigit(s) || s.length() > 9)
+				throw(WrongDataException());
+			if (atoi(s.c_str()) > MAX_CLIENT_BODY_SIZE)
+				throw(WrongDataException());
+		}
+	}
+}
+
 void data::printData()
 {
 	for (size_t i = 0; i != _servers.size(); i++)
@@ -323,7 +344,8 @@ data::data(std::string conf)
 		setSettings();
 		data::fill(file, "default");
 		parseCustomErr();
-		printData();
+		checkMaxBodySize();
+		//printData();
 	}
 	catch (std::exception &e)
 	{
