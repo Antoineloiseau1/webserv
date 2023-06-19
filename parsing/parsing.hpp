@@ -51,11 +51,16 @@ class data
 		void 								printData();
 		void								parseCustomErr();
 		void								addCustomErrorInMap(std::string errParam);
+		int									isEmpty(std::string conf);
 
 		//random exceptions just in case
 		class	CantOpenFileException : public std::exception{
 		public:
 			const char	*what() const throw(){ return "can't open file";};
+		};
+		class	EmptyFileException : public std::exception{
+		public:
+			const char	*what() const throw(){ return "empty configuration file";};
 		};
 		class	WrongDataException : public std::exception{
 		public:

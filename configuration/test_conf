@@ -1,4 +1,8 @@
 server
+	server_name			exmple.com
+	listen					4242
+
+server
 		server_name			example.com
 		listen					4242
 		cgi_extension			.cgi
