@@ -1,16 +1,13 @@
 server
-	server_name			exmple.com
-	listen					4242
-
-server
 		server_name			example.com
 		listen					4242
 		cgi_extension			.cgi
 		autoindex	off;
 		index					manon.html
+		error_page	404		 501		data/www/error/error_test.html
 		location data/www/
 		{
-			limit_except		GET
+			limit_except		GET POST
 			cgi_extension			.php
 			autoindex off
 		}

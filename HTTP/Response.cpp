@@ -363,15 +363,18 @@ void	Response::PostResponse(int fd) {
 
 void	Response::DeleteResponse(void) {
 
-	_file = _request.getFileToDelete();
-	// if(_file.empty())
-	// 	_file = urlDecode(_file);
-	if(checkPermissions(_file.substr(0, _file.find_last_of('/')).c_str(), _file) == 1)
+	std::string file = _request.getFileToDelete();
+	if(file.empty())
+		file = urlDecode(_file);
+	std::cout << "NOM DE FICHIER DELET E= " << file << std::endl;
+	if(checkPermissions(file.substr(0, file.find_last_of('/')).c_str(), file) == 1)
 		notFound404();
-	else if(checkPermissions(_file.substr(0, _file.find_last_of('/')).c_str(), _file) == 2)
+	else if(checkPermissions(file.substr(0, file.find_last_of('/')).c_str(), file) == 2)
 		forbidden403();
 	else {
-		_server.deletePict(_file);
+		_server.deletePict(file);
+		if (std::remove(file.c_str()))
+			std::cerr << "error: Failed to delete file.\n";
 		ok200();
 		std::cerr << "File deleted successfully" << std::endl;
 	}

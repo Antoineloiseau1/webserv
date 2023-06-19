@@ -242,8 +242,8 @@ int	isAllDigit(std::string s) {
 }
 void	data::addCustomErrorInMap(std::string errParam) {
 	_customErrors.clear();
-	_customErrPage = errParam.substr(errParam.find_last_of(' ') + 1, errParam.size() - errParam.find_last_of(' ') - 1);
-	errParam.erase(errParam.find_last_of(' ') + 1);
+	_customErrPage = errParam.substr(errParam.find_last_of(" \t\v\r\f") + 1, errParam.size() - errParam.find_last_of(" \t\v\r\f") - 1);
+	errParam.erase(errParam.find_last_of(" \t\v\r\f") + 1);
 
 	std::string token;
 	std::istringstream iss(errParam);
