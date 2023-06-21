@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: anloisea <anloisea@student.42.fr>          +#+  +:+       +#+        */
+/*   By: elpolpa <elpolpa@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/04 09:54:40 by mmidon            #+#    #+#             */
-/*   Updated: 2023/06/15 16:27:53 by mmidon           ###   ########.fr       */
+/*   Updated: 2023/06/21 11:05:56 by elpolpa          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,6 +41,11 @@ class Server {
 		socklen_t						_socklen;
 		char							**_envp;
 		void 							_watchLoop();
+		std::vector<Client*>			_connClients;
+		
+		std::map<std::string, std::string>	_response;
+		
+
 		
 		fd_set							_readSet;
 		fd_set							_writeSet;
@@ -75,6 +80,12 @@ class Server {
 		void			changeDupName(std::string &file_name);
 		
 		void			deletePict(std::string path);
+		
+		/******************	SETTER	**********************/
+		void			addInConnClient(Client *client);
+		void			remFromConnClient(Client *client);
+		
+		void			TimeOutError(int fd);
 		
 
 };

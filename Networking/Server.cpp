@@ -62,10 +62,40 @@ void	Server::exit(int sig)
 }
 std::vector<ListeningSocket*>	Server::getSocket(){return _socket;}
 
+
+void	Server::TimeOutError(int fd) {
+
+	std::string file = "data/www/error/408.html";
+
+	std::ifstream error(file);
+    std::string content((std::istreambuf_iterator<char>(error)), (std::istreambuf_iterator<char>()));
+
+	_response["status"] = " 408 Request Timeout\r\n";
+	_response["body"] = content;
+	_response["type"] = "Content-Type: text/html\r\n";
+	_response["length"] = "Content-Length: ";
+	_response["length"] += std::to_string(std::strlen(_response["body"].c_str()));
+	_response["length"] += "\r\n";
+	_response["version"] = "HTTP 1.1";
+	_response["connexion"] = "Connexion: close\r\n\r\n";
+
+	
+	std::string res = _response["version"] + _response["status"] + _response["type"] + _response["length"] + _response["connexion"] + _response["body"];
+
+	std::cout << "\033[36m#### response from server ####\033[1m\033[94m\n\n"; 
+	// std::cout << response.getMap()["version"] << response.getMap()["status"];
+	// std::cout << response.getFile() << "\033[0m" << std::endl;
+	std::cout << "\n\033[36m##############################\033[0m\n\n"; 
+	send(fd, res.c_str(), res.length(), 0);
+}
+
 void	Server::_watchLoop() {
 	int 	nbEvents;
 	int	i = 0;
 
+	struct timeval	tv;
+	tv.tv_sec = 20;
+	tv.tv_usec = 0;
 	fd_set	tmpRead;
 	fd_set	tmpWrite;
 	fd_set	tmpError;
@@ -79,9 +109,19 @@ void	Server::_watchLoop() {
 		copy_fd_set(&_readSet, &tmpRead);
 		copy_fd_set(&_writeSet, &tmpWrite);
 		copy_fd_set(&_errorSet, &tmpError);
-		nbEvents = select(_getFdMax() + 1, &tmpRead, &tmpWrite, &tmpError, NULL); //server 0 events are not detected for now (and server 1 events works but handler segfault (?!) )
-		if (!nbEvents)
+		nbEvents = select(_getFdMax() + 1, &tmpRead, &tmpWrite, &tmpError, &tv); //server 0 events are not detected for now (and server 1 events works but handler segfault (?!) )
+		if (!nbEvents) {
+			// for (std::vector<Client*>::iterator it = _connClients.begin(); it != _connClients.end(); it++)
+			// {
+			// 	std::cout << "TEST CLIENT TJRS EN VIE = " << (*it)->getFd() << std::endl;
+			// 	TimeOutError((*it)->getFd());
+			// 	disconnectClient(*it, i);
+				
+			// }
+			// std::cout << "JE SORS DE LA LOOP\n";
 			continue;
+		}
+		
 		if (i >= _data.getPortsNbr())
 			i = 0;
 		if (FD_ISSET(_socket[i]->getFd(), &tmpError)) {
@@ -150,6 +190,19 @@ std::string	create_tmp_file_name(int fd) {
 	return s;
 }
 
+void	Server::addInConnClient(Client *client) {
+	_connClients.push_back(client);
+}
+
+void	Server::remFromConnClient(Client *client) {
+	for (std::vector<Client*>::iterator it = _connClients.begin(); it != _connClients.end(); it++) {
+		if (*it == client) {
+			_connClients.erase(it);
+			break ;
+		}
+	}
+}
+
 // Handle incoming CONNECTION and add the connection socket to the kqueue
 void	Server::_accepter(int server_fd, ListeningSocket *sock) {
 	struct sockaddr_in	address;
@@ -172,6 +225,7 @@ void	Server::_accepter(int server_fd, ListeningSocket *sock) {
 		_fdMax = fd;
 	Client* newClient = new Client(fd, sock->getFd(), create_tmp_file_name(fd));
 	sock->setClient(newClient);
+	addInConnClient(newClient);
 }
 
 /*A SUPPRIMER: NE SERT A RIEN ?*/
@@ -283,6 +337,7 @@ void	Server::disconnectClient(Client *client, int i) {
 	FD_CLR(client->getFd(), &_writeSet);
 	FD_CLR(client->getFd(), &_errorSet);
 	close(client->getFd());
+	remFromConnClient(client);
 	_socket[i]->deleteClient(client->getFd());
 }
 
