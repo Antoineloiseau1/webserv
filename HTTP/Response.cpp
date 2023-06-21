@@ -162,7 +162,7 @@ void	Response::generateAutoindex(std::string path)
 	struct dirent	*currentFile;
 	
 	if (path.empty())
-		path = ".";
+		path = "data/";
 	fd = opendir(path.c_str());
 	if(!fd)
 	{
@@ -187,17 +187,20 @@ void	Response::generateAutoindex(std::string path)
 	currentFile = readdir(fd);
 	while(currentFile)
 	{
-		if(strcmp(currentFile->d_name, "."))
+		std::cout << currentFile->d_name << std::endl;
+		if(!strcmp(currentFile->d_name, ".") || !strcmp(currentFile->d_name, ".."))
 		{
-			_response["body"] += "<li><a href=\"/";
-			_response["body"] += path;
-			if(path[path.length() - 1] != '/')
-				_response["body"] += "/";
-			_response["body"] += currentFile->d_name;
-			_response["body"] += "\">";
-			_response["body"] += currentFile->d_name;
-			_response["body"] += "</a></li>\n";
+			currentFile = readdir(fd);
+			continue;
 		}
+		_response["body"] += "<li><a href=\"/";
+		_response["body"] += path;
+		if(path[path.length() - 1] != '/')
+			_response["body"] += "/";
+		_response["body"] += currentFile->d_name;
+		_response["body"] += "\">";
+		_response["body"] += currentFile->d_name;
+		_response["body"] += "</a></li>\n";
 		currentFile = readdir(fd);
 	}
 	_response["body"] += "</ul>\n"
