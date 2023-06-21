@@ -98,15 +98,16 @@ Response::Response(Request &request, Server &server, std::string tmp_file, int f
 	setConfig();
 	std::vector<std::string>	requestTypes = findMethods();
 
-	enum		mtype { OTHER, GET, POST, DELETE, ERROR413 };
+	enum		mtype {OTHER, GET, POST, DELETE, ERROR413};
 	int			a = 0;
+	size_t		i;
 
-	for (size_t i = 0; i != requestTypes.size(); i++)
+	for (i = 0; i != requestTypes.size(); i++)
 	{
 		if (request.getTypeStr() == requestTypes[i])
 		{
 			a = i + 1;
-			if (i > 4)
+			if (i > 4 || a > 3)
 			{
 				a = 0;
 				break;
@@ -114,7 +115,8 @@ Response::Response(Request &request, Server &server, std::string tmp_file, int f
 			break;
 		}
 	}
-
+	if(i == requestTypes.size())
+		a = 5;
 	rootFile();
 
 	if (!_server.getData().getServers()[_curServer][_curRoute]["client_max_body_size"].empty()
