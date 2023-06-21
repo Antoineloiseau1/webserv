@@ -12,6 +12,7 @@ Client::Client(int fd, int serverFd, std::string tmp_file) : _fd(fd), _serverFd(
 
 Client::~Client() {
 	std::cout << "\033[1;31m*******      Closing connexion of client: " << _fd << "     ********\n\033[0m";
+	std::remove(_tmpPictFile.c_str());
 	delete (_request);
 }
 

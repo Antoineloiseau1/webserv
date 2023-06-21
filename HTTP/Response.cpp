@@ -187,7 +187,6 @@ void	Response::generateAutoindex(std::string path)
 	currentFile = readdir(fd);
 	while(currentFile)
 	{
-		std::cout << currentFile->d_name << std::endl;
 		if(!strcmp(currentFile->d_name, ".") || !strcmp(currentFile->d_name, ".."))
 		{
 			currentFile = readdir(fd);
@@ -271,7 +270,7 @@ void	Response::fillGetLength() {
 
 void	Response::fillGetType(std::string file) {
 	_response["type"] = "Content-Type: text/html\r\n"; //Main case
-	if (file.find("uploads/") != std::string::npos)
+	if (file.find("data/images/") != std::string::npos)
 	{
 		std::string	ext = file.substr(file.find_last_of('.') + 1, file.size() - file.find_last_of('.') - 1);
 		if (ext == "jpeg" || ext == "jpg")
@@ -366,7 +365,7 @@ void	Response::PostResponse(int fd) {
 	}
 	if (_request.isADataUpload == true) {
 			std::ifstream sourceFile(_tmpPictFile, std::ios::in | std::ios::binary);
-			std::string filePath = "uploads/" + _request.getFileName(); 
+			std::string filePath = "data/images/" + _request.getFileName(); 
 			std::ofstream destFile(filePath, std::ios::out | std::ios::binary);
 
 			if (sourceFile.is_open() && destFile.is_open()) {
@@ -432,7 +431,7 @@ std::string	Response::openHtmlFile(std::string f)
 		}
 		return openHtmlFile("data/www/error/404.html");
 	}
-	if (f.find("uploads/") != std::string::npos || f.find("favicon.ico") != std::string::npos)
+	if (f.find("data/images/") != std::string::npos || f.find("favicon.ico") != std::string::npos)
 		file.open(f, std::ios::binary);
 	else
 		file.open(f);

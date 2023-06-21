@@ -319,7 +319,7 @@ void	Server::changeDupName(std::string &file_name) {
 
 void	Server::checkForDupName(std::string &file_name) {
 	for (std::vector<std::string>::iterator it = pictPaths.begin(); it != pictPaths.end(); it++) {
-		if (*it == "uploads/" + file_name) {
+		if (*it == "data/images/" + file_name) {
 			changeDupName(file_name);
 			it = pictPaths.begin();
 		}
@@ -328,7 +328,7 @@ void	Server::checkForDupName(std::string &file_name) {
 
 std::string	Server::addPicture(std::string file_name) {
 	checkForDupName(file_name);
-	pictPaths.push_back("uploads/" + file_name);
+	pictPaths.push_back("data/images/" + file_name);
 	return file_name;
 }
 
