@@ -454,12 +454,25 @@ void	Response::handleCgi(std::string file, int fd) {
 		if(result == 0 || result == -1)
 		{
 			kill(pid, SIGTERM);
+			fclose(tmpFile);
+			tmpFile = freopen("/dev/tty", "w", stdout);
+			std::remove("data/CGI/ocgi.html");
+			close(pipefd[0]);
+			close(pipefd[1]);
 			return gatewayTimeout504();
 		}
 		else
 		{
-			if(WIFSIGNALED(status)) // if segfault
+			if(WIFSIGNALED(status))
+			{			
+				kill(pid, SIGTERM);
+				fclose(tmpFile);
+				tmpFile = freopen("/dev/tty", "w", stdout);
+				std::remove("data/CGI/ocgi.html");
+				close(pipefd[0]);
+				close(pipefd[1]);
 				return internalServerError505();
+			}
 			FILE	*ocgi = fopen("data/CGI/ocgi.html", "r");
 			fclose(tmpFile);
 			tmpFile = freopen("/dev/tty", "w", stdout);
@@ -473,7 +486,6 @@ void	Response::handleCgi(std::string file, int fd) {
 			close(pipefd[0]);
 		}
 	}
-	
 }
 
 std::string	Response::buildResponse(void) {
