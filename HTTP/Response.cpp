@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include "../utils.hpp"
+#include <signal.h>
 
 bool	isValid(std::vector<std::string> toBeValidated, std::vector<std::string> example)
 {
@@ -417,6 +418,7 @@ void	Response::handleCgi(std::string file, int fd) {
 	std::string arg2 = _request.getBody();
 	const char* cmd2_cstr = arg2.c_str();
 	char* const args[] = { const_cast<char*>(cmd1_cstr), const_cast<char*>(cmd2_cstr), NULL };
+	FILE	*tmpFile = freopen("data/CGI/ocgi.html", "wr", stdout);
 
 	if (pipe(pipefd) == -1) {
 		return internalServerError505();
@@ -439,12 +441,39 @@ void	Response::handleCgi(std::string file, int fd) {
 		for (i = 0; i != _env.size(); i++)
 			cgiEnv[i] = strdup(const_cast<const char *>(_env[i].c_str()));
 		cgiEnv[i] = 0;
-		dup2(pipefd[1], STDOUT_FILENO);
+
 		if (execve(args[0], args, cgiEnv) == -1)
 			internalServerError505();
 	}
-	close(pipefd[1]);
-	close(pipefd[0]);
+	else
+	{
+		ourSleepFunction(1);
+		int result;
+		int status;
+		result = waitpid(pid, &status, WNOHANG);
+		if(result == 0 || result == -1)
+		{
+			kill(pid, SIGTERM);
+			return gatewayTimeout504();
+		}
+		else
+		{
+			if(WIFSIGNALED(status)) // if segfault
+				return internalServerError505();
+			FILE	*ocgi = fopen("data/CGI/ocgi.html", "r");
+			fclose(tmpFile);
+			tmpFile = freopen("/dev/tty", "w", stdout);
+			fclose(ocgi);
+			_response["status"] = " 200 OK\r\n";
+			_response["body"] = openHtmlFile("data/CGI/ocgi.html");
+			fillGetLength();
+			fillGetType("data/CGI/ocgi.html");
+			std::remove("data/CGI/ocgi.html");
+			close(pipefd[1]);
+			close(pipefd[0]);
+		}
+	}
+	
 }
 
 std::string	Response::buildResponse(void) {
@@ -592,6 +621,15 @@ void	Response::internalServerError505(void) {
 	
 	_response["status"] = " 505 Internal Server Error\r\n";
 	if (_server.getData().getServers()[_curServer][_curRoute].count("505") > 0)
+		file = _server.getData().getServers()[_curServer][_curRoute]["error_page"];
+	_response["body"] = openHtmlFile(file);
+}
+
+void	Response::gatewayTimeout504(void) {
+	std::string file = "data/www/error/504.html";
+	
+	_response["status"] = " 504 Gateway Timeout\r\n";
+	if (_server.getData().getServers()[_curServer][_curRoute].count("504") > 0)
 		file = _server.getData().getServers()[_curServer][_curRoute]["error_page"];
 	_response["body"] = openHtmlFile(file);
 }

@@ -61,6 +61,7 @@ class Response
 		void								ok200(void);
 		void								noContent204(void);
 		void								internalServerError505(void);
+		void								gatewayTimeout504(void);
 
 		void								fillGetBody(std::string file);
 		void								fillGetLength();

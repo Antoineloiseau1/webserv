@@ -6,5 +6,6 @@
 std::string urlDecode(const std::string& encoded);
 bool		isADirectory(std::string const path);
 int			isAllDigit(std::string s);
+void    	ourSleepFunction(unsigned int sec);
 
 #endif

@@ -36,3 +36,9 @@ int	isAllDigit(std::string s) {
 	}
 	return 1;
 }
+
+void    ourSleepFunction(unsigned int sec) {
+    time_t start = time(NULL);
+    while(time(NULL) - start < sec)
+        continue;
+}
