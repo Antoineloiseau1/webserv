@@ -156,11 +156,64 @@ std::string	Response::findRoute(std::string const file)
 	return "default";
 }
 
+void	Response::generateAutoindex(std::string path)
+{
+	DIR				*fd;
+	struct dirent	*currentFile;
+	
+	if (path.empty())
+		path = ".";
+	fd = opendir(path.c_str());
+	if(!fd)
+	{
+		std::cerr << "generateAutoindex: Cannot open " << path << std::endl;
+		return internalServerError505();
+	}
+	_response["status"] = " 200 OK\r\n";
+	_response["body"] = "<!DOCTYPE html>\n"
+							"<html>\n"
+							"<head>\n"
+							"<title>";
+	_response["body"] += path;
+	_response["body"] += "</title\n>"
+						"</head>\n"
+						"<body>\n"
+						"<header>\n"
+						"<h1>";
+	_response["body"] += path;
+	_response["body"] += "</h1>\n"
+						"<nav>\n"
+						"<ul>\n";
+	currentFile = readdir(fd);
+	while(currentFile)
+	{
+		if(strcmp(currentFile->d_name, "."))
+		{
+			_response["body"] += "<li><a href=\"/";
+			_response["body"] += path;
+			if(path[path.length() - 1] != '/')
+				_response["body"] += "/";
+			_response["body"] += currentFile->d_name;
+			_response["body"] += "\">";
+			_response["body"] += currentFile->d_name;
+			_response["body"] += "</a></li>\n";
+		}
+		currentFile = readdir(fd);
+	}
+	_response["body"] += "</ul>\n"
+						"</nav>\n"
+						"</header>\n"
+						"</body>\n";
+	fillGetLength();
+	_response["type"] = "text/html";
+	closedir(fd);
+}
+
 void	Response::fillGetBody(std::string file) {
 	if (file == "")
 	{
 		if (_server.getData().getServers()[_curServer][_curRoute]["autoindex"] == "on")
-			_response["body"] = openHtmlFile("data/www/index.html");
+			generateAutoindex(_request.getPath());
 		else if (_server.getData().getServers()[_curServer][_curRoute]["autoindex"] == "off" || _server.getData().getServers()[_curServer][_curRoute]["autoindex"].empty())
 			_response["body"] = openHtmlFile("data/www/milan.html");
 		else
@@ -400,13 +453,12 @@ std::string	Response::openHtmlFile(std::string f)
 void	Response::createCgiEnv()
 {
 
-		_env[0] = "REQUEST_METHOD=GET";
-		_env[1] = "QUERY_STRING=";
-		_env[1] += _request.getHeaders()["formbody"];
-		_env[2] = "CONTENT_TYPE=text/html";
-		_env[3] = std::to_string(std::strlen(_env[1].c_str()));
-		_env[4] = "HTTP_USER_AGENT=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3";
-		_env[5] = "REMOTE_ADDR=127.0.0.1";
+		_env.push_back("REQUEST_METHOD=GET");
+		_env.push_back("QUERY_STRING=" + _request.getHeaders()["formbody"]);
+		_env.push_back("CONTENT_TYPE=text/html");
+		_env.push_back(std::to_string(std::strlen(_env[1].c_str())));
+		_env.push_back("HTTP_USER_AGENT=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3");
+		_env.push_back("REMOTE_ADDR=127.0.0.1");
 }
 
 
@@ -421,23 +473,29 @@ void	Response::handleCgi(std::string file, int fd) {
 	FILE	*tmpFile = freopen("data/CGI/ocgi.html", "wr", stdout);
 
 	if (pipe(pipefd) == -1) {
+		fclose(tmpFile);
+		std::remove("data/CGI/ocgi.html");
+		tmpFile = freopen("/dev/tty", "w", stdout);
 		return internalServerError505();
 	}
 	close(pipefd[0]);
-
 	pid_t pid = fork();
 	if (pid == -1) {
 		close(pipefd[0]);
 		close(pipefd[1]);
+		fclose(tmpFile);
+		std::remove("data/CGI/ocgi.html");
+		tmpFile = freopen("/dev/tty", "w", stdout);
 		return internalServerError505();
 	}
 
 	if (pid == 0) {  //Processus enfant 
 		pipefd[1] = fd;
-
 		createCgiEnv();
-		char *cgiEnv[_env.size() + 1];
-		size_t i;
+	
+		char	*cgiEnv[_env.size() + 1];
+		size_t	i;
+
 		for (i = 0; i != _env.size(); i++)
 			cgiEnv[i] = strdup(const_cast<const char *>(_env[i].c_str()));
 		cgiEnv[i] = 0;

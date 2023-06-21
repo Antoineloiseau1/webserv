@@ -23,13 +23,14 @@ class Response
 		std::map<std::string, std::string>	_response;
 		std::string							_file;
 		char 								**envp;
-		std::array<std::string, 6>			_env;
+		std::vector<std::string>			_env;
 		std::string 						_tmpPictFile;
 		size_t								_contentSize;
 		bool								_firstTry;
 		int									_curServer;
 		std::string							_curRoute;
 		int									checkPermissions(const char *directory, std::string file);
+		void								generateAutoindex(std::string path);
 
 
 	public:
