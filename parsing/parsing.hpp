@@ -23,6 +23,7 @@ class data
 		int									_portsNbr;
 		std::string							_customErrPage;
 		std::vector<std::string>			_customErrors;
+		std::vector<std::string>			_indexFiles;
 
 	public:
 		data(std::string conf);
@@ -38,8 +39,10 @@ class data
 		int									checkRoutes(int &isRoute, std::string &content, std::map<std::string,std::map<std::string,std::string> > _config);
 		void 								printData();
 		void								parseCustomErr();
+		void								parseIndexFiles();
 		void								checkMaxBodySize(void);
-		void								addCustomErrorInMap(std::string errParam);
+		void								addCustomErrorInVect(std::string errParam);
+		void								addIndexFilesInVect(std::string indexParam);
 		int									isEmpty(std::string conf);
 
 		//random exceptions just in case

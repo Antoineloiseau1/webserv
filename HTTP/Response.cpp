@@ -95,7 +95,7 @@ void	Response::setConfig()
 }
 
 Response::Response(Request &request, Server &server, std::string tmp_file, int fd) : _server(server),
-	_request(request), _tmpPictFile(tmp_file), _firstTry(true)
+	_request(request), _tmpPictFile(tmp_file), _firstTry(true), _isADirectory(false), _fileErrorDetected(false)
 {
 	setConfig();
 	std::vector<std::string>	requestTypes = findMethods();
@@ -210,18 +210,40 @@ void	Response::generateAutoindex(std::string path)
 						"</nav>\n"
 						"</header>\n"
 						"</body>\n";
-	fillGetLength();
+	_contentSize = std::strlen(_response["body"].c_str());
 	_response["type"] = "text/html";
 	closedir(fd);
 }
 
+void	Response::checkOpeningOfDirectory() {
+	size_t i = 0;
+	if (_server.getData().getServers()[_curServer][_curRoute].count("index") > 0) {
+		while (1) {
+			if (_server.getData().getServers()[_curServer][_curRoute].count("index_" + std::to_string(i)) < 1)
+				break ;
+			std::cout << "trying to open = " << (_file + _server.getData().getServers()[_curServer][_curRoute]["index_" + std::to_string(i)]) << std::endl;
+			_response["body"] = openHtmlFile(_file + _server.getData().getServers()[_curServer][_curRoute]["index_" + std::to_string(i)]);
+			if (!_fileErrorDetected)
+				break ;
+			i++;
+		}
+	}
+	else
+		forbidden403();
+}
+			
+
 void	Response::fillGetBody(std::string file) {
-	if (file == "")
+	if (file == "" || _isADirectory)
 	{
-		if (_server.getData().getServers()[_curServer][_curRoute]["autoindex"] == "on")
+		if (_server.getData().getServers()[_curServer][_curRoute]["autoindex"] == "on") {
+			std::cout << "Je suis ici cest bien 2\n";
 			generateAutoindex(_request.getPath());
-		else if (_server.getData().getServers()[_curServer][_curRoute]["autoindex"] == "off" || _server.getData().getServers()[_curServer][_curRoute]["autoindex"].empty())
-			_response["body"] = openHtmlFile("data/www/milan.html");
+		}
+		else if (_server.getData().getServers()[_curServer][_curRoute]["autoindex"] == "off"
+			|| _server.getData().getServers()[_curServer][_curRoute]["autoindex"].empty()) {
+			checkOpeningOfDirectory();
+		}
 		else
 		{
 			std::cerr << "Error in config file\n"; //maybe better error handling later
@@ -268,6 +290,7 @@ void	Response::fillGetBody(std::string file) {
 
 void	Response::fillGetLength() {
 	_response["length"] = "Content-Length: ";
+	std::cout << " contetnt size = " << _contentSize << std::endl;
 	_response["length"] += std::to_string(_contentSize);
 	_response["length"] += "\r\n";
 }
@@ -340,7 +363,8 @@ void	Response::GetResponse(int fd) {
 			type = isValid(extension, _server.getData().getServers()[_curServer][_curRoute]["cgi_extension"]);
 			if (isADirectory(_file)) {
 				type = 2;
-				_file = "";
+				std::cout << " FILE 0 = " << _file << std::endl;
+				_isADirectory = true;
 			}
 		}
 		else
@@ -349,7 +373,7 @@ void	Response::GetResponse(int fd) {
 			BadRequestError();
 		}
 		else if (type)
-		{
+		{ std::cout << "Je suis ici cest bien 1\n";
 			_response["status"] = " 200 OK\r\n"; //Main case, updated when event in the building of response
 			fillGetBody(_file);
 			fillGetLength();
@@ -358,16 +382,6 @@ void	Response::GetResponse(int fd) {
 		else
 			handleCgi(_file, fd);
 }
-
-//A METTRE DANS UTILS
-bool isDirectory(const std::string& path) {
-    struct stat pathStat;
-    if (stat(path.c_str(), &pathStat) == 0) {
-        return S_ISDIR(pathStat.st_mode);
-    }
-    return false;
-}
-
 
 void	Response::PostResponse(int fd) {
 	std::string	file = _request.getPath();
@@ -396,7 +410,7 @@ void	Response::PostResponse(int fd) {
 	}
 	else if (file != "favicon.ico" && file != " " && !file.empty() && file != "" && file != "data/www/style.css")
 	{
-		if (isDirectory(file))
+		if (isADirectory(file))
 			methodNotAllowed404();
 		else if (openHtmlFile(file).find("<title>Error 404"))
 			notFound404();
@@ -434,6 +448,7 @@ std::string	Response::openHtmlFile(std::string f)
 	int permit = checkPermissions(f.substr(0, f.find_last_of('/')).c_str(), f);
 	if(permit == 2)
 	{
+		_fileErrorDetected = true;
 		_response["status"] = " 403 Forbidden\r\n";
 		if (_server.getData().getServers()[_curServer][_curRoute].count("403") > 0)
 			return openHtmlFile(_server.getData().getServers()[_curServer][_curRoute]["error_page"]);
@@ -441,6 +456,7 @@ std::string	Response::openHtmlFile(std::string f)
 	}
 	else if(permit == 1)
 	{
+		_fileErrorDetected = true;
 		_response["status"] = " 404 Not Found\r\n";
 		if (_server.getData().getServers()[_curServer][_curRoute].count("404") > 0) {
 			if (_firstTry) {
@@ -465,6 +481,7 @@ std::string	Response::openHtmlFile(std::string f)
 	}
 	else {
 		_response["status"] = " 404 Not Found\r\n";
+		_fileErrorDetected = true;
 		if (_server.getData().getServers()[_curServer][_curRoute].count("404") > 0)
 			return openHtmlFile(_server.getData().getServers()[_curServer][_curRoute]["error_page"]);
 		return openHtmlFile("data/www/error/404.html");

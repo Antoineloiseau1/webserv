@@ -29,6 +29,8 @@ class Response
 		bool								_firstTry;
 		int									_curServer;
 		std::string							_curRoute;
+		bool								_isADirectory;
+		bool								_fileErrorDetected;
 		int									checkPermissions(const char *directory, std::string file);
 		void								generateAutoindex(std::string path);
 
@@ -71,6 +73,8 @@ class Response
 
 		void	rootFile();
 		void	setConfig();
+
+		void	checkOpeningOfDirectory();
 
 
 		class	UnknownDataException : public std::exception{

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parse_conf.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: anloisea <anloisea@student.42.fr>          +#+  +:+       +#+        */
+/*   By: elpolpa <elpolpa@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/25 10:15:25 by mmidon            #+#    #+#             */
-/*   Updated: 2023/06/19 15:01:52 by anloisea         ###   ########.fr       */
+/*   Updated: 2023/06/22 10:27:51 by elpolpa          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -239,7 +239,7 @@ void data::fill(std::fstream &file, std::string route) //at first call:  route="
 	}
 }
 
-void	data::addCustomErrorInMap(std::string errParam) {
+void	data::addCustomErrorInVect(std::string errParam) {
 	_customErrors.clear();
 	_customErrPage = errParam.substr(errParam.find_last_of(" \t\v\r\f") + 1, errParam.size() - errParam.find_last_of(" \t\v\r\f") - 1);
 	errParam.erase(errParam.find_last_of(" \t\v\r\f") + 1);
@@ -254,16 +254,42 @@ void	data::addCustomErrorInMap(std::string errParam) {
 	}
 }
 
+void	data::addIndexFilesInVect(std::string indexParam) {
+	_indexFiles.clear();
+
+	std::string token;
+	std::istringstream iss(indexParam);
+
+	while (iss >> token) {
+		_indexFiles.push_back(token);
+	}
+}
+
 void	data::parseCustomErr() {
 	for (size_t i = 0; i != _servers.size(); i++)
 	{
 		for (std::map<std::string, std::map<std::string, std::string> >::iterator route = _servers[i].begin(); route != _servers[i].end(); route++)
 		{
 			if (route->second.count("error_page") > 0) {
-				addCustomErrorInMap(route->second["error_page"]);
+				addCustomErrorInVect(route->second["error_page"]);
 				route->second["error_page"] = _customErrPage;
 				for (std::vector<std::string>::iterator it = _customErrors.begin(); it != _customErrors.end(); it++) {
 					route->second.insert(std::make_pair(*it, "custom_error"));
+				}
+			}
+		}
+	}
+}
+
+void	data::parseIndexFiles() {
+	for (size_t i = 0; i != _servers.size(); i++)
+	{
+		for (std::map<std::string, std::map<std::string, std::string> >::iterator route = _servers[i].begin(); route != _servers[i].end(); route++)
+		{
+			if (route->second.count("index") > 0) {
+				addIndexFilesInVect(route->second["index"]);
+				for (size_t i = 0; i < _indexFiles.size(); i++) {
+					route->second.insert(std::make_pair("index_" + std::to_string(i), _indexFiles[i]));
 				}
 			}
 		}
@@ -344,8 +370,9 @@ data::data(std::string conf)
 		setSettings();
 		data::fill(file, "default");
 		parseCustomErr();
+		parseIndexFiles();
 		checkMaxBodySize();
-		//printData();
+		printData();
 	}
 	catch (std::exception &e)
 	{

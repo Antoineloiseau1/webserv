@@ -275,6 +275,7 @@ void	Server::_responder(Client *client, int i) {
 	std::cout << response.getMap()["version"] << response.getMap()["status"];
 	std::cout << response.getFile() << "\033[0m" << std::endl;
 	std::cout << "\n\033[36m##############################\033[0m\n\n";
+	std::cout << "res = " << res << std::endl;
 	send(client->getFd(), res.c_str(), res.length(), 0);
 	disconnectClient(client, i);
 }
