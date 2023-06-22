@@ -9,6 +9,8 @@
 #include <dirent.h>
 #include "../utils.hpp"
 #include <signal.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 bool	isValid(std::vector<std::string> toBeValidated, std::vector<std::string> example)
 {
@@ -357,6 +359,15 @@ void	Response::GetResponse(int fd) {
 			handleCgi(_file, fd);
 }
 
+//A METTRE DANS UTILS
+bool isDirectory(const std::string& path) {
+    struct stat pathStat;
+    if (stat(path.c_str(), &pathStat) == 0) {
+        return S_ISDIR(pathStat.st_mode);
+    }
+    return false;
+}
+
 
 void	Response::PostResponse(int fd) {
 	std::string	file = _request.getPath();
@@ -384,9 +395,15 @@ void	Response::PostResponse(int fd) {
 		return ;
 	}
 	else if (file != "favicon.ico" && file != " " && !file.empty() && file != "" && file != "data/www/style.css")
-	{ 
-		_response["status"] = " 201 Created\r\n";
-		_response["body"] = openHtmlFile("data/www/error/201.html");
+	{
+		if (isDirectory(file))
+			methodNotAllowed404();
+		else if (openHtmlFile(file).find("<title>Error 404"))
+			notFound404();
+		else {
+			_response["status"] = " 201 Created\r\n";
+			_response["body"] = openHtmlFile("data/www/error/201.html");
+		}
 	}
 	fillGetLength();
 	_response["type"] = "Content-Type: text/html\r\n";
@@ -654,6 +671,15 @@ int	Response::checkPermissions(const char *directory, std::string file)
 		return 1; //file not found		
 	}
 	return 0;
+}
+
+void	Response::methodNotAllowed404() {
+	std::string file = "data/www/error/405.html";
+	
+	_response["status"] = " 405 Not Allowed\r\n";
+	if (_server.getData().getServers()[_curServer][_curRoute].count("404") > 0)
+		file = _server.getData().getServers()[_curServer][_curRoute]["error_page"];
+	_response["body"] = openHtmlFile(file);
 }
 
 void	Response::notFound404() {

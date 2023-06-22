@@ -204,6 +204,7 @@ int	Server::_handler(Client *client, int i) {
 	}
 	else {
 		_requestBuffer[n] = '\0';
+		std::cout << "REAUEST : " << _requestBuffer << std::endl;
 		/*******************POUR TOUT LE MONDE 1 X*****************************/
 		if (strstr(_requestBuffer, "\r\n\r\n") && client->getStatus() == Client::INIT) {
 			client->createRequest(_requestBuffer);
