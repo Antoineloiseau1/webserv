@@ -1,5 +1,4 @@
 server
-		server_name			example.com
 		listen					4242
 		cgi_extension			.cgi
 		autoindex				off;
@@ -21,5 +20,4 @@ server
 server
 		cgi_extension			.cgi
 		listen		4241
-		server_name     oskour.com			
 		autoindex on

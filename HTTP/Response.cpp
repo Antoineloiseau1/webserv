@@ -98,6 +98,7 @@ Response::Response(Request &request, Server &server, std::string tmp_file, int f
 	_request(request), _tmpPictFile(tmp_file), _firstTry(true), _isADirectory(false), _fileErrorDetected(false)
 {
 	setConfig();
+	std::cout << "CUR SERVER " << _curServer << std::endl;
 	std::vector<std::string>	requestTypes = findMethods();
 
 	enum		mtype {OTHER, GET, POST, DELETE, ERROR413};
@@ -344,6 +345,12 @@ int		Response::findServer()
 	std::string line;
 	for (size_t i = 0; i != _server.getData().getServers().size(); i++)
 	{
+		line = _request.getHeaders()["Host"];
+		if (_server.getData().getServers()[i]["default"]["server_name"].empty())
+			_server.getData().getServers()[i]["default"]["server_name"] = "localhost";
+		if (_server.getData().getServers()[i]["default"]["listen"].empty())
+			_server.getData().getServers()[i]["default"]["listen"] = "80";
+
 		std::string serverSetup = _server.getData().getServers()[i]["default"]["server_name"] + ":" + _server.getData().getServers()[i]["default"]["listen"];
 		if (!strncmp(line.c_str(), serverSetup.c_str(), serverSetup.length()))
 			return i;
