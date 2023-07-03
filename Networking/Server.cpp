@@ -204,7 +204,6 @@ int	Server::_handler(Client *client, int i) {
 	}
 	else {
 		_requestBuffer[n] = '\0';
-		std::cout << "REAUEST : " << _requestBuffer << std::endl;
 		/*******************POUR TOUT LE MONDE 1 X*****************************/
 		if (strstr(_requestBuffer, "\r\n\r\n") && client->getStatus() == Client::INIT) {
 			client->createRequest(_requestBuffer);
@@ -275,7 +274,6 @@ void	Server::_responder(Client *client, int i) {
 	std::cout << response.getMap()["version"] << response.getMap()["status"];
 	std::cout << response.getFile() << "\033[0m" << std::endl;
 	std::cout << "\n\033[36m##############################\033[0m\n\n";
-	std::cout << "res = " << res << std::endl;
 	send(client->getFd(), res.c_str(), res.length(), 0);
 	disconnectClient(client, i);
 }
