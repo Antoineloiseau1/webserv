@@ -23,7 +23,8 @@ void	Client::createRequest(char *reqLine) {
 			_request->isADataUpload = true;
 			_type = POST_DATA;
 		}
-		else if (_request->getHeaders()["Content-Type"].find("application/x-www-form-urlencoded") != std::string::npos) {
+		else if (_request->getHeaders()["Content-Type"].find("application/x-www-form-urlencoded") != std::string::npos 
+		|| _request->getHeaders()["Content-Type"].find("plain/text") != std::string::npos) {
 			_type = POST_FORM;
 			if (_request->getPath() == "delete")
 				_request->isDelete = true;
@@ -31,6 +32,12 @@ void	Client::createRequest(char *reqLine) {
 				&& _request->getHeaders()["Transfer-Encoding"].find("chunked") != std::string::npos)
 				_request->isChunked = true;
 		}
+		else
+		{
+			_request->badRequest = true;
+			_type = POST_FORM;
+		}
+
 	}
 	else if (_request->getTypeStr() == "GET" || _request->getTypeStr() == "DELETE")
 		_type = GET_DELETE;

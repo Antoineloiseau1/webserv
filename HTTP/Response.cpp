@@ -98,7 +98,6 @@ Response::Response(Request &request, Server &server, std::string tmp_file, int f
 	_request(request), _tmpPictFile(tmp_file), _firstTry(true), _isADirectory(false), _fileErrorDetected(false)
 {
 	setConfig();
-	std::cout << "CUR SERVER " << _curServer << std::endl;
 	std::vector<std::string>	requestTypes = findMethods();
 
 	enum		mtype {OTHER, GET, POST, DELETE, ERROR413};
@@ -122,6 +121,8 @@ Response::Response(Request &request, Server &server, std::string tmp_file, int f
 		a = 5;
 	rootFile();
 
+	if(_request.badRequest)
+		a = 42;
 	if (!_server.getData().getServers()[_curServer][_curRoute]["client_max_body_size"].empty()
 		&& atoi(_request.getHeaders()["Content-Length"].c_str()) > atoi(_server.getData().getServers()[_curServer][_curRoute]["client_max_body_size"].c_str()))
 		a = ERROR413;
@@ -423,6 +424,11 @@ void	Response::PostResponse(int fd) {
 			_response["status"] = " 201 Created\r\n";
 			_response["body"] = openHtmlFile("data/www/error/201.html");
 		}
+	}
+	if(file == "")
+	{
+			_response["status"] = " 201 Created\r\n";
+			_response["body"] = openHtmlFile("data/www/error/201.html");
 	}
 	fillGetLength();
 	_response["type"] = "Content-Type: text/html\r\n";

@@ -28,6 +28,7 @@ class Request {
 		bool								isADataUpload;
 		bool								isDelete;
 		bool								isChunked;
+		bool								badRequest;
 
 		std::string							getTypeStr();
 		std::string							getPath();
