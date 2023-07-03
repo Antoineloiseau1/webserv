@@ -221,7 +221,6 @@ void	Response::checkOpeningOfDirectory() {
 		while (1) {
 			if (_server.getData().getServers()[_curServer][_curRoute].count("index_" + std::to_string(i)) < 1)
 				break ;
-			std::cout << "trying to open = " << (_file + _server.getData().getServers()[_curServer][_curRoute]["index_" + std::to_string(i)]) << std::endl;
 			_response["body"] = openHtmlFile(_server.getData().getServers()[_curServer][_curRoute]["index_" + std::to_string(i)]);
 			if (!_fileErrorDetected)
 				break ;
