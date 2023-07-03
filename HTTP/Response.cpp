@@ -410,8 +410,8 @@ void	Response::PostResponse(int fd) {
 	{
 		if (isADirectory(file))
 			methodNotAllowed404();
-		else if (openHtmlFile(file).find("<title>Error 404"))
-			notFound404();
+		// else if (openHtmlFile(file).find("<title>Error 404"))
+		// 	notFound404();
 		else {
 			_response["status"] = " 201 Created\r\n";
 			_response["body"] = openHtmlFile("data/www/error/201.html");
