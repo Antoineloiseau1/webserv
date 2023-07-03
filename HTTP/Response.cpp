@@ -222,7 +222,7 @@ void	Response::checkOpeningOfDirectory() {
 			if (_server.getData().getServers()[_curServer][_curRoute].count("index_" + std::to_string(i)) < 1)
 				break ;
 			std::cout << "trying to open = " << (_file + _server.getData().getServers()[_curServer][_curRoute]["index_" + std::to_string(i)]) << std::endl;
-			_response["body"] = openHtmlFile(_file + _server.getData().getServers()[_curServer][_curRoute]["index_" + std::to_string(i)]);
+			_response["body"] = openHtmlFile(_server.getData().getServers()[_curServer][_curRoute]["index_" + std::to_string(i)]);
 			if (!_fileErrorDetected)
 				break ;
 			i++;
@@ -237,7 +237,6 @@ void	Response::fillGetBody(std::string file) {
 	if (file == "" || _isADirectory)
 	{
 		if (_server.getData().getServers()[_curServer][_curRoute]["autoindex"] == "on") {
-			std::cout << "Je suis ici cest bien 2\n";
 			generateAutoindex(_request.getPath());
 		}
 		else if (_server.getData().getServers()[_curServer][_curRoute]["autoindex"] == "off"
@@ -290,7 +289,6 @@ void	Response::fillGetBody(std::string file) {
 
 void	Response::fillGetLength() {
 	_response["length"] = "Content-Length: ";
-	std::cout << " contetnt size = " << _contentSize << std::endl;
 	_response["length"] += std::to_string(_contentSize);
 	_response["length"] += "\r\n";
 }
@@ -357,13 +355,14 @@ int		Response::findServer()
 void	Response::GetResponse(int fd) {
 	
 		int type = -1;
+		if (_file.empty())
+			_file += "data/www/";
 		if (!_file.empty())
 		{
 			std::string extension = getExtension(_file);
 			type = isValid(extension, _server.getData().getServers()[_curServer][_curRoute]["cgi_extension"]);
 			if (isADirectory(_file)) {
 				type = 2;
-				std::cout << " FILE 0 = " << _file << std::endl;
 				_isADirectory = true;
 			}
 		}
@@ -373,7 +372,7 @@ void	Response::GetResponse(int fd) {
 			BadRequestError();
 		}
 		else if (type)
-		{ std::cout << "Je suis ici cest bien 1\n";
+		{
 			_response["status"] = " 200 OK\r\n"; //Main case, updated when event in the building of response
 			fillGetBody(_file);
 			fillGetLength();
