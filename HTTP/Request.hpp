@@ -29,6 +29,7 @@ class Request {
 		bool								isDelete;
 		bool								isChunked;
 		bool								badRequest;
+		bool								noContent;
 
 		std::string							getTypeStr();
 		std::string							getPath();

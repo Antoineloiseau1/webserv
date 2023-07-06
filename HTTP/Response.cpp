@@ -123,6 +123,8 @@ Response::Response(Request &request, Server &server, std::string tmp_file, int f
 
 	if(_request.badRequest)
 		a = 42;
+	else if (_request.noContent)
+		a = 45;
 	if (!_server.getData().getServers()[_curServer][_curRoute]["client_max_body_size"].empty()
 		&& atoi(_request.getHeaders()["Content-Length"].c_str()) > atoi(_server.getData().getServers()[_curServer][_curRoute]["client_max_body_size"].c_str()))
 		a = ERROR413;
@@ -142,6 +144,9 @@ Response::Response(Request &request, Server &server, std::string tmp_file, int f
 			break;
 		case ERROR413:
 			RequestEntityTooLargeError();
+			break;
+		case 45:
+			noContent204();
 			break;
 		default:
 			BadRequestError();
@@ -327,18 +332,18 @@ std::string	getExtension(std::string &file)
 
 int	isValid(std::string const extension, std::string cgiCase)
 {
-	std::string validExtensions[] = {"html", "png", "jpeg", "css", "ico", "jpg"};
+	//std::string validExtensions[] = {"html", "png", "jpeg", "css", "ico", "jpg"};
 
 	if (cgiCase.find(".") == 0)
 		cgiCase.erase(0, 1);
 	if (extension == cgiCase)
 		return 0;
-	for (int i = 0; i < 6; i++)
-	{
-		if (extension == validExtensions[i])
-			return i + 1;
-	}
-	return -42;
+	// for (int i = 0; i < 6; i++)
+	// {
+	// 	if (extension == validExtensions[i])
+	// 		return i + 1;
+	// }
+	return 1;
 }
 
 int		Response::findServer()
@@ -375,10 +380,7 @@ void	Response::GetResponse(int fd) {
 		}
 		else
 			_file = "";
-		if (type == -42) {
-			BadRequestError();
-		}
-		else if (type)
+		if (type)
 		{
 			_response["status"] = " 200 OK\r\n"; //Main case, updated when event in the building of response
 			fillGetBody(_file);
@@ -417,12 +419,14 @@ void	Response::PostResponse(int fd) {
 	else if (file != "favicon.ico" && file != " " && !file.empty() && file != "" && file != "data/www/style.css")
 	{
 		if (isADirectory(file))
-			methodNotAllowed404();
-		// else if (openHtmlFile(file).find("<title>Error 404"))
-		// 	notFound404();
+			methodNotAllowed405();
 		else {
+			if(checkPermissions(file.substr(0, file.find_last_of('/')).c_str(), file) == 1)
+				notFound404();
+			else {
 			_response["status"] = " 201 Created\r\n";
 			_response["body"] = openHtmlFile("data/www/error/201.html");
+			}
 		}
 	}
 	if(file == "")
@@ -701,7 +705,7 @@ int	Response::checkPermissions(const char *directory, std::string file)
 	return 0;
 }
 
-void	Response::methodNotAllowed404() {
+void	Response::methodNotAllowed405() {
 	std::string file = "data/www/error/405.html";
 	
 	_response["status"] = " 405 Not Allowed\r\n";

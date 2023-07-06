@@ -4,7 +4,6 @@ server
 		autoindex				off;
 		index					data/www/milan.html
 		error_page		 501		data/www/error/error_test.html
-		client_max_body_size	100000
 		location data/www/
 		{
 			limit_except		GET POST
@@ -21,3 +20,4 @@ server
 		cgi_extension			.cgi
 		listen		4241
 		autoindex on
+		client_max_body_size	100000

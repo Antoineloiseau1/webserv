@@ -61,7 +61,7 @@ class Response
 
 		void								notFound404(void);
 		void								forbidden403(void);
-		void								methodNotAllowed404(void);
+		void								methodNotAllowed405(void);
 		void								ok200(void);
 		void								noContent204(void);
 		void								internalServerError505(void);
