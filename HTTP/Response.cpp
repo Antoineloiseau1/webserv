@@ -143,6 +143,7 @@ Response::Response(Request &request, Server &server, std::string tmp_file, int f
 			NotImplemented();
 			break;
 		case ERROR413:
+			_server.deletePict("data/images/" + request.getFileName());
 			RequestEntityTooLargeError();
 			break;
 		case 45:
@@ -641,7 +642,6 @@ void	Response::RequestEntityTooLargeError(void) {
 	_response["length"] = "Content-Length: ";
 	_response["length"] += std::to_string(std::strlen(_response["body"].c_str()));
 	_response["length"] += "\r\n";
-
 	if (std::remove(_tmpPictFile.c_str()))
 		std::cerr << "error: Failed to delete file.\n";
 }
