@@ -31,7 +31,7 @@ class Response
 		std::string							_curRoute;
 		bool								_isADirectory;
 		bool								_fileErrorDetected;
-		int									checkPermissions(const char *directory, std::string file);
+		int									checkPermissions(std::string directory, std::string file);
 		void								generateAutoindex(std::string path);
 
 

@@ -149,7 +149,10 @@ Response::Response(Request &request, Server &server, std::string tmp_file, int f
 			noContent204();
 			break;
 		default:
-			BadRequestError();
+			if(_request.getTypeStr() == "DELETE" || _request.getTypeStr() == "POST" || _request.getTypeStr() == "GET" )
+				forbidden403();
+			else
+				BadRequestError();
 	}
 	_response["version"] = _request.getVersion();
 	_response["connexion"] = "Connexion: close\r\n\r\n";
@@ -449,8 +452,7 @@ void	Response::DeleteResponse(void) {
 		forbidden403();
 	else {
 		_server.deletePict(file);
-		if (std::remove(file.c_str()))
-			std::cerr << "error: Failed to delete file.\n";
+		std::remove(file.c_str());
 		ok200();
 		std::cerr << "File deleted successfully" << std::endl;
 	}
@@ -663,23 +665,30 @@ void	Response::NotImplemented(void) {
 }
 /************************************************************************************************/
 
-int	Response::checkPermissions(const char *directory, std::string file)
+int	Response::checkPermissions(std::string directory, std::string file)
 {
 	struct dirent	*currentFile;
 	struct stat		sfile;
 	DIR				*fd;
 
-	fd = opendir(directory);
+	if (file.empty())
+		return 2;
+	fd = opendir(directory.c_str());
 	if (fd == NULL)
 	{
 		std::cerr << "checkPermissions: Couldn't open " << directory << std::endl;
 		return 1;
 	}
 	currentFile = readdir(fd);
+	
 	while(currentFile)
 	{
-		if (file == (std::string(directory) + "/" + std::string(currentFile->d_name)))
-		{	
+		if (isADirectory(file)) {
+			closedir(fd);
+			return 2;
+		}
+		if (file == (directory + "/" + std::string(currentFile->d_name)))
+		{
 			if (stat(file.c_str(), &sfile) == -1)
 			{
 				closedir(fd);
@@ -699,8 +708,14 @@ int	Response::checkPermissions(const char *directory, std::string file)
 		currentFile = readdir(fd);
 	}
 	if(currentFile == NULL) {
-		closedir(fd);
-		return 1; //file not found		
+		if (isADirectory(file)) {
+			closedir(fd);
+			return 2;
+		}
+		else {
+			closedir(fd);
+			return 1; //file not found
+		}
 	}
 	return 0;
 }
