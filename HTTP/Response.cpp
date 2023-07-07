@@ -121,7 +121,7 @@ Response::Response(Request &request, Server &server, std::string tmp_file, int f
 		a = 5;
 	rootFile();
 	std::string f = _file;
-	if(f != "delete" && f != "data/www/gallery.html" && checkPermissions(f.substr(0, f.find_last_of("/")), f) == 1) {
+	if(f != _curRoute &&  f != "delete" && f != "data/www/gallery.html" && checkPermissions(f.substr(0, f.find_last_of("/")), f) == 1) {
 		notFound404();
 		return;
 	}
