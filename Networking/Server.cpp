@@ -98,16 +98,11 @@ void	Server::_watchLoop() {
 				_accepter(_socket[i]->getFd(),_socket[i]);
 		}
 
-	// std::cout << "DEBUT BOUCLE FOR\n";
+	_clientSizeChange = false;
 		for(size_t k = 0; k != _socket[i]->clients.size() && nbEvents-- && _alive; k++)
 		{
 			if ( _socket[i]->clients.size() == 0)
 				break ;
-			// std::cout << "k = "<< k << "i = " << i <<std::endl;
-			// std::cout << "taille socket = " <<_socket.size() << std::endl;
-			// fflush(stdout);
-			// std::cout << "taille clients = " << _socket[i]->clients.size() << std::endl;
-			// fflush(stdout);
 			Client *client = _socket[i]->clients[k];
 			if (FD_ISSET(client->getFd(), &tmpError)) {
 				std::cerr << "\nFD_ISSET: " << strerror(errno) << std::endl;
@@ -119,12 +114,14 @@ void	Server::_watchLoop() {
 			}
 			if(FD_ISSET(client->getFd(), &tmpWrite))
 				_responder(client, i);
+			if (_clientSizeChange)
+				break ;
 		}
 		i++;
 	}
 }
 
-Server::Server(int domain, int service, int protocole, std::vector<int> ports, int nbSocket, char **envp, data& data) : _data(data), _envp(envp) {
+Server::Server(int domain, int service, int protocole, std::vector<int> ports, int nbSocket, char **envp, data& data) : _data(data), _envp(envp), _clientSizeChange(false) {
 	std::cout << "\033[30;42m";
 	std::cout << "### Server is now open ###\033[0m" << std::endl << std::endl;
 
@@ -290,9 +287,9 @@ void	Server::disconnectClient(Client *client, int i) {
 	FD_CLR(client->getFd(), &_readSet);
 	FD_CLR(client->getFd(), &_writeSet);
 	FD_CLR(client->getFd(), &_errorSet);
-	std::cout << "Client DISCONNECTED "<< client->getFd() <<std::endl;
 	close(client->getFd());
 	_socket[i]->deleteClient(client->getFd());
+	_clientSizeChange = true;
 
 }
 

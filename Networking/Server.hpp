@@ -46,6 +46,8 @@ class Server {
 		fd_set							_writeSet;
 		fd_set							_errorSet;
 
+		bool							_clientSizeChange;
+
 	public:
 		void							_accepter(int server_fd, ListeningSocket *socket);
 		void							_refuse(int server_fd);
