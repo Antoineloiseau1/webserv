@@ -120,10 +120,14 @@ Response::Response(Request &request, Server &server, std::string tmp_file, int f
 	if(i == requestTypes.size())
 		a = 5;
 	rootFile();
-
-	if(_request.badRequest)
+	std::string f = _file;
+	if(f != "delete" && f != "data/www/gallery.html" && checkPermissions(f.substr(0, f.find_last_of("/")), f) == 1) {
+		notFound404();
+		return;
+	}
+	if (_request.badRequest)
 		a = 42;
-	else if (_request.noContent)
+	if (!_request.badRequest && _request.noContent)
 		a = 45;
 	if (!_server.getData().getServers()[_curServer][_curRoute]["client_max_body_size"].empty()
 		&& atoi(_request.getHeaders()["Content-Length"].c_str()) > atoi(_server.getData().getServers()[_curServer][_curRoute]["client_max_body_size"].c_str()))
@@ -151,7 +155,14 @@ Response::Response(Request &request, Server &server, std::string tmp_file, int f
 			break;
 		default:
 			if(_request.getTypeStr() == "DELETE" || _request.getTypeStr() == "POST" || _request.getTypeStr() == "GET" )
-				forbidden403();
+			{
+				if(_request.getHeaders()["Content-Type"].empty())
+					BadRequestError();
+				else
+					forbidden403();
+			}
+			else if (_request.getTypeStr() == "OPTIONS" || _request.getTypeStr() == "HEAD" || _request.getTypeStr() == "PUT" || _request.getTypeStr() == "TRACE" || _request.getTypeStr() == "CONNECT")
+				NotImplemented();
 			else
 				BadRequestError();
 	}
@@ -561,7 +572,7 @@ void	Response::handleCgi(std::string file, int fd) {
 	}
 	else
 	{
-		ourSleepFunction(1);
+		ourSleepFunction(2);
 		int result;
 		int status;
 		result = waitpid(pid, &status, WNOHANG);
@@ -732,10 +743,14 @@ void	Response::methodNotAllowed405() {
 void	Response::notFound404() {
 	std::string file = "data/www/error/404.html";
 	
+	_response["version"] = _request.getVersion();
+	_response["connexion"] = "Connexion: close\r\n\r\n";
 	_response["status"] = " 404 Not Found\r\n";
 	if (_server.getData().getServers()[_curServer][_curRoute].count("404") > 0)
 		file = _server.getData().getServers()[_curServer][_curRoute]["error_page"];
 	_response["body"] = openHtmlFile(file);
+	_response["type"] = "Content-Type: text/html\r\n";
+	fillGetLength();
 }
 
 void	Response::ok200() {
