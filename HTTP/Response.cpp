@@ -349,6 +349,8 @@ int	isValid(std::string const extension, std::string cgiCase)
 {
 	//std::string validExtensions[] = {"html", "png", "jpeg", "css", "ico", "jpg"};
 
+	if (cgiCase.empty())
+		cgiCase = "cgi";
 	if (cgiCase.find(".") == 0)
 		cgiCase.erase(0, 1);
 	if (extension == cgiCase)
