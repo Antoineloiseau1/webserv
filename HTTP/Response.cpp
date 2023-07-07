@@ -371,6 +371,15 @@ int		Response::findServer()
 void	Response::GetResponse(int fd) {
 	
 		int type = -1;
+		if (_server.getData().getServers()[_curServer][_curRoute].count("redirect") > 0)
+		{
+			std::cout << _server.getData().getServers()[_curServer][_curRoute]["redirect"] << "JE SUIS LA \n";
+			_response["status"] = " 301 Moved Permanently\r\n";
+			_response["status"] += "Location: ";
+			_response["status"] += _server.getData().getServers()[_curServer][_curRoute]["redirect"];
+			_response["status"] += "\n";
+			return ;
+		}
 		if (_file.empty())
 			_file += "data/www/";
 		if (!_file.empty())
