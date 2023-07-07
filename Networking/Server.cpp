@@ -98,8 +98,16 @@ void	Server::_watchLoop() {
 				_accepter(_socket[i]->getFd(),_socket[i]);
 		}
 
-		for(size_t k = 0; k != _socket[i]->clients.size() && nbEvents-- && _alive; k++) //hate u
+	// std::cout << "DEBUT BOUCLE FOR\n";
+		for(size_t k = 0; k != _socket[i]->clients.size() && nbEvents-- && _alive; k++)
 		{
+			if ( _socket[i]->clients.size() == 0)
+				break ;
+			// std::cout << "k = "<< k << "i = " << i <<std::endl;
+			// std::cout << "taille socket = " <<_socket.size() << std::endl;
+			// fflush(stdout);
+			// std::cout << "taille clients = " << _socket[i]->clients.size() << std::endl;
+			// fflush(stdout);
 			Client *client = _socket[i]->clients[k];
 			if (FD_ISSET(client->getFd(), &tmpError)) {
 				std::cerr << "\nFD_ISSET: " << strerror(errno) << std::endl;
@@ -204,7 +212,6 @@ int	Server::_handler(Client *client, int i) {
 	}
 	else {
 		_requestBuffer[n] = '\0';
-		std::cout << "REQ= "<< _requestBuffer << std::endl;
 		/*******************POUR TOUT LE MONDE 1 X*****************************/
 		if (strstr(_requestBuffer, "\r\n\r\n") && client->getStatus() == Client::INIT) {
 			client->createRequest(_requestBuffer);
@@ -275,7 +282,6 @@ void	Server::_responder(Client *client, int i) {
 	std::cout << response.getMap()["version"] << response.getMap()["status"];
 	std::cout << response.getFile() << "\033[0m" << std::endl;
 	std::cout << "\n\033[36m##############################\033[0m\n\n";
-	std::cout << res << std::endl;
 	send(client->getFd(), res.c_str(), res.length(), 0);
 	disconnectClient(client, i);
 }
@@ -284,8 +290,10 @@ void	Server::disconnectClient(Client *client, int i) {
 	FD_CLR(client->getFd(), &_readSet);
 	FD_CLR(client->getFd(), &_writeSet);
 	FD_CLR(client->getFd(), &_errorSet);
+	std::cout << "Client DISCONNECTED "<< client->getFd() <<std::endl;
 	close(client->getFd());
 	_socket[i]->deleteClient(client->getFd());
+
 }
 
 ListeningSocket	*Server::getSocket(int fd) {
@@ -332,9 +340,6 @@ std::string	Server::addPicture(std::string file_name) {
 	checkForDupName(file_name);
 	file_name = urlEncode(file_name);
 	pictPaths.push_back("data/images/" + file_name);
-	for (std::vector<std::string>::iterator it = pictPaths.begin(); it != pictPaths.end(); it++) {
-		std::cout << "FILE NAME = "<< *it << std::endl;
-	}
 	return file_name;
 }
 

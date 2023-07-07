@@ -121,7 +121,7 @@ Response::Response(Request &request, Server &server, std::string tmp_file, int f
 		a = 5;
 	rootFile();
 	std::string f = _file;
-	if(f != _curRoute &&  f != "delete" && f != "data/www/gallery.html" && checkPermissions(f.substr(0, f.find_last_of("/")), f) == 1) {
+	if(f != "style.css" && f != _curRoute &&  f != "delete" && f != "data/www/gallery.html" && checkPermissions(f.substr(0, f.find_last_of("/")), f) == 1) {
 		notFound404();
 		return;
 	}
@@ -386,7 +386,6 @@ void	Response::GetResponse(int fd) {
 		int type = -1;
 		if (_server.getData().getServers()[_curServer][_curRoute].count("redirect") > 0)
 		{
-			std::cout << _server.getData().getServers()[_curServer][_curRoute]["redirect"] << "JE SUIS LA \n";
 			_response["status"] = " 301 Moved Permanently\r\n";
 			_response["status"] += "Location: ";
 			_response["status"] += _server.getData().getServers()[_curServer][_curRoute]["redirect"];
@@ -468,7 +467,7 @@ void	Response::DeleteResponse(void) {
 
 	std::string file = _request.getFileToDelete();
 	if(file.empty())
-		file = urlDecode(_file);
+		file = _file;
 	if(checkPermissions(file.substr(0, file.find_last_of('/')).c_str(), file) == 1)
 		notFound404();
 	else if(checkPermissions(file.substr(0, file.find_last_of('/')).c_str(), file) == 2)
