@@ -329,7 +329,11 @@ void	Server::checkForDupName(std::string &file_name) {
 
 std::string	Server::addPicture(std::string file_name) {
 	checkForDupName(file_name);
+	file_name = urlEncode(file_name);
 	pictPaths.push_back("data/images/" + file_name);
+	for (std::vector<std::string>::iterator it = pictPaths.begin(); it != pictPaths.end(); it++) {
+		std::cout << "FILE NAME = "<< *it << std::endl;
+	}
 	return file_name;
 }
 

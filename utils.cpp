@@ -1,5 +1,27 @@
 #include "utils.hpp"
 #include <dirent.h>
+#include <sstream>
+#include <iomanip>
+
+std::string urlEncode(const std::string& input) {
+    std::ostringstream encoded;
+    encoded.fill('0');
+    encoded << std::hex;
+
+    for (std::string::const_iterator it = input.begin(); it != input.end(); ++it) {
+        char c = *it;
+
+        if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') {
+            encoded << c;
+        }
+        else if (c == ' ')
+            encoded << '%' << std::setw(2) << int((unsigned char)c);
+        else
+            encoded << '%' << std::setw(2) << int((unsigned char)c);
+    }
+
+    return encoded.str();
+}
 
 std::string urlDecode(const std::string& encoded) {
     std::string decoded;
