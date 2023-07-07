@@ -21,3 +21,8 @@ server
 		listen		4241
 		autoindex on
 		client_max_body_size	100000
+		location data/www/serbie.html
+		{
+        	redirect https://fr.wikipedia.org/wiki/Serbie
+			limit_except		GET
+    	}	

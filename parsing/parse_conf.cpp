@@ -85,6 +85,7 @@ void	data::setSettings() //put all the accepted settings (the keyword will also 
 	_routeSettings.push_back("error_page");
 	_routeSettings.push_back("index");
 	_routeSettings.push_back("return");
+	_routeSettings.push_back("redirect");
 
 	_possibleSettings.push_back("listen");
 	_possibleSettings.push_back("server_name");
