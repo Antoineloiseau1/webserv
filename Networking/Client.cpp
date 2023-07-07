@@ -46,7 +46,7 @@ void	Client::createRequest(char *reqLine) {
 		}
 
 	}
-	else if (_request->getTypeStr() == "GET" || _request->getTypeStr() == "DELETE")
+	else //if (_request->getTypeStr() == "GET" || _request->getTypeStr() == "DELETE")
 		_type = GET_DELETE;
 	if (_type != POST_DATA) {
 		if (std::remove(_tmpPictFile.c_str()))

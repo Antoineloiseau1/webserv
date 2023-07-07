@@ -3,7 +3,7 @@ server
 		cgi_extension			.cgi
 		autoindex				off;
 		index					data/www/milan.html
-		error_page		 501		data/www/error/error_test.html
+		error_page		 404		data/www/error/error_test.html
 		location data/www/
 		{
 			limit_except		GET POST
@@ -20,7 +20,7 @@ server
 		cgi_extension			.cgi
 		listen		4241
 		autoindex on
-		client_max_body_size	100000
+		client_max_body_size	10000
 		location data/www/serbie.html
 		{
         	redirect https://fr.wikipedia.org/wiki/Serbie

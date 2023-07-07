@@ -209,6 +209,7 @@ int	Server::_handler(Client *client, int i) {
 	}
 	else {
 		_requestBuffer[n] = '\0';
+		std::cout << _requestBuffer << std::endl;
 		/*******************POUR TOUT LE MONDE 1 X*****************************/
 		if (strstr(_requestBuffer, "\r\n\r\n") && client->getStatus() == Client::INIT) {
 			client->createRequest(_requestBuffer);
@@ -257,7 +258,9 @@ int	Server::_handler(Client *client, int i) {
 					break;
 			}
 		}
+		std::cout << atoi(client->getRequest()->getHeaders()["Content-Length"].c_str()) << "| " << client->bytes << "\n";
 		if (client->bytes >= atoi(client->getRequest()->getHeaders()["Content-Length"].c_str())) {
+			std::cout << atoi(client->getRequest()->getHeaders()["Content-Length"].c_str()) << "GET READY FOR DATA 11\n";
 				client->writeInFile(_requestBuffer, n);
 				setToWrite(client);
 				client->getRequest()->parseFormBody(client->getFormBody());
@@ -265,6 +268,7 @@ int	Server::_handler(Client *client, int i) {
 				client->getFile().close(); //closing file after finishing to write data
 		}
 		else if (client->getStatus() == Client::READY_FOR_DATA && n > 0) {
+			std::cout << "GET READY FOR DATA 222\n";
 				client->writeInFile(_requestBuffer, n);
 			}
 	}
@@ -280,6 +284,7 @@ void	Server::_responder(Client *client, int i) {
 	std::cout << response.getFile() << "\033[0m" << std::endl;
 	std::cout << "\n\033[36m##############################\033[0m\n\n";
 	send(client->getFd(), res.c_str(), res.length(), 0);
+	std::cout << res << std::endl;
 	disconnectClient(client, i);
 }
 

@@ -663,8 +663,7 @@ void	Response::RequestEntityTooLargeError(void) {
 	_response["length"] = "Content-Length: ";
 	_response["length"] += std::to_string(std::strlen(_response["body"].c_str()));
 	_response["length"] += "\r\n";
-	if (std::remove(_tmpPictFile.c_str()))
-		std::cerr << "error: Failed to delete file.\n";
+	std::remove(_tmpPictFile.c_str());
 }
 
 /********************************** NotImplemented **********************************************/
